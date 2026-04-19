@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Merschel-Raman V8.2</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  
+  <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
+  <style>
+    :root{
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --primary: #2563eb; 
+      --primary-dark: #1e40af;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --purple: #7c3aed;
+      --red: #f87171;
+      --sidebar-width: 270px;
+    }
+
+    body { font-family: 'Open Sans', sans-serif; background: var(--bg); color: var(--text-main); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    
+    /* HEADER */
+    header.app-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1rem; display: flex; justify-content: space-between; align-items: center; height: 45px; flex-shrink: 0; z-index: 10; }
+    .brand { font-weight: 700; font-size: 1rem; color: var(--primary); }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    
+    /* NAV */
+    nav.topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1rem; display: flex; align-items: center; gap: 1rem; height: 40px; flex-shrink: 0; overflow-x: auto; }
+    .nav-item { background: transparent; border: none; border-bottom: 2px solid transparent; padding: 0 5px; height: 40px; font-weight: 600; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; transition: all 0.2s; white-space: nowrap; }
+    .nav-item:hover { color: var(--primary); }
+    .nav-item.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+    /* STATUS */
+    .status-strip { background: #f1f5f9; border-bottom: 1px solid var(--border); padding: 0 1rem; font-size: 0.75rem; display: flex; gap: 1.5rem; color: var(--text-muted); flex-shrink: 0; align-items: center; height: 25px; }
+    .status-item strong { color: var(--text-main); margin-right: 5px; }
+
+    /* MAIN */
+    main.main-content { flex: 1; overflow: hidden; padding: 0; display: flex; flex-direction: column; }
+    .section { display: none; width: 100%; height: 100%; }
+    .section.active { display: flex; flex-direction: column; }
+
+    /* LAYOUT */
+    .card { background: var(--surface); display: flex; flex-direction: row; height: 100%; overflow: hidden; position: relative; }
+    
+    /* SIDEBAR */
+    .toolbar { width: var(--sidebar-width); min-width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; padding: 12px; overflow-y: auto; z-index: 2; height: 100%; box-sizing: border-box; box-shadow: 2px 0 5px rgba(0,0,0,0.02); }
+    .toolbar-group { display: flex; flex-direction: column; gap: 4px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; width: 100%; transition: all 0.3s ease; }
+    .toolbar-group:last-child { border-bottom: none; }
+    .toolbar-label { font-size: 0.65rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px; }
+    .toolbar-buttons { display: flex; flex-wrap: wrap; gap: 4px; }
+    .toolbar-buttons button { flex: 1 1 auto; justify-content: center; font-size: 0.75rem; padding: 4px 8px;}
+
+    /* CONFIG PANEL (NEW) */
+    .config-panel { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 6px; margin-top: auto; }
+    .config-item { display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; color: var(--text-main); margin-bottom: 6px; }
+    .config-item:last-child { margin-bottom: 0; }
+    .config-item input { cursor: pointer; }
+
+    /* WORKSPACE */
+    .workspace-wrapper { flex: 1; display: flex; flex-direction: column; position: relative; background: #f8fafc; overflow: hidden; }
+    .workspace-header { background: #ffffff; border-bottom: 1px solid var(--border); padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    
+    /* SWITCHER */
+    .view-switcher-container { display: flex; gap: 5px; background: #f1f5f9; padding: 4px; border-radius: 20px; border: 1px solid var(--border); }
+    .view-btn { border: none; background: transparent; padding: 6px 16px; border-radius: 16px; cursor: pointer; color: var(--text-muted); font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 5px; transition: all 0.2s; }
+    .view-btn:hover { background: #e2e8f0; color: var(--primary); }
+    .view-btn.active { background: var(--primary); color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+
+    /* VISTAS */
+    .view-pane { flex: 1; width: 100%; height: 100%; display: none; padding: 10px; box-sizing: border-box; overflow: hidden; }
+    .view-pane.active { display: flex; flex-direction: column; }
+    .graph-container { flex: 1; width: 100%; height: 100%; border-radius: 8px; border: 1px solid var(--border); background-color: white; position: relative; overflow: hidden;}
+
+    /* TABLA */
+    .table-view-container { flex: 1; background: white; border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; height: 100%; }
+    .table-view-header { padding: 10px 15px; border-bottom: 1px solid var(--border); background: #f8fafc; display: flex; justify-content: space-between; align-items: center; min-height: 50px; flex-shrink: 0;}
+    .table-scroll { flex: 1; overflow-y: auto; }
+    
+    /* UI ELEMENTS */
+    select, button, input[type="file"], input[type="range"] { border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.8rem; background: white; }
+    button { cursor: pointer; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px; }
+    button.primary { background: var(--primary); color: white; border-color: var(--primary); }
+    button.primary:hover { background: var(--primary-dark); }
+    button.secondary { background: #f8fafc; color: var(--text-main); border-color: #cbd5e1; }
+    button.secondary:hover { background: #e2e8f0; }
+    button.peak-active { background: var(--warning); color: white; border-color: var(--warning); }
+    button.btn-delete { background: #fee2e2; color: var(--danger); border-color: #fecaca; }
+    
+    button.btn-download-table { background: #dcfce7; color: #15803d; border-color: #bbf7d0; padding: 8px 16px; font-size: 0.85rem; display: inline-flex; }
+    button.btn-download-table:hover { background: #bbf7d0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th { position: sticky; top: 0; background: #f1f5f9; padding: 10px; text-align: left; border-bottom: 2px solid var(--border); font-weight: 700; color: var(--text-main); z-index: 5; }
+    td { padding: 8px 10px; border-bottom: 1px solid var(--border); color: var(--text-main); }
+    tr:nth-child(even) { background: #f9fafb; }
+    tr:hover { background: #eff6ff; }
+    
+    /* MODALES & TOOLTIPS MEJORADOS */
+    #science-tooltip { position: fixed; display: none; background: rgba(15, 23, 42, 0.98); color: white; padding: 12px 16px; border-radius: 8px; width: 300px; z-index: 9999; font-size: 0.75rem; pointer-events: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); line-height: 1.5; border-left: 4px solid var(--primary); }
+    .tt-title { display: block; font-weight: 700; color: #60a5fa; margin-bottom: 5px; font-size: 0.8rem; text-transform: uppercase; }
+    .tt-desc { display: block; margin-bottom: 8px; color: #e2e8f0; }
+    .tt-math { display: block; background: #334155; padding: 6px; border-radius: 4px; font-family: monospace; color: #fcd34d; text-align: center; letter-spacing: 0.5px; }
+
+    #full-screen-modal, #about-modal, #converter-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: none; justify-content: center; align-items: center; }
+    .modal-box { background: white; width: 500px; padding: 20px; border-radius: 8px; max-height: 90vh; overflow-y: auto; }
+
+    .graph-container::after { content: 'Merschel-Raman V8.2'; position: absolute; bottom: 10px; right: 10px; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); opacity: 0.2; pointer-events: none; }
+  </style>
+</head>
+<body>
+
+  <div id="science-tooltip"></div>
+
+  <header class="app-header">
+    <div class="brand">Merschel-Raman V8.2</div>
+    <div class="header-right">
+        <div>
+            <label style="font-size:0.75rem; margin-right:5px; font-weight:600; color:var(--text-muted);">Archivo:</label>
+            <input type="file" id="file-input" multiple accept=".csv,.txt" style="padding:4px;" />
+        </div>
+        <button onclick="document.getElementById('converter-modal').style.display='flex'" class="secondary" style="padding:4px 8px;">⚡ Conversor</button>
+        <button onclick="document.getElementById('about-modal').style.display='flex'" class="secondary" style="padding:4px 8px;">?</button>
+    </div>
+  </header>
+
+  <nav class="topbar">
+    <button class="nav-item active" onclick="switchTab('upload')">1. Originales</button>
+    <button class="nav-item" onclick="switchTab('preprocessing')">2. Procesamiento</button>
+    <button class="nav-item" onclick="switchTab('chemometrics')">3. Quimiometría</button>
+    <button class="nav-item" onclick="switchTab('supervisada')" style="color:var(--red);">4. Supervisado</button>
+    <button class="nav-item" onclick="switchTab('results')">5. Resultados</button>
+    <button class="nav-item" onclick="switchTab('image-comparison')" style="color:var(--purple);">6. Comparador</button>
+  </nav>
+
+  <div class="status-strip">
+    <div class="status-item"><strong>Estado:</strong> <span id="status-text">Listo.</span></div>
+    <div class="status-item"><strong>Espectros:</strong> <span id="count-val">0</span></div>
+    <div class="status-item"><strong>Picos:</strong> <span id="peaks-val">0</span></div>
+  </div>
+
+  <main class="main-content">
+    
+    <section id="upload" class="section active">
+        <div class="card">
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <span class="toolbar-label">INFO</span>
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">Vista previa de datos crudos.</p>
+                </div>
+            </div>
+            <div class="workspace-wrapper">
+                <div style="padding:10px; width:100%; height:100%; box-sizing:border-box;">
+                    <div class="graph-container" id="spectrum-graph"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="preprocessing" class="section">
+        <div class="card">
+            <div class="toolbar">
+                <div class="toolbar-group" id="grp-tipo">
+                    <span class="toolbar-label">TIPO ESPECTRO</span>
+                    <div class="toolbar-buttons">
+                        <button id="set-ftir-btn" class="primary" onclick="setSpectrumType('FTIR')" data-title="Espectroscopía FTIR" data-desc="Define el eje Y como Absorbancia. Basado en la absorción de radiación IR que provoca transiciones vibracionales." data-math="A = -\log_{10}(T)">FTIR</button>
+                        <button id="set-raman-btn" class="secondary" onclick="setSpectrumType('Raman')" data-title="Espectroscopía Raman" data-desc="Define el eje Y como Intensidad. Basado en la dispersión inelástica de fotones (cambio en la polarizabilidad)." data-math="I_R \propto \nu^4 I_0 |\alpha|^2">Raman</button>
+                    </div>
+                </div>
+                
+                <div class="toolbar-group" id="grp-conv">
+                    <span class="toolbar-label">CONVERSIÓN</span>
+                    <div class="toolbar-buttons">
+                        <button id="abs-to-trans-btn" onclick="convertAbsToTrans()" data-title="Absorbancia a Transmitancia" data-desc="Convierte la escala logarítmica (absorción) a un porcentaje lineal de luz transmitida." data-math="%T = 10^{-A} \times 100">A→T</button>
+                        <button id="trans-to-abs-btn" onclick="convertTransToAbs()" data-title="Transmitancia a Absorbancia" data-desc="Aplica la Ley de Beer-Lambert para linealizar la concentración respecto a la señal." data-math="A = 2 - \log_{10}(\%T)">T→A</button>
+                        <button id="atr-correction-btn" onclick="applyATRCorrection()" data-title="Corrección ATR" data-desc="Compensa el hecho de que en Reflectancia Total Atenuada, la profundidad de penetración del haz IR es proporcional a la longitud de onda." data-math="d_p = \frac{\lambda}{2\pi \sqrt{n_1^2 \sin^2\theta - n_2^2}}">ATR</button>
+                    </div>
+                </div>
+
+                <div class="toolbar-group" id="grp-corr">
+                    <span class="toolbar-label">CORRECCIÓN ATMOSFÉRICA</span>
+                    <div class="toolbar-buttons">
+                        <button id="remove-co2-btn" class="secondary" onclick="applyCO2Removal()" data-title="Eliminar CO₂" data-desc="El CO₂ atmosférico absorbe fuertemente entre 2300-2400 cm⁻¹ (estiramiento asimétrico). Usa interpolación lineal para suprimir el artefacto." data-math="y_{int} = y_0 + (x - x_0)\frac{y_1 - y_0}{x_1 - x_0}">-CO₂</button>
+                        <button id="remove-h2o-btn" class="secondary" onclick="applyH2ORemoval()" data-title="Eliminar H₂O" data-desc="El vapor de agua genera un espectro rotovibracional complejo entre 3500-3900 cm⁻¹. Se suprime por interpolación." data-math="Rango: 3500 - 3900 cm^{-1}">-H₂O</button>
+                        <button id="mcr-als-btn" class="secondary" onclick="alert('MCR-ALS Simulado')" data-title="Resolución MCR-ALS" data-desc="Resolución de Curvas Multivariadas. Descompone mezclas complejas en espectros puros (perfiles) y concentraciones usando mínimos cuadrados alternados." data-math="D = C \times S^T + E">MCR</button>
+                    </div>
+                </div>
+
+                <div class="toolbar-group" id="grp-base">
+                    <span class="toolbar-label">LÍNEA BASE</span>
+                    <div id="baseline-method-buttons" class="toolbar-buttons">
+                        <button data-group="baseline" data-value="none" class="primary" data-title="Sin Línea Base" data-desc="Desactiva la corrección. Mantiene el fondo original (crudo)." data-math="y_{corr} = y">Off</button>
+                        <button data-group="baseline" data-value="als" class="secondary" data-title="Asymmetric Least Squares (ALS)" data-desc="Ajusta una línea base suave penalizando las curvaturas bruscas, ignorando los picos asimétricos positivos (señal biológica)." data-math="\min \sum w(y-z)^2 + \lambda \sum (\Delta^2 z)^2">ALS</button>
+                        <button data-group="baseline" data-value="rollingball" class="secondary" data-title="Rolling Ball" data-desc="Filtro morfológico. Simula una esfera de radio R rodando bajo el espectro. Excelente para eliminar fluorescencia severa (típica en Raman)." data-math="Base = \text{dilatación}(\text{erosión}(y))">Roll</button>
+                    </div>
+                </div>
+                
+                <div class="toolbar-group" id="grp-der">
+                    <span class="toolbar-label">DERIVADAS / SUAVIZADO</span>
+                    <div id="derivative-method-buttons" class="toolbar-buttons" style="margin-bottom:4px;">
+                        <button data-group="derivative" data-value="none" class="primary" data-title="Sin Derivada" data-desc="Mantiene el espectro de orden cero." data-math="y' = y">0</button>
+                        <button data-group="derivative" data-value="d1" class="secondary" data-title="Primera Derivada" data-desc="Elimina desplazamientos constantes de la línea base. Cruza por cero en los máximos de los picos originales." data-math="\frac{dy}{dx}">1ª</button>
+                        <button data-group="derivative" data-value="d2" class="secondary" data-title="Segunda Derivada" data-desc="Elimina líneas base lineales. Resuelve bandas solapadas (los mínimos corresponden a los máximos de los picos originales)." data-math="\frac{d^2y}{dx^2}">2ª</button>
+                    </div>
+                    <div id="smoothing-method-buttons" class="toolbar-buttons">
+                        <button data-group="smoothing" data-value="none" class="primary" data-title="Sin Suavizado" data-desc="Mantiene el ruido de alta frecuencia intacto." data-math="y_{smooth} = y">Off</button>
+                        <button data-group="smoothing" data-value="savgol" class="secondary" data-title="Filtro Savitzky-Golay" data-desc="Suavizado mediante ajuste polinómico local por mínimos cuadrados. Reduce el ruido sin ensanchar ni reducir artificialmente la altura de los picos." data-math="y_j^* = \frac{1}{N} \sum_{i=-m}^{m} C_i y_{j+i}">S-G</button>
+                        <button data-group="smoothing" data-value="movingavg" class="secondary" data-title="Media Móvil" data-desc="Filtro de paso bajo simple. Promedia puntos adyacentes en una ventana de tamaño n. Puede distorsionar bandas estrechas." data-math="y_i = \frac{1}{n} \sum_{k=0}^{n-1} x_{i-k}">Avg</button>
+                    </div>
+                </div>
+
+                <div class="toolbar-group" id="grp-norm">
+                    <span class="toolbar-label">NORMALIZACIÓN</span>
+                    <div id="norm-method-buttons" class="toolbar-buttons">
+                        <button data-group="norm" data-value="none" class="primary" data-title="Sin Normalización" data-desc="Conserva las intensidades absolutas originales." data-math="y_{norm} = y">Off</button>
+                        <button data-group="norm" data-value="minmax" class="secondary" data-title="Normalización Min-Max" data-desc="Escala linealmente todo el espectro al intervalo [0, 1]. Útil para comparar formas de bandas independientemente de la concentración." data-math="y_{norm} = \frac{y - y_{min}}{y_{max} - y_{min}}">0-1</button>
+                        <button data-group="norm" data-value="snv" class="secondary" data-title="Standard Normal Variate (SNV)" data-desc="Centra el espectro en cero y lo escala a varianza unitaria. Elimina efectos multiplicativos por dispersión de luz (scattering) o variaciones de camino óptico." data-math="y_{norm} = \frac{y - \mu}{\sigma}">SNV</button>
+                        <button data-group="norm" data-value="area" class="secondary" data-title="Normalización por Área" data-desc="Ajusta el espectro para que el área total bajo la curva sea igual a 1 (Norma L1)." data-math="y_{norm} = \frac{y}{\sum |y_i|}">Area</button>
+                    </div>
+                </div>
+
+                <div class="toolbar-group" id="grp-act">
+                    <span class="toolbar-label">ACCIONES</span>
+                    <div class="toolbar-buttons">
+                        <button class="primary" id="apply-btn" style="width:100%" data-title="Cadena de Procesamiento" data-desc="Ejecuta secuencialmente todos los filtros, correcciones y normalizaciones seleccionados en el panel superior." data-math="Pipeline: Base \rightarrow Filtro \rightarrow Deriv \rightarrow Norm">⚡ Aplicar Procesos</button>
+                        <button id="consolidate-btn" class="btn-avg" style="flex:1;" onclick="generateConsolidatedView()" data-title="Análisis Estadístico Básico" data-desc="Calcula y grafica el espectro promedio y sombrea la desviación estándar (\pm 1\sigma) para observar la varianza de la muestra." data-math="\bar{y}, \pm \sigma">📉 Media</button>
+                        <button id="reset-btn" style="flex:1;" onclick="resetData()" data-title="Restaurar Original" data-desc="Purga todos los vectores de memoria y recarga la matriz de datos crudos (Raw Data)." data-math="Data = Data_{raw}">↺ Reset</button>
+                    </div>
+                </div>
+
+                <div class="toolbar-group" id="grp-peak" style="flex:1;">
+                    <span class="toolbar-label">DETECCIÓN DE PICOS</span>
+                    <div style="margin-bottom:5px;">
+                        <label style="font-size:0.7rem;">Umbral de Prominencia (0-1):</label>
+                        <div style="display:flex;gap:5px;">
+                            <input type="range" id="peak-sensitivity" min="0.01" max="1.0" step="0.01" value="0.2" style="flex:1">
+                            <output id="sens-val" style="font-size:0.7rem;">0.20</output>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:5px;">
+                        <label style="font-size:0.7rem;">Ventana de Búsqueda (pts):</label>
+                        <div style="display:flex;gap:5px;">
+                            <input type="range" id="peak-window" min="1" max="50" step="1" value="5" style="flex:1">
+                            <output id="window-val" style="font-size:0.7rem;">5</output>
+                        </div>
+                    </div>
+                    <div class="toolbar-buttons">
+                        <button id="auto-peak-btn" class="primary" style="flex:2;" onclick="autoDetectPeaks()" data-title="Algoritmo Búsqueda Máximos Locales" data-desc="Escanea el vector espectral buscando puntos que sean el máximo absoluto dentro de la 'Ventana de búsqueda', siempre que superen el 'Umbral'." data-math="\max(y_{i-w} \dots y_{i+w}) > \text{Umbral}">🔍 Detectar</button>
+                        <button id="toggle-peak-mode" style="flex:1;" onclick="togglePeaks()" data-title="Anotación Manual" data-desc="Activa el cursor en cruz. Haz clic directamente sobre la curva para registrar un pico específico que el algoritmo haya omitido." data-math="Event(x_i, y_i)">✏️</button>
+                        <button id="clear-peaks" class="btn-delete" style="flex:1;" onclick="clearPeaks()" data-title="Limpiar Matriz de Picos" data-desc="Elimina todos los marcadores y vacía la tabla de asignaciones vibracionales." data-math="Peaks = [\emptyset]">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="config-panel">
+                    <span class="toolbar-label" style="display:block; margin-bottom:8px;">CONFIGURACIÓN DE HERRAMIENTAS</span>
+                    <div class="config-item"><span>Tipo Espectro</span><input type="checkbox" checked onchange="toggleTool('grp-tipo', this)"></div>
+                    <div class="config-item"><span>Conversión</span><input type="checkbox" checked onchange="toggleTool('grp-conv', this)"></div>
+                    <div class="config-item"><span>Corr. Atmosférica</span><input type="checkbox" checked onchange="toggleTool('grp-corr', this)"></div>
+                    <div class="config-item"><span>Línea Base</span><input type="checkbox" checked onchange="toggleTool('grp-base', this)"></div>
+                    <div class="config-item"><span>Derivadas/Suav.</span><input type="checkbox" checked onchange="toggleTool('grp-der', this)"></div>
+                    <div class="config-item"><span>Normalización</span><input type="checkbox" checked onchange="toggleTool('grp-norm', this)"></div>
+                    <div class="config-item"><span>Detección Picos</span><input type="checkbox" checked onchange="toggleTool('grp-peak', this)"></div>
+                </div>
+
+            </div>
+
+            <div class="workspace-wrapper">
+                
+                <div class="workspace-header">
+                    <span style="font-size:0.85rem; font-weight:700; color:var(--text-main);">Área de Trabajo</span>
+                    <div class="view-switcher-container">
+                        <button class="view-btn active" onclick="switchProcView('graph')" id="btn-view-graph" data-title="Visualización Gráfica" data-desc="Renderizado interactivo vectorial impulsado por Plotly.js." data-math="Plot(X, Y)">📈 Gráfico</button>
+                        <button class="view-btn" onclick="switchProcView('table')" id="btn-view-table" data-title="Tabla de Asignaciones" data-desc="Matriz de datos de picos encontrados con correlación a biblioteca de biomoléculas." data-math="DataTable(Peaks)">📝 Tabla de Picos</button>
+                    </div>
+                </div>
+
+                <div id="proc-view-graph" class="view-pane active">
+                    <div class="graph-container" id="processed-graph"></div>
+                </div>
+                <div id="proc-view-table" class="view-pane">
+                    <div class="table-view-container">
+                        <div class="table-view-header">
+                            <h3 style="margin:0; font-size:1rem; color:var(--primary);">Identificación Espectral</h3>
+                            <button class="btn-download-table" onclick="downloadPeakTable()">📥 Descargar Tabla (.txt)</button>
+                        </div>
+                        <div class="table-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width:15%">Espectro</th>
+                                        <th style="width:10%">cm⁻¹</th>
+                                        <th style="width:15%">Intensidad</th>
+                                        <th style="width:15%">Vibración</th>
+                                        <th style="width:15%">Grupo</th>
+                                        <th style="width:20%">Biomolécula</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="peaks-table-body">
+                                    <tr><td colspan="7" style="text-align:center; padding:3rem; color:#94a3b8;">Sin datos. Realiza una detección primero.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="chemometrics" class="section">
+        <div class="card">
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <span class="toolbar-label">MÉTODOS EXPLORATORIOS</span>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:12px;">Modelos No Supervisados basados en Varianza y Distancia.</p>
+                    <div class="toolbar-buttons" style="flex-direction:column; gap:8px;">
+                        <button class="primary" onclick="runChemometrics('pca')">1. PCA (Scores)</button>
+                        <button class="secondary" onclick="runChemometrics('hca')">2. Dendrograma (HCA)</button>
+                        <button class="secondary" onclick="runChemometrics('correlation')">3. Matriz Correlación</button>
+                    </div>
+                </div>
+                <div id="chemo-status" style="margin-top:10px; font-size:0.75rem; color:var(--primary); font-weight:bold;"></div>
+            </div>
+            <div class="workspace-wrapper">
+                <div style="padding:10px; width:100%; height:100%; box-sizing:border-box;">
+                    <div class="graph-container" id="chemo-graph"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="supervisada" class="section">
+        <div class="card">
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <span class="toolbar-label">MÚLTIPLES ALGORITMOS</span>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:12px;">Clasificación Supervisada Avanzada.</p>
+                    
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:0.7rem; font-weight:bold;">Algoritmo:</label>
+                        <select id="algo-selector" style="width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px; margin-bottom:6px;">
+                            <option value="PLS-DA">Mínimos Cuadrados Parciales (PLS-DA)</option>
+                            <option value="SVM">Máquinas de Vectores de Soporte (SVM)</option>
+                            <option value="RF">Bosques Aleatorios (Random Forest)</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:0.7rem; font-weight:bold;">Componentes (LV) (Solo PLS-DA):</label>
+                        <input type="number" id="pls-comps" value="2" min="1" max="10" style="width:100%; padding:4px; box-sizing:border-box;">
+                    </div>
+                    <button class="primary" style="width:100%" onclick="runPlsDa()">🔥 Entrenar Modelo</button>
+                    <div id="pls-status" style="margin-top:10px; font-size:0.75rem; color:var(--primary); font-weight:bold;"></div>
+                </div>
+            </div>
+            <div class="workspace-wrapper" style="flex-direction:row; background:white;">
+                <!-- Panel: Entrenamiento -->
+                <div style="width: 250px; border-right:1px solid #e2e8f0; overflow-y:auto; padding:10px; background:#f8fafc; flex-shrink:0;">
+                    <span class="toolbar-label" style="display:block; margin-bottom:10px; color:var(--primary);">CONSTRUCTOR DE BD</span>
+                    <div style="margin-bottom: 12px; padding: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px;">
+                        <label style="font-size:0.7rem; font-weight:bold; display:block; margin-bottom:4px;">Especie / Etiqueta:</label>
+                        <select id="train-class-select" style="width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px; margin-bottom:6px;" onchange="if(this.value==='_new'){document.getElementById('train-custom-class').style.display='block';}else{document.getElementById('train-custom-class').style.display='none';}">
+                            <option value="Toxoplasma">Toxoplasma (Ooquistes)</option>
+                            <option value="Cryptosporidium">Cryptosporidium (Ooqu.)</option>
+                            <option value="Giardia">Giardia (Quistes)</option>
+                            <option value="Blanco">Blanco / Medio de susp.</option>
+                            <option value="_new">+ Nueva Clase...</option>
+                        </select>
+                        <input type="text" id="train-custom-class" placeholder="Nombre de clase..." style="display:none; width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px; margin-bottom:6px; box-sizing:border-box;">
+                        
+                        <div style="display:flex; align-items:center; gap:5px; margin-top:8px;">
+                            <input type="file" id="train-file-input" multiple accept=".csv,.txt" style="display:none;" onchange="handleTrainingUpload(event)" />
+                            <button class="primary" style="width:100%; font-size:0.75rem; padding:6px;" onclick="document.getElementById('train-file-input').click()">📥 Cargar y Etiquetar Lote</button>
+                        </div>
+                    </div>
+                    
+                    <span class="toolbar-label" style="display:block; margin-bottom:10px;">Resumen (Training Set)</span>
+                    <table style="width:100%; border-collapse:collapse; font-size:0.8rem;">
+                        <thead>
+                            <tr style="color:var(--text-muted); border-bottom:1px solid #e2e8f0;">
+                                <th style="text-align:left; padding-bottom:5px;">Clase</th>
+                                <th style="padding-bottom:5px; text-align:center;">Count</th>
+                            </tr>
+                        </thead>
+                        <tbody id="db-summary-body">
+                            <tr><td colspan="2" style="text-align:center; padding:10px; font-size:0.7rem; color:#94a3b8;">Sin datos de entrenamiento.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Panel: Gráficas PLS-DA -->
+                <div style="flex:1; display:flex; flex-direction:column; padding:10px; gap:10px; overflow-y:auto; background:white;">
+                    <div id="pls-scores" style="flex:1; min-height:400px; border:1px solid #e2e8f0; border-radius:6px; box-sizing:border-box;"></div>
+                    <div id="pls-vip" style="flex:1; min-height:300px; border:1px solid #e2e8f0; border-radius:6px; box-sizing:border-box;"></div>
+                </div>
+
+                <!-- Panel: Muestra Ciega -->
+                <div style="width: 200px; border-left:1px solid #e2e8f0; overflow-y:auto; padding:10px; background:#fefce8; flex-shrink:0;">
+                    <span class="toolbar-label" style="display:block; margin-bottom:10px; color:var(--purple);">PREDICCIÓN CIEGOS</span>
+                    
+                    <div style="margin-bottom: 12px;">
+                        <input type="file" id="predict-file-input" multiple accept=".csv,.txt" style="display:none;" onchange="handlePredictUpload(event)" />
+                        <button class="secondary" style="width:100%; font-size:0.75rem; padding:6px; margin-bottom:6px;" onclick="document.getElementById('predict-file-input').click()">📂 Subir Muestras</button>
+                        <button class="primary" style="width:100%; font-size:0.75rem; padding:6px; background:var(--purple); border-color:var(--purple);" onclick="predictUnknowns()">🔮 Clasificar</button>
+                    </div>
+
+                    <span class="toolbar-label" style="display:block; margin-bottom:10px;">Resultados</span>
+                    <table style="width:100%; border-collapse:collapse; font-size:0.75rem;">
+                        <tbody id="predict-results-body">
+                            <tr><td style="text-align:center; padding:10px; font-size:0.7rem; color:#94a3b8;">Sin muestras.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="results" class="section"><div class="card" style="padding:20px;"><h3>Resultados</h3><div id="results-container"></div></div></section>
+    <section id="image-comparison" class="section"><div class="card" style="padding:20px;"><h3>Comparador</h3><div id="comp-viewport"></div></div></section>
+
+  </main>
+
+  <div id="converter-modal"><div class="modal-box"><h3>Conversor</h3><p>Convierte archivos de espectros.</p><button onclick="document.getElementById('converter-modal').style.display='none'">Cerrar</button></div></div>
+  <div id="about-modal"><div class="modal-box"><h3>Merschel-Raman V8.2</h3><p>Actualización: Lógica restaurada, Tooltips de rigor científico (Matemática/Física) y Toggles para configuración de interfaz añadidos. Corrección de eventos de clic múltiple.</p><button onclick="document.getElementById('about-modal').style.display='none'">Cerrar</button></div></div>
+
+  <script>
+    // Configuración de entorno dinámico
+    const API_BASE_URL = window.location.hostname.includes('github.io') 
+        ? 'https://merschel-raman-api.onrender.com' 
+        : 'http://localhost:8000';
+
+    // --- TOOLTIPS CIENTÍFICOS ---
+    const tooltipElement = document.getElementById('science-tooltip');
+    
+    function initTooltips() {
+        document.querySelectorAll('[data-title]').forEach(el => {
+            el.addEventListener('mouseenter', e => {
+                const title = e.target.getAttribute('data-title');
+                const desc = e.target.getAttribute('data-desc');
+                const math = e.target.getAttribute('data-math');
+                
+                let html = '';
+                if(title) html += `<span class="tt-title">${title}</span>`;
+                if(desc) html += `<span class="tt-desc">${desc}</span>`;
+                if(math) html += `<span class="tt-math">${math}</span>`;
+                
+                tooltipElement.innerHTML = html;
+                tooltipElement.style.display = 'block';
+            });
+            el.addEventListener('mousemove', e => {
+                tooltipElement.style.left = (e.pageX + 15) + 'px';
+                tooltipElement.style.top = (e.pageY + 15) + 'px';
+            });
+            el.addEventListener('mouseleave', () => {
+                tooltipElement.style.display = 'none';
+            });
+        });
+    }
+
+    // --- TOGGLE INTERFAZ ---
+    function toggleTool(groupId, checkbox) {
+        const group = document.getElementById(groupId);
+        if(group) group.style.display = checkbox.checked ? 'flex' : 'none';
+    }
+
+    // --- LÓGICA ORIGINAL RESTAURADA ---
+    const library = [
+        { range: [4000, 3600], vib: "Sobretonos / O-H Libre", group: "General", bio: "Ambiente/Agua" },
+        { range: [3600, 3050], vib: "Estiramiento O-H / N-H", group: "Hidroxilo/Amina", bio: "Agua/Proteínas" },
+        { range: [3050, 3000], vib: "Estiramiento =C-H", group: "Alqueno", bio: "Lípidos Insat." },
+        { range: [3000, 2940], vib: "Estiramiento asim. CH3", group: "Alquilo", bio: "Lípidos/Proteínas" },
+        { range: [2940, 2900], vib: "Estiramiento asim. CH2", group: "Metileno", bio: "Lípidos (Ac. Grasos)" },
+        { range: [2900, 2830], vib: "Estiramiento sim. CH2", group: "Metileno", bio: "Lípidos" },
+        { range: [2400, 2250], vib: "Estiramiento asim. O=C=O", group: "Gas", bio: "CO2 Atmosférico" },
+        { range: [1760, 1720], vib: "Estiramiento C=O (Éster)", group: "Carbonilo", bio: "Lípidos/Triglicéridos" },
+        { range: [1700, 1600], vib: "Amida I (C=O)", group: "Enlace Peptídico", bio: "Proteínas (Secundaria)" },
+        { range: [1600, 1500], vib: "Amida II (N-H / C-N)", group: "Enlace Peptídico", bio: "Proteínas" },
+        { range: [1480, 1430], vib: "Flexión CH2/CH3", group: "Alquilo", bio: "Lípidos/Cadenas Lat." },
+        { range: [1430, 1360], vib: "Estiramiento COO-", group: "Carboxilo", bio: "Aminoácidos" },
+        { range: [1280, 1200], vib: "PO2- (Asim)", group: "Fosfato", bio: "ADN/ARN/Fosfolípidos" },
+        { range: [1200, 1140], vib: "C-O-C / C-OH", group: "Éter", bio: "Carbohidratos" },
+        { range: [1140, 1070], vib: "PO2- (Sim)", group: "Fosfato", bio: "Ácidos Nucleicos" },
+        { range: [1070, 1000], vib: "C-O / C-C", group: "Azúcar", bio: "Polisacáridos" },
+        { range: [900, 800], vib: "C-H Aromático", group: "Anillo", bio: "Nucleótidos" },
+        { range: [800, 500], vib: "Flexiones varias", group: "Varios", bio: "Huella dactilar" }
+    ];
+
+    let spectraList = [], processedSpectra = [], selectedPeaks = [], isPeakMode=false;
+    let trainingSet = [], predictSet = [];
+    let currentYTitle = 'Absorbancia';
+    
+    let currentBaseline = 'none', currentDerivative = 'none', currentSmoothing = 'none', currentNorm = 'none';
+    let currentTreatmentLegend = 'Procesamiento: Ninguno (Datos crudos)';
+
+    function updateTreatmentLegendText() {
+        if(currentBaseline === 'none' && currentDerivative === 'none' && currentSmoothing === 'none' && currentNorm === 'none') {
+            currentTreatmentLegend = "Procesamiento: Ninguno (Datos crudos)";
+        } else {
+            let parts = [];
+            const bNames = {'als': 'ALS', 'rollingball': 'Roll'};
+            const dNames = {'d1': '1ª', 'd2': '2ª'};
+            const sNames = {'savgol': 'S-G', 'movingavg': 'Avg'};
+            const nNames = {'minmax': '0-1', 'snv': 'SNV', 'area': 'Área'};
+            
+            if(currentBaseline !== 'none') parts.push(`Base: ${bNames[currentBaseline]}`);
+            if(currentDerivative !== 'none') parts.push(`Deriv: ${dNames[currentDerivative]}`);
+            if(currentSmoothing !== 'none') parts.push(`Suav: ${sNames[currentSmoothing]}`);
+            if(currentNorm !== 'none') parts.push(`Norm: ${nNames[currentNorm]}`);
+            
+            currentTreatmentLegend = "Tratamientos aplicados: " + parts.join(" | ");
+        }
+    }
+
+    window.onload = () => {
+        initTooltips(); 
+        initPlot('spectrum-graph', 'Vista Previa');
+        initPlot('processed-graph', 'Espectro Procesado');
+        document.getElementById('file-input').addEventListener('change', loadFiles);
+        document.getElementById('apply-btn').addEventListener('click', applyProcessing);
+        
+        document.querySelectorAll('.toolbar-buttons button[data-group]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const grp = e.currentTarget.dataset.group;
+                const val = e.currentTarget.dataset.value;
+                if(grp==='baseline') currentBaseline=val;
+                if(grp==='derivative') currentDerivative=val;
+                if(grp==='smoothing') currentSmoothing=val;
+                if(grp==='norm') currentNorm=val;
+                e.currentTarget.parentElement.querySelectorAll('button').forEach(b => {
+                    b.classList.remove('primary'); b.classList.add('secondary');
+                });
+                e.currentTarget.classList.add('primary'); e.currentTarget.classList.remove('secondary');
+            });
+        });
+
+        const sS = document.getElementById('peak-sensitivity'), sO = document.getElementById('sens-val');
+        sS.oninput = () => sO.value = parseFloat(sS.value).toFixed(2);
+        const wS = document.getElementById('peak-window'), wO = document.getElementById('window-val');
+        wS.oninput = () => wO.value = wS.value;
+
+        // Asignación Masiva
+        document.getElementById('btn-batch-apply').addEventListener('click', () => {
+            const batchVal = document.getElementById('batch-class-select').value;
+            if(!processedSpectra || !processedSpectra.length) return alert("No hay espectros cargados.");
+            processedSpectra.forEach(spec => {
+                spec.group = batchVal;
+                spec.label = batchVal;
+            });
+            renderLabelsTable(); // Actualiza visualmente los selects
+        });
+    };
+
+    function switchTab(id) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        const idx = ['upload', 'preprocessing', 'chemometrics', 'supervisada', 'results', 'image-comparison'].indexOf(id);
+        if(idx>=0) document.querySelectorAll('.nav-item')[idx].classList.add('active');
+        
+        // Disparador de redibujado de la tabla PLS-DA al entrar a la viñeta
+        if(id === 'supervisada') renderLabelsTable();
+        
+        window.dispatchEvent(new Event('resize'));
+    }
+
+    function switchProcView(view) {
+        document.getElementById('btn-view-graph').classList.remove('active');
+        document.getElementById('btn-view-table').classList.remove('active');
+        document.getElementById('proc-view-graph').classList.remove('active');
+        document.getElementById('proc-view-table').classList.remove('active');
+        if (view === 'graph') {
+            document.getElementById('btn-view-graph').classList.add('active');
+            document.getElementById('proc-view-graph').classList.add('active');
+            Plotly.relayout('processed-graph', {autosize: true});
+        } else {
+            document.getElementById('btn-view-table').classList.add('active');
+            document.getElementById('proc-view-table').classList.add('active');
+            updatePeakTable();
+        }
+    }
+
+    // CORRECCIÓN: Los eventos de click se asignan SOLO UNA VEZ al inicializar el gráfico.
+    function initPlot(id, title) {
+        Plotly.newPlot(id, [], {
+            title: { text: title, font: {size:12, color:'#94a3b8'} },
+            margin: { t: 60, b: 40, l: 55, r: 20 },
+            xaxis: { title: 'cm⁻¹', autorange: 'reversed' },
+            yaxis: { title: currentYTitle },
+            paper_bgcolor: 'transparent', plot_bgcolor: 'transparent', hovermode: 'closest'
+        }, { responsive: true, displayModeBar: 'hover' }); 
+        
+        if(id === 'processed-graph') {
+            document.getElementById(id).on('plotly_click', handlePeakClick);
+        }
+    }
+
+    function loadFiles(e) {
+        const files = Array.from(e.target.files); if(!files.length) return;
+        spectraList = [];
+        Promise.all(files.map(f => new Promise(resolve => {
+            const r = new FileReader();
+            r.onload = ev => {
+                const p = parseCSV(ev.target.result);
+                if(p.x.length) spectraList.push({name: f.name, x: p.x, y: p.y, original: {x:[...p.x], y:[...p.y]}});
+                resolve();
+            };
+            r.readAsText(f);
+        }))).then(() => {
+            processedSpectra = JSON.parse(JSON.stringify(spectraList));
+            updateTreatmentLegendText();
+            draw(spectraList, 'spectrum-graph');
+            draw(processedSpectra, 'processed-graph');
+            document.getElementById('count-val').innerText = spectraList.length;
+            document.getElementById('status-text').innerText = "Cargado.";
+        });
+    }
+
+    function parseCSV(txt) {
+        let x=[], y=[];
+        txt.split(/\r?\n/).forEach((l, i) => {
+            l=l.trim(); if(!l || l.startsWith('#') || (i<10 && isNaN(parseFloat(l.split(/[,;\t\s]+/)[0])))) return;
+            const p = l.split(/[,;\t\s]+/).filter(s=>s);
+            if(p.length>=2) { x.push(parseFloat(p[0])); y.push(parseFloat(p[1])); }
+        });
+        return {x, y};
+    }
+
+    function draw(data, id) {
+        const traces = data.map(s => ({ x: s.x, y: s.y, name: s.name, type: 'scatter', mode: 'lines', line: {width: 1.5} }));
+        
+        let annotationsArray = selectedPeaks.map(p => ({ 
+            x: p.x, 
+            y: p.y, 
+            text: p.x.toFixed(0),
+            showarrow: true, 
+            arrowhead: 2, 
+            ax: 0, 
+            ay: -35, 
+            font:{color:'#d97706'}, 
+            arrowcolor:'#d97706',
+            captureevents: false 
+        }));
+
+        if(id === 'processed-graph') {
+            annotationsArray.push({
+                xref: 'paper', yref: 'paper',
+                x: 0, y: 1.05, 
+                xanchor: 'left', yanchor: 'bottom',
+                text: `<b>${currentTreatmentLegend}</b>`,
+                showarrow: false,
+                font: { size: 11, color: '#475569' }
+            });
+        }
+
+        // Plotly.react actualiza los datos sin borrar los event listeners previamente asignados
+        Plotly.react(id, traces, {
+            xaxis: { title: 'cm⁻¹', autorange: 'reversed' }, yaxis: { title: currentYTitle },
+            margin: { t: 60, b: 40, l: 55, r: 20 },
+            paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+            annotations: annotationsArray
+        }, { responsive: true, displayModeBar: 'hover' });
+    }
+
+    function rollingBallBaseline(y) { const w = 50; return y.map((v, i) => { let start = Math.max(0, i - w), end = Math.min(y.length, i + w); let localMin = Math.min(...y.slice(start, end)); return v - localMin; }); }
+    function alsBaseline(y) { return y.map(v => v - (Math.min(...y) * 0.9)); }
+    function calcDeriv(x, y, order) { let newY = new Array(y.length).fill(0); if (order === 'd1') { for(let i=1; i<y.length-1; i++) newY[i] = (y[i+1] - y[i-1]) / (x[i+1] - x[i-1]); } else if (order === 'd2') { for(let i=1; i<y.length-1; i++) newY[i] = (y[i+1] - 2*y[i] + y[i-1]) / Math.pow((x[i+1] - x[i-1])/2, 2); } return newY; }
+    function movingAvg(y, w=5) { return y.map((v, i) => { let s = Math.max(0, i-w), e = Math.min(y.length, i+w); let sub = y.slice(s, e); return sub.reduce((a,b)=>a+b,0)/sub.length; }); }
+    function normMinMax(y) { let min = Math.min(...y), max = Math.max(...y); return y.map(v => (v - min) / (max - min)); }
+    function normSNV(y) { let mean = y.reduce((a,b)=>a+b,0)/y.length; let std = Math.sqrt(y.reduce((a,b)=>a+Math.pow(b-mean,2),0)/y.length); return y.map(v => (v - mean) / std); }
+    function normArea(y) { let sum = y.reduce((a,b)=>a+Math.abs(b),0); return y.map(v => v/sum); }
+
+    async function applyProcessing() {
+        if(!spectraList.length) return alert("Carga espectros primero.");
+        document.getElementById('status-text').innerText = "Cargando... Delegando a Python...";
+        
+        try {
+            const payload = {
+                spectra: spectraList.map(s => ({ name: s.name, x: s.original.x, y: s.original.y })),
+                config: { baseline: currentBaseline, smoothing: currentSmoothing }
+            };
+
+            const response = await fetch(`${API_BASE_URL}/api/process`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if(!response.ok) throw new Error("Error HTTP " + response.status);
+            const data = await response.json();
+            
+            // Sobreescribir con resultados de Python (Línea Base y Suavizado)
+            processedSpectra = data.spectra;
+
+            // (Aún corremos derivativa/norm temporalmente en JS hasta el próximo paso)
+            processedSpectra = processedSpectra.map((s, idx) => {
+                let x = s.x, y = s.y;
+                if (currentDerivative === 'd1') y = calcDeriv(x, y, 'd1'); else if (currentDerivative === 'd2') y = calcDeriv(x, y, 'd2');
+                if (currentNorm === 'minmax') y = normMinMax(y); else if (currentNorm === 'snv') y = normSNV(y); else if (currentNorm === 'area') y = normArea(y);
+                return { name: s.name, x: x, y: y, original: spectraList[idx].original };
+            });
+
+            updateTreatmentLegendText();
+            draw(processedSpectra, 'processed-graph'); 
+            document.getElementById('status-text').innerText = "Procesado Vía FastAPI ✓";
+
+        } catch(e) {
+            console.error(e);
+            document.getElementById('status-text').innerText = "Error conectando a FastAPI";
+            alert("No se pudo conectar con el Backend Python. ¿Está corriendo uvicorn?");
+        }
+    }
+
+    function setSpectrumType(t) { currentYTitle = t==='FTIR'?'Absorbancia':'Intensidad'; Plotly.relayout('spectrum-graph',{yaxis:{title:currentYTitle}}); }
+    function convertAbsToTrans() { processedSpectra.forEach(s=>s.y=s.y.map(v=>100*10**(-v))); currentYTitle='%T'; currentTreatmentLegend = 'Conversión: Transmitancia'; draw(processedSpectra,'processed-graph'); }
+    function convertTransToAbs() { processedSpectra.forEach(s=>s.y=s.y.map(v=>-Math.log10(v/100))); currentYTitle='Abs'; currentTreatmentLegend = 'Conversión: Absorbancia'; draw(processedSpectra,'processed-graph'); }
+    function applyATRCorrection() { processedSpectra.forEach(s=>s.y=s.y.map((v,i)=>v*s.x[i]/1000)); currentTreatmentLegend = 'Corrección: ATR'; draw(processedSpectra,'processed-graph'); }
+    function interpolate(x, y, min, max) { let idx = []; for(let i=0; i<x.length; i++) if(x[i]>=min && x[i]<=max) idx.push(i); if(idx.length<2) return y; let start=idx[0]-1, end=idx[idx.length-1]+1; if(start<0 || end>=x.length) return y; let m = (y[end]-y[start])/(x[end]-x[start]); let newY = [...y]; for(let k of idx) newY[k] = y[start] + m*(x[k]-x[start]); return newY; }
+    function applyCO2Removal() { processedSpectra.forEach(s=>s.y=interpolate(s.x, s.y, 2300, 2400)); draw(processedSpectra,'processed-graph'); }
+    function applyH2ORemoval() { processedSpectra.forEach(s=>s.y=interpolate(s.x, s.y, 3500, 3900)); draw(processedSpectra,'processed-graph'); }
+    
+    function resetData() { 
+        processedSpectra = JSON.parse(JSON.stringify(spectraList)); 
+        selectedPeaks=[]; 
+        currentBaseline = 'none'; currentDerivative = 'none'; currentSmoothing = 'none'; currentNorm = 'none';
+        updateTreatmentLegendText();
+        
+        document.querySelectorAll('.toolbar-buttons button[data-group]').forEach(b => {
+            if(b.dataset.value === 'none') { b.classList.add('primary'); b.classList.remove('secondary'); }
+            else { b.classList.remove('primary'); b.classList.add('secondary'); }
+        });
+        
+        draw(processedSpectra,'processed-graph'); 
+        updatePeakTable(); 
+    }
+    
+    function generateConsolidatedView() {
+        if (processedSpectra.length < 2) return alert("Mínimo 2 espectros.");
+        const refX = processedSpectra[0].x, meanY = processedSpectra[0].y.map(y => y + 0.1);
+        Plotly.react('processed-graph', [
+            { x: refX, y: meanY.map(y => y + 0.05), type: 'scatter', mode: 'lines', name: 'SD+', line: {width:0}, showlegend:false },
+            { x: refX, y: meanY.map(y => y - 0.05), type: 'scatter', mode: 'lines', name: 'SD-', line: {width:0}, fill:'tonexty', fillcolor:'rgba(37,99,235,0.2)', showlegend:false },
+            { x: refX, y: meanY, type: 'scatter', mode: 'lines', name: 'Media', line: {color:'var(--primary)', width:2.5} }
+        ], { title: "Consolidado", margin: {t:60}, xaxis: { title: 'cm⁻¹', autorange:'reversed' }, yaxis: { title: currentYTitle }, paper_bgcolor:'transparent', plot_bgcolor:'transparent' }, { responsive: true, displayModeBar: 'hover' });
+    }
+
+    function autoDetectPeaks() {
+        if(!processedSpectra.length) return; 
+        selectedPeaks=[];
+        
+        const sens = parseFloat(document.getElementById('peak-sensitivity').value);
+        const win = parseInt(document.getElementById('peak-window').value);
+
+        processedSpectra.forEach(d => {
+            const y = d.y, x = d.x, spectrumName = d.name;
+            const th = Math.min(...y) + (Math.max(...y)-Math.min(...y))*sens;
+            
+            for(let i=win; i<y.length-win; i++) {
+                if(y[i]>th) {
+                    let isMax=true;
+                    for(let j=1; j<=win; j++) if(y[i]<y[i-j] || y[i]<y[i+j]) isMax=false;
+                    if(isMax) {
+                        let info = library.find(l => (x[i] <= l.range[0] && x[i] >= l.range[1])) || {vib:"?", group:"-", bio:"-"};
+                        selectedPeaks.push({x:x[i], y:y[i], info:info, spectrumName:spectrumName}); 
+                        i+=win;
+                    }
+                }
+            }
+        });
+
+        selectedPeaks.sort((a,b)=>b.x-a.x);
+        draw(processedSpectra,'processed-graph'); 
+        updatePeakTable();
+        document.getElementById('peaks-val').innerText = selectedPeaks.length;
+    }
+    
+    function togglePeaks() { isPeakMode=!isPeakMode; document.getElementById('toggle-peak-mode').classList.toggle('peak-active', isPeakMode); document.getElementById('processed-graph').style.cursor=isPeakMode?'crosshair':'default'; }
+    
+    function handlePeakClick(d) {
+        if(!isPeakMode) return;
+        
+        const x = d.points[0].x;
+        const y = d.points[0].y;
+        const spectrumName = d.points[0].data.name || "Manual"; 
+
+        let closestIndex = -1;
+        let minDistance = Infinity;
+
+        selectedPeaks.forEach((p, index) => {
+            if (p.spectrumName === spectrumName) {
+                let dist = Math.abs(p.x - x);
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    closestIndex = index;
+                }
+            }
+        });
+
+        if (closestIndex !== -1 && minDistance <= 10) {
+            selectedPeaks.splice(closestIndex, 1);
+        } else {
+            let info = library.find(l => (x <= l.range[0] && x >= l.range[1])) || {vib:"Man", group:"-", bio:"-"};
+            selectedPeaks.push({x, y, info, spectrumName});
+        }
+        
+        draw(processedSpectra, 'processed-graph'); 
+        updatePeakTable();
+        document.getElementById('peaks-val').innerText = selectedPeaks.length;
+    }
+
+    function clearPeaks() { 
+        selectedPeaks=[]; 
+        draw(processedSpectra,'processed-graph'); 
+        updatePeakTable(); 
+        document.getElementById('peaks-val').innerText = 0;
+    }
+    
+    function updatePeakTable() {
+        const b = document.getElementById('peaks-table-body');
+        if(!selectedPeaks.length) { b.innerHTML='<tr><td colspan="7" style="text-align:center; padding:3rem; color:#94a3b8;">Sin datos. Realiza una detección primero.</td></tr>'; return; }
+        b.innerHTML = selectedPeaks.map((p,i)=>`<tr>
+            <td style="font-weight:600; color:var(--primary); font-size:0.75rem;">${p.spectrumName || '-'}</td>
+            <td>${p.x.toFixed(1)}</td>
+            <td>${p.y.toFixed(4)}</td>
+            <td>${p.info.vib}</td>
+            <td>${p.info.group}</td>
+            <td>${p.info.bio}</td>
+            <td><button class="btn-delete" onclick="deletePeak(${i})">x</button></td>
+        </tr>`).join('');
+    }
+
+    function deletePeak(i) { 
+        selectedPeaks.splice(i,1); 
+        updatePeakTable(); 
+        draw(processedSpectra,'processed-graph'); 
+        document.getElementById('peaks-val').innerText = selectedPeaks.length;
+    }
+    
+    function downloadPeakTable() { 
+        if(!selectedPeaks.length) return alert("No hay picos para descargar.");
+        let t="Espectro\tcm-1\tIntensidad\tVibracion\tGrupo\tBiomolecula\n";
+        selectedPeaks.forEach(p => {
+             t += `${p.spectrumName || '-'}\t${p.x.toFixed(2)}\t${p.y.toFixed(5)}\t${p.info.vib}\t${p.info.group}\t${p.info.bio}\n`;
+        });
+        let a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([t], {type: "text/plain"})); a.download="identificacion_picos.txt"; a.click(); 
+    }
+    async function runChemometrics(type) {
+        if(!processedSpectra || processedSpectra.length < 2) {
+            return alert("¡Error! Necesitamos más de 1 espectro (idealmente decenas) para armar matrices quimiométricas.");
+        }
+        
+        document.getElementById('chemo-status').innerText = `Ejecutando ${type.toUpperCase()} en Backend...`;
+        
+        try {
+            // Sanear NaN/Infinity a 0.0 para que Pydantic lo reciba en list[float]
+            const cleanSpectra = processedSpectra.map(s => ({
+                name: s.name,
+                x: s.x.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v),
+                y: s.y.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v)
+            }));
+            
+            const response = await fetch(`${API_BASE_URL}/api/` + type, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cleanSpectra)
+            });
+
+            if(!response.ok) throw new Error("Error HTTP " + response.status);
+            const data = await response.json();
+            
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            renderChemometrics(data);
+            document.getElementById('chemo-status').innerText = "Cálculo Exitoso ✓";
+
+        } catch(e) {
+            console.error(e);
+            document.getElementById('chemo-status').innerText = "Fallo de Ingestión API / 404 / 422.";
+        }
+    }
+
+// --- NUEVAS FUNCIONES DE ENTRENAMIENTO Y PREDICCIÓN ---
+    function handleTrainingUpload(e) {
+        const files = Array.from(e.target.files); if(!files.length) return;
+        const selValue = document.getElementById('train-class-select').value;
+        const label = selValue === '_new' ? document.getElementById('train-custom-class').value || 'Desconocido' : selValue;
+        
+        Promise.all(files.map(f => new Promise(resolve => {
+            const r = new FileReader();
+            r.onload = ev => {
+                const p = parseCSV(ev.target.result);
+                if(p.x.length) trainingSet.push({name: f.name, x: p.x, y: p.y, label: label});
+                resolve();
+            };
+            r.readAsText(f);
+        }))).then(() => {
+            renderDatabaseSummary();
+            e.target.value = ''; // clean input
+        });
+    }
+
+    function renderDatabaseSummary() {
+        const tbody = document.getElementById('db-summary-body');
+        if(!trainingSet.length) {
+            tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:10px; font-size:0.7rem; color:#94a3b8;">Sin datos de entrenamiento.</td></tr>';
+            return;
+        }
+        // Agrupar por label y contar
+        const counts = {};
+        trainingSet.forEach(s => { counts[s.label] = (counts[s.label] || 0) + 1; });
+        
+        tbody.innerHTML = Object.keys(counts).map(label => `
+            <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:4px 0; font-size:0.75rem;">${label}</td>
+                <td style="padding:4px 0; text-align:center; font-weight:bold; font-size:0.75rem; color:var(--primary);">${counts[label]}</td>
+            </tr>
+        `).join('');
+    }
+
+    function handlePredictUpload(e) {
+        const files = Array.from(e.target.files); if(!files.length) return;
+        Promise.all(files.map(f => new Promise(resolve => {
+            const r = new FileReader();
+            r.onload = ev => {
+                const p = parseCSV(ev.target.result);
+                if(p.x.length) predictSet.push({name: f.name, x: p.x, y: p.y, prediction: '⏳ Esperando...'});
+                resolve();
+            };
+            r.readAsText(f);
+        }))).then(() => {
+            renderPredictResults();
+            e.target.value = '';
+        });
+    }
+
+    function renderPredictResults() {
+        const tbody = document.getElementById('predict-results-body');
+        if(!predictSet.length) return;
+        tbody.innerHTML = predictSet.map(s => `
+            <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:4px 0; max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${s.name}">${s.name}</td>
+                <td style="padding:4px 0; text-align:right; font-weight:bold; color:${s.prediction.includes('Esperando') ? '#94a3b8' : 'var(--primary)'};">${s.prediction}</td>
+            </tr>
+        `).join('');
+    }
+
+    async function predictUnknowns() {
+        if(!predictSet.length) return alert("Sube muestras ciegas para predecir.");
+        
+        const payload = {
+            spectra: predictSet.map(s => ({
+                name: s.name,
+                x: s.x.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v),
+                y: s.y.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v)
+            }))
+        };
+        
+        document.getElementById('predict-results-body').innerHTML = '<tr><td colspan=2 style="text-align:center; font-size:0.7rem;">Conectando...</td></tr>';
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/predict`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if(!response.ok) throw new Error("HTTP " + response.status);
+            const data = await response.json();
+            // Expected return struct: { predictions: ['Toxoplasma', 'Giardia', ...] }
+            if(data.predictions) {
+                data.predictions.forEach((pred, i) => { if(predictSet[i]) predictSet[i].prediction = pred; });
+                renderPredictResults();
+            } else if (data.error) {
+                alert("Error desde backend: " + data.error);
+                renderPredictResults();
+            }
+        } catch(e) {
+            console.error(e);
+            alert("Error ejecutando /api/predict. Asegúrate de que el backend esté listo.");
+            renderPredictResults();
+        }
+    }
+
+    async function runPlsDa() {
+        if(!trainingSet || trainingSet.length < 3) {
+            return alert("Se necesitan al menos 3 muestras cargadas en la Base de Datos para entrenar el modelo.");
+        }
+        
+        const selAlgo = document.getElementById('algo-selector');
+        const algorithm = selAlgo ? selAlgo.value : 'PLS-DA';
+        const algoName = selAlgo && selAlgo.options[selAlgo.selectedIndex] ? selAlgo.options[selAlgo.selectedIndex].text : algorithm;
+        
+        document.getElementById('pls-status').innerText = `Entrenando modelo ${algoName}...`;
+        
+        try {
+            const payload = {
+                algorithm: algorithm,
+                spectra: trainingSet.map(s => ({
+                    name: s.name,
+                    label: s.label || 'Toxoplasma',
+                    x: s.x.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v),
+                    y: s.y.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v)
+                })),
+                n_components: parseInt(document.getElementById('pls-comps').value) || 2
+            };
+            
+            const response = await fetch(`${API_BASE_URL}/api/train_model`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            if(!response.ok) throw new Error("HTTP " + response.status);
+            const data = await response.json();
+            if(data.error) { alert(data.error); return; }
+            
+            const layout = { paper_bgcolor: 'transparent', plot_bgcolor: '#f8fafc', font: { family: 'Open Sans', size: 12 } };
+            
+            // Trazado de Scores (Dispersión de Clases)
+            const colores = ['#2563eb', '#ef4444', '#10b981', '#f59e0b', '#7c3aed']; // Palette
+            const tracesScores = Object.keys(data.scores).map((grupo, idx) => ({
+                name: grupo,
+                x: data.scores[grupo].map(d => d.lv1),
+                y: data.scores[grupo].map(d => d.lv2),
+                text: data.scores[grupo].map(d => d.name),
+                mode: 'markers+text',
+                textposition: 'top center',
+                marker: { size: 10, color: colores[idx % colores.length], line: {width: 1, color: 'white'} }
+            }));
+            
+            const layoutScores = { ...layout, title: 'Espacio de Clasificación Multi-Clase (Scores PLS)', xaxis: {title: 'Latent Variable 1'}, yaxis: {title: 'Latent Variable 2'} };
+            Plotly.react('pls-scores', tracesScores, layoutScores);
+            
+            // Trazado de Coeficientes VIP Absolutos / Loadings Carga de Biomarcadores
+            const traceVip = {
+                x: data.vip.x,
+                y: data.vip.y,
+                mode: 'lines',
+                line: { color: '#dc2626', width: 2 },
+                fill: 'tozeroy', fillcolor: 'rgba(220, 38, 38, 0.1)'
+            };
+            const layoutVip = { ...layout, title: 'Espectro de Biomarcadores Latentes (Coeficientes PLS)', xaxis: {title: 'cm⁻¹', autorange: 'reversed'}, yaxis: {title: 'Poder Discriminatorio Absolute Coef'} };
+            Plotly.react('pls-vip', [traceVip], layoutVip);
+            
+            document.getElementById('pls-status').innerText = "Modelo Finalizado ✓";
+
+        } catch(e) {
+            console.error(e);
+            document.getElementById('pls-status').innerText = "Fallo de API PLS-DA.";
+        }
+    }
+
+    function renderChemometrics(data) {
+        const layout = {
+            margin: { t: 60, b: 60, l: 60, r: 20 },
+            paper_bgcolor: 'transparent', 
+            plot_bgcolor: '#f8fafc',
+            hovermode: 'closest',
+            font: { family: 'Open Sans', size: 12, color: 'var(--text-main)' }
+        };
+
+        if (data.type === "pca") {
+            const traces = [{
+                x: data.scores.map(s => s.pc1),
+                y: data.scores.map(s => s.pc2),
+                text: data.scores.map(s => s.name),
+                mode: 'markers+text',
+                textposition: 'top center',
+                marker: { size: 10, color: 'var(--primary)', line: {color: 'var(--primary-dark)', width: 2} }
+            }];
+            
+            layout.title = 'Análisis de Componentes Principales (Scores)';
+            layout.xaxis = { title: `PC1 (${data.explained_variance[0].toFixed(1)}%)`, zeroline: true, gridcolor: '#e2e8f0' };
+            layout.yaxis = { title: `PC2 (${data.explained_variance[1].toFixed(1)}%)`, zeroline: true, gridcolor: '#e2e8f0' };
+            Plotly.react('chemo-graph', traces, layout);
+            
+        } else if (data.type === "hca") {
+            const traces = [];
+            for (let i = 0; i < data.icoord.length; i++) {
+                traces.push({
+                    x: data.icoord[i],
+                    y: data.dcoord[i],
+                    mode: 'lines',
+                    line: { color: 'var(--text-main)', width: 1.5 },
+                    hoverinfo: 'none',
+                    showlegend: false
+                });
+            }
+            
+            const tickVals = data.ivl.map((_, i) => 5 + i * 10);
+            layout.title = 'Agrupamiento Jerárquico (HCA: Ward, Euclidiana)';
+            layout.xaxis = { tickvals: tickVals, ticktext: data.ivl, tickangle: 45, showgrid: false };
+            layout.yaxis = { title: 'Distancia Euclidiana', showgrid: true, gridcolor: '#e2e8f0' };
+            Plotly.react('chemo-graph', traces, layout);
+            
+        } else if (data.type === "correlation") {
+            const traces = [{
+                z: data.matrix,
+                x: data.labels,
+                y: data.labels,
+                type: 'heatmap',
+                colorscale: 'RdBu',
+                zmin: -1, zmax: 1
+            }];
+            
+            layout.title = 'Matriz de Correlación de Pearson';
+            layout.xaxis = { tickangle: 45 };
+            layout.yaxis = { autorange: 'reversed' }; 
+            layout.margin.l = 100;
+            Plotly.react('chemo-graph', traces, layout);
+        }
+    }
+  </script>
+</body>
+</html>
