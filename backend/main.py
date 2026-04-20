@@ -10,7 +10,17 @@ from scipy.cluster.hierarchy import linkage, dendrogram
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.preprocessing import LabelBinarizer
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(title="Merschel-Raman V8.2 API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Permite solicitudes desde github.io (o cualquier origen)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 from typing import List, Optional
 
