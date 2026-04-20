@@ -447,10 +447,8 @@
   <div id="about-modal"><div class="modal-box"><h3>Merschel-Raman V8.2</h3><p>Actualización: Lógica restaurada, Tooltips de rigor científico (Matemática/Física) y Toggles para configuración de interfaz añadidos. Corrección de eventos de clic múltiple.</p><button onclick="document.getElementById('about-modal').style.display='none'">Cerrar</button></div></div>
 
   <script>
-    // Configuración de entorno dinámico
-    const API_BASE_URL = window.location.hostname.includes('github.io') 
-        ? 'https://merschel-raman-api.onrender.com' 
-        : 'http://localhost:8000';
+    // Configuración de entorno dinámico a instancia Live de Render
+    const API_BASE_URL = 'https://merschel-raman.onrender.com';
 
     // --- TOOLTIPS CIENTÍFICOS ---
     const tooltipElement = document.getElementById('science-tooltip');
@@ -736,7 +734,6 @@
         } catch(e) {
             console.error(e);
             document.getElementById('status-text').innerText = "Error conectando a FastAPI";
-            alert("No se pudo conectar con el Backend Python. ¿Está corriendo uvicorn?");
         }
     }
 
