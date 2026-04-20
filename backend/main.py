@@ -106,8 +106,8 @@ async def process_spectra(request: ProcessRequest):
         
     return {"spectra": processed_results}
 
-@app.post("/api/compare")
-async def comparar_espectros(data: CompareRequest):
+@app.post("/comparar")
+async def comparar_espectros_avanzado(data: CompareRequest):
     if len(data.spectra) < 2:
         return {"error": "Se requieren al menos 2 espectros para comparar."}
     
@@ -123,21 +123,24 @@ async def comparar_espectros(data: CompareRequest):
     for i, spec in enumerate(data.spectra):
         unique_peaks = []
         for p1 in spectra_peaks[i]:
+            diff_type = None
             is_diff = False
             for j in range(len(data.spectra)):
                 if i == j: continue
-                matching_peaks = [p2 for p2 in spectra_peaks[j] if abs(p1["x"] - p2["x"]) <= 5.0]
+                matching_peaks = [p2 for p2 in spectra_peaks[j] if abs(p1["x"] - p2["x"]) <= 4.0]
                 if not matching_peaks:
+                    diff_type = "Pico Diferencial"
                     is_diff = True
                     break
                 else:
                     closest_peak = min(matching_peaks, key=lambda p2: abs(p1["x"] - p2["x"]))
                     intensity_diff = abs(p1["y"] - closest_peak["y"]) / max(abs(p1["y"]), 1e-9)
-                    if intensity_diff > 0.20:
+                    if intensity_diff > 0.25:
+                        diff_type = "Cambio de Intensidad"
                         is_diff = True
                         break
             if is_diff:
-                unique_peaks.append(p1)
+                unique_peaks.append({"x": p1["x"], "y": p1["y"], "type": diff_type})
         diff_peaks_result[spec.name] = unique_peaks
         
     return {"diff_peaks": diff_peaks_result}
