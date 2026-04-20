@@ -1,8 +1,7 @@
 fastapi
 uvicorn
-scikit-learn
 pandas
 numpy
-python-multipart
+scikit-learn
 scipy
 pybaselines
