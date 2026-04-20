@@ -472,24 +472,18 @@
 
     // --- LÓGICA ORIGINAL RESTAURADA ---
     const library = [
-        { range: [4000, 3600], vib: "Sobretonos / O-H Libre", group: "General", bio: "Ambiente/Agua" },
-        { range: [3600, 3050], vib: "Estiramiento O-H / N-H", group: "Hidroxilo/Amina", bio: "Agua/Proteínas" },
-        { range: [3050, 3000], vib: "Estiramiento =C-H", group: "Alqueno", bio: "Lípidos Insat." },
-        { range: [3000, 2940], vib: "Estiramiento asim. CH3", group: "Alquilo", bio: "Lípidos/Proteínas" },
-        { range: [2940, 2900], vib: "Estiramiento asim. CH2", group: "Metileno", bio: "Lípidos (Ac. Grasos)" },
-        { range: [2900, 2830], vib: "Estiramiento sim. CH2", group: "Metileno", bio: "Lípidos" },
-        { range: [2400, 2250], vib: "Estiramiento asim. O=C=O", group: "Gas", bio: "CO2 Atmosférico" },
-        { range: [1760, 1720], vib: "Estiramiento C=O (Éster)", group: "Carbonilo", bio: "Lípidos/Triglicéridos" },
-        { range: [1700, 1600], vib: "Amida I (C=O)", group: "Enlace Peptídico", bio: "Proteínas (Secundaria)" },
-        { range: [1600, 1500], vib: "Amida II (N-H / C-N)", group: "Enlace Peptídico", bio: "Proteínas" },
-        { range: [1480, 1430], vib: "Flexión CH2/CH3", group: "Alquilo", bio: "Lípidos/Cadenas Lat." },
-        { range: [1430, 1360], vib: "Estiramiento COO-", group: "Carboxilo", bio: "Aminoácidos" },
-        { range: [1280, 1200], vib: "PO2- (Asim)", group: "Fosfato", bio: "ADN/ARN/Fosfolípidos" },
-        { range: [1200, 1140], vib: "C-O-C / C-OH", group: "Éter", bio: "Carbohidratos" },
-        { range: [1140, 1070], vib: "PO2- (Sim)", group: "Fosfato", bio: "Ácidos Nucleicos" },
-        { range: [1070, 1000], vib: "C-O / C-C", group: "Azúcar", bio: "Polisacáridos" },
-        { range: [900, 800], vib: "C-H Aromático", group: "Anillo", bio: "Nucleótidos" },
-        { range: [800, 500], vib: "Flexiones varias", group: "Varios", bio: "Huella dactilar" }
+        { range: [3070, 3060], vib: "Estiramiento =C-H", group: "Alqueno", bio: "Ácidos grasos insaturados" },
+        { range: [2960, 2920], vib: "Estiramiento CH2/CH3", group: "Alquilo", bio: "Lípidos y Proteínas" },
+        { range: [1745, 1735], vib: "Estiramiento C=O", group: "Éster", bio: "Ésteres de lípidos" },
+        { range: [1665, 1650], vib: "Amida I (Hélice alfa)", group: "Péptido", bio: "Proteínas" },
+        { range: [1640, 1630], vib: "Amida I (Lámina beta)", group: "Péptido", bio: "Proteínas" },
+        { range: [1550, 1540], vib: "Amida II", group: "Péptido", bio: "Proteínas" },
+        { range: [1460, 1440], vib: "Flexión CH2/CH3", group: "Alquilo", bio: "Lípidos/Proteínas" },
+        { range: [1250, 1240], vib: "Estiramiento asim. PO2-", group: "Fosfato", bio: "ADN/ARN/Fosfolípidos" },
+        { range: [1090, 1080], vib: "Estiramiento sim. PO2-", group: "Fosfato", bio: "Esqueleto Ácidos Nucleicos" },
+        { range: [1005, 1003], vib: "Respiración del anillo", group: "Aromático", bio: "Fenilalanina (Proteínas)" },
+        { range: [950, 850], vib: "Región Carbohidratos", group: "Azúcar", bio: "Carbohidratos y Glucógeno" },
+        { range: [520, 480], vib: "Enlaces S-S", group: "Sulfuro", bio: "Puentes disulfuro" }
     ];
 
     let spectraList = [], processedSpectra = [], selectedPeaks = [], isPeakMode=false;
@@ -766,7 +760,7 @@
                     let isMax=true;
                     for(let j=1; j<=win; j++) if(y[i]<y[i-j] || y[i]<y[i+j]) isMax=false;
                     if(isMax) {
-                        let info = library.find(l => (x[i] <= l.range[0] && x[i] >= l.range[1])) || {vib:"?", group:"-", bio:"-"};
+                        let info = library.find(l => (x[i] <= l.range[0] + 4 && x[i] >= l.range[1] - 4)) || {vib:"Vibración compleja / Región de huella digital", group:"No ID", bio:"Desconocido"};
                         selectedPeaks.push({x:x[i], y:y[i], info:info, spectrumName:spectrumName}); 
                         i+=win;
                     }
@@ -805,7 +799,7 @@
         if (closestIndex !== -1 && minDistance <= 10) {
             selectedPeaks.splice(closestIndex, 1);
         } else {
-            let info = library.find(l => (x <= l.range[0] && x >= l.range[1])) || {vib:"Man", group:"-", bio:"-"};
+            let info = library.find(l => (x <= l.range[0] + 4 && x >= l.range[1] - 4)) || {vib:"Vibración compleja / Región de huella digital", group:"Manual", bio:"Desconocido"};
             selectedPeaks.push({x, y, info, spectrumName});
         }
         
