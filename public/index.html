@@ -423,7 +423,23 @@
         </div>
     </section>
     <section id="results" class="section"><div class="card" style="padding:20px;"><h3>Resultados</h3><div id="results-container"></div></div></section>
-    <section id="image-comparison" class="section"><div class="card" style="padding:20px;"><h3>Comparador</h3><div id="comp-viewport"></div></div></section>
+    <section id="image-comparison" class="section">
+        <div class="card">
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <span class="toolbar-label">ANÁLISIS DIFERENCIAL</span>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:12px;">Solapamiento y Picos Únicos.</p>
+                    <button class="primary" style="width:100%" onclick="compareSpectra()">🔍 Analizar Diferencias</button>
+                    <div id="comp-status" style="margin-top:10px; font-size:0.75rem; color:var(--primary); font-weight:bold;"></div>
+                </div>
+            </div>
+            <div class="workspace-wrapper">
+                <div style="padding:10px; width:100%; height:100%; box-sizing:border-box;">
+                    <div class="graph-container" id="comp-viewport" style="width:100%; height:100%; border-radius:8px; border:1px solid var(--border); background-color:white; overflow:hidden;"></div>
+                </div>
+            </div>
+        </div>
+    </section>
 
   </main>
 
@@ -516,6 +532,7 @@
         initTooltips(); 
         initPlot('spectrum-graph', 'Vista Previa');
         initPlot('processed-graph', 'Espectro Procesado');
+        initPlot('comp-viewport', 'Solapamiento de Espectros (Picos Diferenciales)');
         document.getElementById('file-input').addEventListener('change', loadFiles);
         document.getElementById('apply-btn').addEventListener('click', applyProcessing);
         
@@ -626,8 +643,18 @@
         return {x, y};
     }
 
-    function draw(data, id) {
-        const traces = data.map(s => ({ x: s.x, y: s.y, name: s.name, type: 'scatter', mode: 'lines', line: {width: 1.5} }));
+    const palette = ['#2563eb', '#ef4444', '#10b981', '#d946ef', '#f97316', '#0ea5e9', '#8b5cf6', '#eab308'];
+
+    function draw(data, id, extraAnnotations = []) {
+        const traces = data.map((s, idx) => ({ 
+            x: s.x, 
+            y: s.y, 
+            name: s.name, 
+            type: 'scatter', 
+            mode: 'lines', 
+            line: {width: 1.5, color: palette[idx % palette.length]},
+            showlegend: true 
+        }));
         
         let annotationsArray = selectedPeaks.map(p => ({ 
             x: p.x, 
@@ -641,6 +668,8 @@
             arrowcolor:'#d97706',
             captureevents: false 
         }));
+
+        annotationsArray = annotationsArray.concat(extraAnnotations);
 
         if(id === 'processed-graph') {
             annotationsArray.push({
@@ -879,6 +908,61 @@
         } catch(e) {
             console.error(e);
             document.getElementById('chemo-status').innerText = "Fallo de Ingestión API / 404 / 422.";
+        }
+    }
+
+// --- COMPARACIÓN DE ESPECTROS (DIFERENCIAL) ---
+    async function compareSpectra() {
+        if(!processedSpectra || processedSpectra.length < 2) return alert("Se requieren al menos 2 espectros para comparar.");
+        document.getElementById('comp-status').innerText = "Comparando espectros...";
+        
+        const payload = {
+            spectra: processedSpectra.map(s => ({
+                name: s.name,
+                x: s.x.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v),
+                y: s.y.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v)
+            }))
+        };
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/compare`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if(!response.ok) throw new Error("HTTP " + response.status);
+            const data = await response.json();
+            
+            if(data.error) {
+                document.getElementById('comp-status').innerText = "";
+                return alert(data.error);
+            }
+
+            let diffAnnotations = [];
+            processedSpectra.forEach((spec, idx) => {
+                const color = palette[idx % palette.length];
+                const peaks = data.diff_peaks[spec.name] || [];
+                peaks.forEach(p => {
+                    diffAnnotations.push({
+                        x: p.x,
+                        y: p.y,
+                        text: `${p.x.toFixed(0)}`,
+                        showarrow: true,
+                        arrowhead: 2,
+                        ax: 0,
+                        ay: -40,
+                        font: { color: color, size: 10, weight: 'bold' },
+                        arrowcolor: color
+                    });
+                });
+            });
+
+            draw(processedSpectra, 'comp-viewport', diffAnnotations);
+            document.getElementById('comp-status').innerText = "Comparación Completada ✓";
+
+        } catch(e) {
+            console.error(e);
+            document.getElementById('comp-status').innerText = "Error conectando con la API de comparación.";
         }
     }
 

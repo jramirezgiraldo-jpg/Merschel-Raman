@@ -55,6 +55,9 @@ class ChemoRequest(BaseModel):
     spectra: List[SpectrumData]
     analysis_type: str # "pca", "hca", "correlation"
 
+class CompareRequest(BaseModel):
+    spectra: List[SpectrumData]
+
 # Ruta para servir nuestra UI Front-end
 @app.get("/", response_class=HTMLResponse)
 async def read_index():
@@ -102,6 +105,42 @@ async def process_spectra(request: ProcessRequest):
         })
         
     return {"spectra": processed_results}
+
+@app.post("/api/compare")
+async def comparar_espectros(data: CompareRequest):
+    if len(data.spectra) < 2:
+        return {"error": "Se requieren al menos 2 espectros para comparar."}
+    
+    spectra_peaks = []
+    for spec in data.spectra:
+        y = np.array([v if v is not None else 0.0 for v in spec.y])
+        x = np.array([v if v is not None else 0.0 for v in spec.x])
+        prominence = (np.max(y) - np.min(y)) * 0.05
+        peak_idx, _ = signal.find_peaks(y, prominence=prominence)
+        spectra_peaks.append([{"x": float(x[i]), "y": float(y[i])} for i in peak_idx])
+        
+    diff_peaks_result = {}
+    for i, spec in enumerate(data.spectra):
+        unique_peaks = []
+        for p1 in spectra_peaks[i]:
+            is_diff = False
+            for j in range(len(data.spectra)):
+                if i == j: continue
+                matching_peaks = [p2 for p2 in spectra_peaks[j] if abs(p1["x"] - p2["x"]) <= 5.0]
+                if not matching_peaks:
+                    is_diff = True
+                    break
+                else:
+                    closest_peak = min(matching_peaks, key=lambda p2: abs(p1["x"] - p2["x"]))
+                    intensity_diff = abs(p1["y"] - closest_peak["y"]) / max(abs(p1["y"]), 1e-9)
+                    if intensity_diff > 0.20:
+                        is_diff = True
+                        break
+            if is_diff:
+                unique_peaks.append(p1)
+        diff_peaks_result[spec.name] = unique_peaks
+        
+    return {"diff_peaks": diff_peaks_result}
 
 
 # Interpolación genérica (Helper Function)
