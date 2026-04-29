@@ -47,7 +47,7 @@ def parse_spectroscopy_file(decoded_content: str):
     df = df.sort_values(by='Wavenumber', ascending=True).reset_index(drop=True)
     return df
 
-app = FastAPI(title="Merschel-Raman V8.2 API")
+app = FastAPI(title="Hershell-Raman V8.2 API")
 
 # Configuración de CORS para despliegue en Render
 origins = [
