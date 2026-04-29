@@ -380,6 +380,8 @@
                             <option value="snv">SNV (Z-Score)</option>
                         </select>
                     </div>
+
+                    <button id="btn-update-chemo" class="primary" style="margin-top: 10px; width: 100%;" data-title="Actualización Dinámica" data-desc="Re-ejecuta el pipeline quimiométrico completo aplicando los recortes de rango y escalado actuales sobre la matriz de datos." data-math="Pipeline: Recorte \rightarrow Escalado \rightarrow Modelo">🔄 Actualizar Gráficos</button>
                 </div>
                 
                 <div id="chemo-status" style="margin-top:10px; font-size:0.75rem; color:var(--primary); font-weight:bold;"></div>
@@ -700,6 +702,10 @@
 
         const hS = document.getElementById('hca-threshold'), hO = document.getElementById('threshold-val');
         if(hS && hO) hS.oninput = () => hO.value = parseInt(hS.value) === 0 ? "Off" : hS.value;
+
+        safeAddListener('btn-update-chemo', 'click', () => {
+            runChemometrics(currentChemoType);
+        });
     };
 
     function switchTab(id) {
@@ -888,6 +894,7 @@
         processedSpectra = JSON.parse(JSON.stringify(spectraList)); 
         selectedPeaks=[]; 
         currentBaseline = 'none'; currentDerivative = 'none'; currentSmoothing = 'none'; currentNorm = 'none';
+        currentChemoType = 'pca';
         updateTreatmentLegendText();
         
         document.querySelectorAll('.toolbar-buttons button[data-group]').forEach(b => {
@@ -1010,6 +1017,7 @@
         let a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([t], {type: "text/plain"})); a.download="identificacion_picos.txt"; a.click(); 
     }
     async function runChemometrics(type) {
+        currentChemoType = type;
         if(!processedSpectra || processedSpectra.length < 2) {
             return alert("¡Error! Necesitamos más de 1 espectro (idealmente decenas) para armar matrices quimiométricas.");
         }
