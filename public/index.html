@@ -362,6 +362,24 @@
                             <option value="RdBu">RdBu</option>
                         </select>
                     </div>
+
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:0.7rem; font-weight:bold;">Rango Espectral (cm⁻¹):</label>
+                        <div style="display:flex;gap:5px;align-items:center;">
+                            <input type="number" id="chemo-range-min" value="0" style="width:45%; font-size:0.7rem; padding:2px;">
+                            <span style="font-size:0.7rem;">-</span>
+                            <input type="number" id="chemo-range-max" value="4000" style="width:45%; font-size:0.7rem; padding:2px;">
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:0.7rem; font-weight:bold;">Escalado (Pre-Análisis):</label>
+                        <select id="chemo-scaling" style="width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px;">
+                            <option value="none">Ninguno</option>
+                            <option value="minmax">Min-Max (0-1)</option>
+                            <option value="snv">SNV (Z-Score)</option>
+                        </select>
+                    </div>
                 </div>
                 
                 <div id="chemo-status" style="margin-top:10px; font-size:0.75rem; color:var(--primary); font-weight:bold;"></div>
@@ -1010,7 +1028,10 @@
                 spectra: cleanSpectra,
                 analysis_type: type,
                 linkage_method: document.getElementById('hca-linkage').value,
-                color_threshold: parseFloat(document.getElementById('hca-threshold').value) || null
+                color_threshold: parseFloat(document.getElementById('hca-threshold').value) || null,
+                rango_min: parseFloat(document.getElementById('chemo-range-min').value),
+                rango_max: parseFloat(document.getElementById('chemo-range-max').value),
+                metodo_escala: document.getElementById('chemo-scaling').value
             };
 
             const response = await fetch(`${API_BASE_URL}/api/` + type, {

@@ -96,6 +96,9 @@ class ChemoRequest(BaseModel):
     analysis_type: str = "pca"
     linkage_method: str = "ward"
     color_threshold: Optional[float] = None
+    rango_min: Optional[float] = None
+    rango_max: Optional[float] = None
+    metodo_escala: str = "none" # none, minmax, snv
 
 class CompareRequest(BaseModel):
     spectra: List[SpectrumData]
@@ -236,12 +239,38 @@ def build_symmetric_matrix(data: list[SpectrumInput]):
         
     return np.array(Y_list), x_ref
 
+def prepare_chemometric_matrix(data: ChemoRequest):
+    """
+    Aplica el Pipeline Quimiométrico: Alineación -> Recorte -> Escalado.
+    """
+    Y_matrix, x_ref = build_symmetric_matrix(data.spectra)
+    df = pd.DataFrame(Y_matrix, columns=x_ref.astype(float))
+    
+    # 1. RECORTE (Spectral Range)
+    if data.rango_min is not None and data.rango_max is not None:
+        valid_cols = [c for c in df.columns if data.rango_min <= c <= data.rango_max]
+        if not valid_cols:
+            raise ValueError(f"Rango seleccionado [{data.rango_min}, {data.rango_max}] no contiene datos.")
+        df = df[valid_cols]
+    
+    # 2. ESCALADO (Normalización Dinámica)
+    Y = df.values
+    if data.metodo_escala == "minmax":
+        from sklearn.preprocessing import MinMaxScaler
+        Y = MinMaxScaler().fit_transform(Y.T).T # Normaliza cada espectro (fila)
+    elif data.metodo_escala == "snv":
+        mean = np.mean(Y, axis=1, keepdims=True)
+        std = np.std(Y, axis=1, keepdims=True)
+        Y = (Y - mean) / (std + 1e-9)
+        
+    return Y, df.columns.values
+
 @app.post("/api/pca")
 async def calculate_pca(data: ChemoRequest):
     try:
         if len(data.spectra) < 2: return {"error": "Se requieren al menos 2 espectros."}
         names = [s.name for s in data.spectra]
-        Y, _ = build_symmetric_matrix(data.spectra)
+        Y, _ = prepare_chemometric_matrix(data)
         
         n_comps = min(2, Y.shape[0])
         pca = PCA(n_components=n_comps)
@@ -278,7 +307,7 @@ async def calculate_hca(data: ChemoRequest):
             for name in names
         ]
         
-        Y, _ = build_symmetric_matrix(data.spectra)
+        Y, _ = prepare_chemometric_matrix(data)
         
         Z = linkage(Y, method=data.linkage_method, metric='euclidean')
         
@@ -309,7 +338,7 @@ async def calculate_correlation(data: ChemoRequest):
     try:
         if len(data.spectra) < 2: return {"error": "Se requieren al menos 2 espectros."}
         names = [s.name for s in data.spectra]
-        Y, _ = build_symmetric_matrix(data.spectra)
+        Y, _ = prepare_chemometric_matrix(data)
         
         corr_matrix = np.corrcoef(Y)
         return {
