@@ -268,6 +268,14 @@ def prepare_chemometric_matrix(data: ChemoRequest):
         
     return Y, df.columns.values
 
+def get_treatment_metadata(data: ChemoRequest):
+    r_min, r_max = data.params.range[0], data.params.range[1]
+    scale = data.params.scale.upper() if data.params.scale != "none" else "Ninguno"
+    metadata = f"Tratamiento: Escalado {scale} | Rango: {r_min:.1f} - {r_max:.1f} cm⁻¹"
+    if data.analysis_type == "hca":
+        metadata += f" | Enlace: {data.linkage_method.capitalize()}"
+    return metadata
+
 @app.post("/api/pca")
 async def calculate_pca(data: ChemoRequest):
     try:
@@ -289,7 +297,8 @@ async def calculate_pca(data: ChemoRequest):
         return {
             "type": "pca",
             "scores": scores_out,
-            "explained_variance": [float(evr[0]), float(evr[1]) if n_comps > 1 else 0.0]
+            "explained_variance": [float(evr[0]), float(evr[1]) if n_comps > 1 else 0.0],
+            "metadata": get_treatment_metadata(data)
         }
     except Exception as e:
         print(traceback.format_exc())
@@ -330,7 +339,8 @@ async def calculate_hca(data: ChemoRequest):
             "type": "hca",
             "icoord": ddata['icoord'],
             "dcoord": ddata['dcoord'],
-            "ivl": ddata['ivl']
+            "ivl": ddata['ivl'],
+            "metadata": get_treatment_metadata(data)
         }
     except Exception as e:
         print(traceback.format_exc())
@@ -347,7 +357,8 @@ async def calculate_correlation(data: ChemoRequest):
         return {
             "type": "correlation",
             "matrix": corr_matrix.tolist(),
-            "labels": names
+            "labels": names,
+            "metadata": get_treatment_metadata(data)
         }
     except Exception as e:
         print(traceback.format_exc())
