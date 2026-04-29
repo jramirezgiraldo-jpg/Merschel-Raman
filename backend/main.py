@@ -103,21 +103,29 @@ class CompareRequest(BaseModel):
 async def read_index():
     return FileResponse("../public/index.html")
 
-# Endpoint matemático y de procesamiento quimiométrico
 @app.post("/api/process")
 async def process_spectra(request: ProcessRequest):
     try:
         baseline_algo = request.config.baseline
         smoothing_algo = request.config.smoothing
         
+        # 1. Alinear todos los espectros al rango común (Evitar length mismatch)
+        # build_symmetric_matrix ya implementa el Hotfix de ordenamiento y rango común
+        Y_matrix, x_ref = build_symmetric_matrix(request.spectra)
+        
+        # 2. Creación de la matriz final NUEVA (Master DataFrame)
+        # Filas = Muestras, Columnas = Wavenumbers
+        df_final = pd.DataFrame(Y_matrix, columns=x_ref)
+        
         baseline_fitter = Baseline()
         processed_results = []
         
-        for spec in request.spectra:
-            y = np.array([v if v is not None else 0.0 for v in spec.y])
-            x = np.array([v if v is not None else 0.0 for v in spec.x])
+        # 3. Paso al pre-procesamiento iterativo sobre la matriz alineada
+        for idx, row in df_final.iterrows():
+            y = row.values
+            x = x_ref # Eje X Maestro
             
-            # 1. Corrección de Línea Base
+            # Corrección de Línea Base
             if baseline_algo == "als":
                 y_base, _ = baseline_fitter.asls(y, lam=1e5, p=0.01)
                 y = y - y_base
@@ -126,7 +134,7 @@ async def process_spectra(request: ProcessRequest):
                 y_base, _ = baseline_fitter.rolling_ball(y, half_window=half_window)
                 y = y - y_base
                 
-            # 2. Suavizado
+            # Suavizado
             if smoothing_algo == "savgol":
                 window_size = 11 if len(y) >= 11 else (len(y) // 2 * 2 + 1)
                 if window_size >= 3:
@@ -136,7 +144,7 @@ async def process_spectra(request: ProcessRequest):
                 y = np.convolve(y, kernel, mode='same')
                 
             processed_results.append({
-                "name": spec.name,
+                "name": request.spectra[idx].name,
                 "x": x.tolist(),
                 "y": y.tolist()
             })
@@ -145,7 +153,7 @@ async def process_spectra(request: ProcessRequest):
     except Exception as e:
         error_trace = traceback.format_exc()
         print(error_trace) 
-        return JSONResponse(status_code=500, content={"detail": f"Error matemático: {str(e)}"})
+        return JSONResponse(status_code=500, content={"detail": f"Error matemático en Pipeline: {str(e)}"})
 
 @app.post("/comparar")
 async def comparar_espectros_avanzado(data: CompareRequest):
