@@ -9,8 +9,8 @@ from scipy.interpolate import interp1d
 # =================================================================
 # CONFIGURACIÓN DE DESPLIEGUE (PRODUCCIÓN RENDER)
 # =================================================================
-# URL del backend en Render (Asegurar que coincida con el nombre del servicio en render.yaml)
-API_URL = "https://merschel-raman-api.onrender.com" 
+# URL del backend en Render
+API_URL = "https://merschel-raman-backend.onrender.com" 
 
 # =================================================================
 # CONFIGURACIÓN Y ESTÉTICA (PREMIUM DESIGN)
