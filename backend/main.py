@@ -11,6 +11,9 @@ from sklearn.cross_decomposition import PLSRegression
 from sklearn.preprocessing import LabelBinarizer
 from fastapi.middleware.cors import CORSMiddleware
 import re
+import pandas as pd
+import traceback
+from scipy.interpolate import interp1d
 
 def parse_spectroscopy_file(decoded_content: str):
     """
@@ -140,7 +143,9 @@ async def process_spectra(request: ProcessRequest):
             
         return {"spectra": processed_results}
     except Exception as e:
-        return JSONResponse(status_code=500, content={"detail": str(e)})
+        error_trace = traceback.format_exc()
+        print(error_trace) 
+        return JSONResponse(status_code=500, content={"detail": f"Error matemático: {str(e)}"})
 
 @app.post("/comparar")
 async def comparar_espectros_avanzado(data: CompareRequest):
@@ -204,15 +209,19 @@ def build_symmetric_matrix(data: list[SpectrumInput]):
     
     Y_list = []
     for s in data:
-        x_s = np.array([v if v is not None else 0.0 for v in s.x])
-        y_s = np.array([v if v is not None else 0.0 for v in s.y])
-        y_s = np.nan_to_num(y_s, nan=0.0)
+        # x_temp y y_temp son los arrays extraídos
+        x_temp = np.array([v if v is not None else 0.0 for v in s.x], dtype=float)
+        y_temp = np.array([v if v is not None else 0.0 for v in s.y], dtype=float)
+        y_temp = np.nan_to_num(y_temp, nan=0.0)
         
-        # Asegurar orden ascendente para np.interp
-        idx_sort = np.argsort(x_s)
-        x_s, y_s = x_s[idx_sort], y_s[idx_sort]
+        # Ordenamiento monotónico de menor a mayor obligatorio para Scipy
+        sort_idx = np.argsort(x_temp)
+        x_temp = x_temp[sort_idx]
+        y_temp = y_temp[sort_idx]
         
-        y_interp = np.interp(x_ref, x_s, y_s)
+        # Aplicación de interpolación Scipy
+        f_interp = interp1d(x_temp, y_temp, kind='linear', fill_value='extrapolate', bounds_error=False)
+        y_interp = f_interp(x_ref)
         Y_list.append(y_interp)
         
     return np.array(Y_list), x_ref
@@ -241,7 +250,8 @@ async def calculate_pca(data: list[SpectrumInput]):
             "explained_variance": [float(evr[0]), float(evr[1]) if n_comps > 1 else 0.0]
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Fallo en análisis PCA: {str(e)}")
+        print(traceback.format_exc())
+        return JSONResponse(status_code=500, content={"detail": f"Error matemático PCA: {str(e)}"})
 
 @app.post("/api/hca")
 async def calculate_hca(data: list[SpectrumInput]):
@@ -259,7 +269,8 @@ async def calculate_hca(data: list[SpectrumInput]):
             "ivl": ddata['ivl']
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Fallo en análisis HCA: {str(e)}")
+        print(traceback.format_exc())
+        return JSONResponse(status_code=500, content={"detail": f"Error matemático HCA: {str(e)}"})
 
 @app.post("/api/correlation")
 async def calculate_correlation(data: list[SpectrumInput]):
@@ -275,7 +286,8 @@ async def calculate_correlation(data: list[SpectrumInput]):
             "labels": names
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Fallo en cálculo de correlación: {str(e)}")
+        print(traceback.format_exc())
+        return JSONResponse(status_code=500, content={"detail": f"Error matemático Correlación: {str(e)}"})
 
 @app.post("/api/pls_da")
 async def calculate_plsda(data: PlsdaRequest):
@@ -319,4 +331,5 @@ async def calculate_plsda(data: PlsdaRequest):
             "vip": {"x": x_ref.tolist(), "y": loadings.tolist()}
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Fallo en análisis PLS-DA: {str(e)}")
+        print(traceback.format_exc())
+        return JSONResponse(status_code=500, content={"detail": f"Error matemático PLS-DA: {str(e)}"})
