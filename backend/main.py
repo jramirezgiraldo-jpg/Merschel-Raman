@@ -91,14 +91,16 @@ class ProcessRequest(BaseModel):
     spectra: List[SpectrumData]
     config: ProcessConfig
 
+class ChemoParams(BaseModel):
+    range: List[float] = [0.0, 4000.0]
+    scale: str = "none"
+
 class ChemoRequest(BaseModel):
     spectra: List[SpectrumInput]
     analysis_type: str = "pca"
     linkage_method: str = "ward"
     color_threshold: Optional[float] = None
-    rango_min: Optional[float] = None
-    rango_max: Optional[float] = None
-    metodo_escala: str = "none" # none, minmax, snv
+    params: ChemoParams = ChemoParams()
 
 class CompareRequest(BaseModel):
     spectra: List[SpectrumData]
@@ -247,18 +249,19 @@ def prepare_chemometric_matrix(data: ChemoRequest):
     df = pd.DataFrame(Y_matrix, columns=x_ref.astype(float))
     
     # 1. RECORTE (Spectral Range)
-    if data.rango_min is not None and data.rango_max is not None:
-        valid_cols = [c for c in df.columns if data.rango_min <= c <= data.rango_max]
-        if not valid_cols:
-            raise ValueError(f"Rango seleccionado [{data.rango_min}, {data.rango_max}] no contiene datos.")
-        df = df[valid_cols]
+    r_min, r_max = data.params.range[0], data.params.range[1]
+    mask = (df.columns >= r_min) & (df.columns <= r_max)
+    df = df.loc[:, mask]
+    
+    if df.empty:
+        raise ValueError(f"El rango [{r_min}, {r_max}] no contiene datos.")
     
     # 2. ESCALADO (Normalización Dinámica)
     Y = df.values
-    if data.metodo_escala == "minmax":
+    if data.params.scale == "minmax":
         from sklearn.preprocessing import MinMaxScaler
-        Y = MinMaxScaler().fit_transform(Y.T).T # Normaliza cada espectro (fila)
-    elif data.metodo_escala == "snv":
+        Y = MinMaxScaler().fit_transform(Y.T).T 
+    elif data.params.scale == "snv":
         mean = np.mean(Y, axis=1, keepdims=True)
         std = np.std(Y, axis=1, keepdims=True)
         Y = (Y - mean) / (std + 1e-9)
