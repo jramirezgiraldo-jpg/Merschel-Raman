@@ -92,8 +92,10 @@ class ProcessRequest(BaseModel):
     config: ProcessConfig
 
 class ChemoRequest(BaseModel):
-    spectra: List[SpectrumData]
-    analysis_type: str # "pca", "hca", "correlation"
+    spectra: List[SpectrumInput]
+    analysis_type: str = "pca"
+    linkage_method: str = "ward"
+    color_threshold: Optional[float] = None
 
 class CompareRequest(BaseModel):
     spectra: List[SpectrumData]
@@ -235,11 +237,11 @@ def build_symmetric_matrix(data: list[SpectrumInput]):
     return np.array(Y_list), x_ref
 
 @app.post("/api/pca")
-async def calculate_pca(data: list[SpectrumInput]):
+async def calculate_pca(data: ChemoRequest):
     try:
-        if len(data) < 2: return {"error": "Se requieren al menos 2 espectros."}
-        names = [s.name for s in data]
-        Y, _ = build_symmetric_matrix(data)
+        if len(data.spectra) < 2: return {"error": "Se requieren al menos 2 espectros."}
+        names = [s.name for s in data.spectra]
+        Y, _ = build_symmetric_matrix(data.spectra)
         
         n_comps = min(2, Y.shape[0])
         pca = PCA(n_components=n_comps)
@@ -262,10 +264,10 @@ async def calculate_pca(data: list[SpectrumInput]):
         return JSONResponse(status_code=500, content={"detail": f"Error matemático PCA: {str(e)}"})
 
 @app.post("/api/hca")
-async def calculate_hca(data: list[SpectrumInput]):
+async def calculate_hca(data: ChemoRequest):
     try:
-        if len(data) < 2: return {"error": "Se requieren al menos 2 espectros."}
-        names = [s.name for s in data]
+        if len(data.spectra) < 2: return {"error": "Se requieren al menos 2 espectros."}
+        names = [s.name for s in data.spectra]
         
         # 1. Limpieza automática de etiquetas para legibilidad
         clean_labels = [
@@ -276,16 +278,17 @@ async def calculate_hca(data: list[SpectrumInput]):
             for name in names
         ]
         
-        Y, _ = build_symmetric_matrix(data)
+        Y, _ = build_symmetric_matrix(data.spectra)
         
-        Z = linkage(Y, method='ward', metric='euclidean')
+        Z = linkage(Y, method=data.linkage_method, metric='euclidean')
         
         # 2. Generación del dendrograma sin truncamiento
         ddata = dendrogram(
             Z, 
             labels=clean_labels, 
             no_plot=True,
-            truncate_mode=None, # Fundamental para que no desaparezca ninguna muestra
+            truncate_mode=None, 
+            color_threshold=data.color_threshold, # Umbral dinámico
             leaf_rotation=90.,
             leaf_font_size=10.,
             show_contracted=False
@@ -302,11 +305,11 @@ async def calculate_hca(data: list[SpectrumInput]):
         return JSONResponse(status_code=500, content={"detail": f"Error matemático HCA: {str(e)}"})
 
 @app.post("/api/correlation")
-async def calculate_correlation(data: list[SpectrumInput]):
+async def calculate_correlation(data: ChemoRequest):
     try:
-        if len(data) < 2: return {"error": "Se requieren al menos 2 espectros."}
-        names = [s.name for s in data]
-        Y, _ = build_symmetric_matrix(data)
+        if len(data.spectra) < 2: return {"error": "Se requieren al menos 2 espectros."}
+        names = [s.name for s in data.spectra]
+        Y, _ = build_symmetric_matrix(data.spectra)
         
         corr_matrix = np.corrcoef(Y)
         return {

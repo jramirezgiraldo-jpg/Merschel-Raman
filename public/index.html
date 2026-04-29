@@ -329,6 +329,41 @@
                         <button class="secondary" onclick="runChemometrics('correlation')">3. Matriz Correlación</button>
                     </div>
                 </div>
+
+                <div class="toolbar-group">
+                    <span class="toolbar-label">AJUSTES VISUALES</span>
+                    <hr style="border:0; border-top:1px solid #e2e8f0; margin:10px 0;">
+                    
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:0.7rem; font-weight:bold;">Enlace (HCA):</label>
+                        <select id="hca-linkage" style="width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px;">
+                            <option value="ward">Ward</option>
+                            <option value="average">Average</option>
+                            <option value="complete">Complete</option>
+                            <option value="single">Single</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:0.7rem; font-weight:bold;">Línea de Corte (HCA):</label>
+                        <div style="display:flex;gap:5px;align-items:center;">
+                            <input type="range" id="hca-threshold" min="0" max="100" step="1" value="0" style="flex:1">
+                            <output id="threshold-val" style="font-size:0.7rem;">Off</output>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:0.7rem; font-weight:bold;">Paleta (Heatmap):</label>
+                        <select id="heatmap-palette" style="width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px;">
+                            <option value="coolwarm">Coolwarm</option>
+                            <option value="Viridis">Viridis</option>
+                            <option value="Magma">Magma</option>
+                            <option value="Spectral">Spectral</option>
+                            <option value="RdBu">RdBu</option>
+                        </select>
+                    </div>
+                </div>
+                
                 <div id="chemo-status" style="margin-top:10px; font-size:0.75rem; color:var(--primary); font-weight:bold;"></div>
             </div>
             <div class="workspace-wrapper">
@@ -644,6 +679,9 @@
         
         const wS = document.getElementById('peak-window'), wO = document.getElementById('window-val');
         if(wS && wO) wS.oninput = () => wO.value = wS.value;
+
+        const hS = document.getElementById('hca-threshold'), hO = document.getElementById('threshold-val');
+        if(hS && hO) hS.oninput = () => hO.value = parseInt(hS.value) === 0 ? "Off" : hS.value;
     };
 
     function switchTab(id) {
@@ -968,10 +1006,17 @@
                 y: s.y.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v)
             }));
             
+            const payload = {
+                spectra: cleanSpectra,
+                analysis_type: type,
+                linkage_method: document.getElementById('hca-linkage').value,
+                color_threshold: parseFloat(document.getElementById('hca-threshold').value) || null
+            };
+
             const response = await fetch(`${API_BASE_URL}/api/` + type, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(cleanSpectra)
+                body: JSON.stringify(payload)
             });
 
             if(!response.ok) throw new Error("Error HTTP " + response.status);
@@ -1261,12 +1306,13 @@
             Plotly.react('chemo-graph', traces, layout);
             
         } else if (data.type === "correlation") {
+            const palette = document.getElementById('heatmap-palette').value;
             const traces = [{
                 z: data.matrix,
                 x: data.labels,
                 y: data.labels,
                 type: 'heatmap',
-                colorscale: 'RdBu',
+                colorscale: palette,
                 zmin: -1, zmax: 1
             }];
             
