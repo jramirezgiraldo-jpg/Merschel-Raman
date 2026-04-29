@@ -17,6 +17,7 @@ app = FastAPI(title="Merschel-Raman V8.2 API")
 origins = [
     "https://jramirezgiraldo-jpg.github.io",
     "http://localhost:8501", # Streamlit local
+    "http://localhost:8000", # FastAPI local / Docs
 ]
 
 app.add_middleware(
