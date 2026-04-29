@@ -793,7 +793,10 @@
                 body: JSON.stringify(payload)
             });
 
-            if(!response.ok) throw new Error("Error HTTP " + response.status);
+            if(!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || `Error HTTP ${response.status}`);
+            }
             const data = await response.json();
             
             // Sobreescribir con resultados de Python (Línea Base y Suavizado)
@@ -813,7 +816,7 @@
 
         } catch(e) {
             console.error(e);
-            document.getElementById('status-text').innerText = "Error conectando a FastAPI";
+            document.getElementById('status-text').innerText = "❌ " + e.message;
         }
     }
 

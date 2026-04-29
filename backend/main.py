@@ -197,15 +197,15 @@ def build_symmetric_matrix(data: list[SpectrumInput]):
         x = np.array([v if v is not None else 0.0 for v in s.x])
         all_x.append(x)
     
-    # Rango común (Intersección)
-    min_global = max([np.min(x) for x in all_x])
-    max_global = min([np.max(x) for x in all_x])
+    # 1. Rango común estricto (Intersección Global)
+    global_min = max([np.min(x) for x in all_x])
+    global_max = min([np.max(x) for x in all_x])
     
-    if min_global >= max_global:
-        raise ValueError("No hay un rango común de Wavenumbers entre los espectros seleccionados.")
+    if global_min >= global_max:
+        raise ValueError("No hay un rango común (intersección) entre los espectros seleccionados.")
         
-    # Eje X Maestro ordenado ascendentemente
-    x_ref = np.linspace(min_global, max_global, num=1000) 
+    # 2. Eje X Maestro solo en el rango seguro
+    x_ref = np.arange(global_min, global_max, 1.0)
     
     Y_list = []
     for s in data:
