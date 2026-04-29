@@ -37,6 +37,28 @@ st.markdown("""
 # LÓGICA DE PROCESAMIENTO (RECOLECCIÓN Y ALINEACIÓN LOCAL)
 # =================================================================
 
+import re
+
+def parse_spectroscopy_file(decoded_content):
+    """
+    Extractor Universal: Ignora metadatos y extrae solo valores numéricos.
+    """
+    lines = decoded_content.splitlines()
+    cleaned_data = []
+    for line in lines:
+        # Dividir por comas, tabulaciones o múltiples espacios
+        parts = re.split(r'[,\t;]+|\s{2,}', line.strip())
+        parts = [p.strip() for p in parts if p.strip()]
+        if len(parts) >= 2:
+            try:
+                x, y = float(parts[0]), float(parts[1])
+                cleaned_data.append([x, y])
+            except ValueError:
+                continue
+    if not cleaned_data:
+        raise ValueError("No se encontraron datos numéricos válidos en el archivo.")
+    return pd.DataFrame(cleaned_data, columns=['Wavenumber', 'Absorbance'])
+
 def load_and_align_spectra(uploaded_files):
     """
     Carga y alinea los espectros localmente antes de enviarlos a la API.
@@ -49,7 +71,7 @@ def load_and_align_spectra(uploaded_files):
             name = uploaded_file.name
             content = uploaded_file.getvalue()
             
-            # Intento de decodificación múltiple (Lectura Políglota)
+            # Decodificación Políglota
             decoded_content = None
             for encoding in ['utf-8', 'utf-16', 'latin-1', 'cp1252']:
                 try:
@@ -59,12 +81,11 @@ def load_and_align_spectra(uploaded_files):
                     continue
             
             if decoded_content is None:
-                st.error(f"❌ No se pudo determinar la codificación del archivo {name}")
+                st.error(f"❌ Codificación no soportada: {name}")
                 continue
 
-            # Detección automática de delimitador y carga con Pandas
-            sep = ',' if (',' in decoded_content and decoded_content.count(',') > decoded_content.count('\t')) else None
-            df = pd.read_csv(io.StringIO(decoded_content), sep=sep, header=None, engine='python', on_bad_lines='skip')
+            # Extracción Universal (Hotfix)
+            df = parse_spectroscopy_file(decoded_content)
             data = df.to_numpy()
             
             if data.shape[0] < data.shape[1] and data.shape[0] <= 5:
@@ -75,7 +96,7 @@ def load_and_align_spectra(uploaded_files):
                 all_raw_spectra.append(spec)
                 filenames.append(name)
         except Exception as e:
-            st.error(f"⚠️ Error procesando {uploaded_file.name}: {str(e)}")
+            st.error(f"⚠️ Error en {name}: {str(e)}")
             continue
 
     if not all_raw_spectra: return None, None, None

@@ -10,6 +10,36 @@ from scipy.cluster.hierarchy import linkage, dendrogram
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.preprocessing import LabelBinarizer
 from fastapi.middleware.cors import CORSMiddleware
+import re
+
+def parse_spectroscopy_file(decoded_content: str):
+    """
+    Extractor Universal: Ignora metadatos, encabezados sucios y delimitadores inconsistentes,
+    extrayendo únicamente los valores numéricos de los espectros.
+    """
+    lines = decoded_content.splitlines()
+    cleaned_data = []
+    
+    for line in lines:
+        # Dividir por comas, tabulaciones o múltiples espacios
+        parts = re.split(r'[,\t;]+|\s{2,}', line.strip())
+        # Filtrar strings vacíos generados por comas finales
+        parts = [p.strip() for p in parts if p.strip()]
+        
+        # Si hay al menos dos valores, intentar convertirlos a flotantes
+        if len(parts) >= 2:
+            try:
+                x = float(parts[0])
+                y = float(parts[1])
+                cleaned_data.append([x, y])
+            except ValueError:
+                # Si no son números (ej. 'Time', 'Wavenumber'), se ignora la línea
+                continue
+                
+    if not cleaned_data:
+        raise ValueError("No se encontraron datos numéricos válidos en el archivo.")
+        
+    return pd.DataFrame(cleaned_data, columns=['Wavenumber', 'Absorbance'])
 
 app = FastAPI(title="Merschel-Raman V8.2 API")
 
