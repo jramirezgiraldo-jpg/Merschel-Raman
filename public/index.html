@@ -592,14 +592,38 @@
         }
     }
 
+    // Función de seguridad (Cinturón de Seguridad) para evitar TypeErrors
+    function safeAddListener(id, event, callback) {
+        const checkElement = setInterval(() => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener(event, callback);
+                clearInterval(checkElement);
+            }
+        }, 500);
+        // Timeout de seguridad tras 10 segundos para no dejar intervalos infinitos
+        setTimeout(() => clearInterval(checkElement), 10000);
+    }
+
     window.onload = () => {
         initTooltips(); 
         initPlot('spectrum-graph', 'Vista Previa');
         initPlot('processed-graph', 'Espectro Procesado');
         initPlot('comp-viewport', 'Solapamiento de Espectros (Picos Diferenciales)');
-        document.getElementById('file-input').addEventListener('change', loadFiles);
-        document.getElementById('apply-btn').addEventListener('click', applyProcessing);
-        
+
+        // Asignaciones seguras
+        safeAddListener('file-input', 'change', loadFiles);
+        safeAddListener('apply-btn', 'click', applyProcessing);
+        safeAddListener('btn-batch-apply', 'click', () => {
+            const batchVal = document.getElementById('batch-class-select')?.value;
+            if(!processedSpectra || !processedSpectra.length) return alert("No hay espectros cargados.");
+            processedSpectra.forEach(spec => {
+                spec.group = batchVal;
+                spec.label = batchVal;
+            });
+            renderLabelsTable(); 
+        });
+
         document.querySelectorAll('.toolbar-buttons button[data-group]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const grp = e.currentTarget.dataset.group;
@@ -616,20 +640,10 @@
         });
 
         const sS = document.getElementById('peak-sensitivity'), sO = document.getElementById('sens-val');
-        sS.oninput = () => sO.value = parseFloat(sS.value).toFixed(2);
+        if(sS && sO) sS.oninput = () => sO.value = parseFloat(sS.value).toFixed(2);
+        
         const wS = document.getElementById('peak-window'), wO = document.getElementById('window-val');
-        wS.oninput = () => wO.value = wS.value;
-
-        // Asignación Masiva
-        document.getElementById('btn-batch-apply').addEventListener('click', () => {
-            const batchVal = document.getElementById('batch-class-select').value;
-            if(!processedSpectra || !processedSpectra.length) return alert("No hay espectros cargados.");
-            processedSpectra.forEach(spec => {
-                spec.group = batchVal;
-                spec.label = batchVal;
-            });
-            renderLabelsTable(); // Actualiza visualmente los selects
-        });
+        if(wS && wO) wS.oninput = () => wO.value = wS.value;
     };
 
     function switchTab(id) {
