@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional
 import numpy as np
@@ -39,7 +39,10 @@ def parse_spectroscopy_file(decoded_content: str):
     if not cleaned_data:
         raise ValueError("No se encontraron datos numéricos válidos en el archivo.")
         
-    return pd.DataFrame(cleaned_data, columns=['Wavenumber', 'Absorbance'])
+    df = pd.DataFrame(cleaned_data, columns=['Wavenumber', 'Absorbance'])
+    # Ordenamiento Monotónico para evitar errores en interpolación
+    df = df.sort_values(by='Wavenumber', ascending=True).reset_index(drop=True)
+    return df
 
 app = FastAPI(title="Merschel-Raman V8.2 API")
 
@@ -137,7 +140,7 @@ async def process_spectra(request: ProcessRequest):
             
         return {"spectra": processed_results}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Fallo en procesamiento espectral: {str(e)}")
+        return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @app.post("/comparar")
 async def comparar_espectros_avanzado(data: CompareRequest):
@@ -179,28 +182,47 @@ async def comparar_espectros_avanzado(data: CompareRequest):
     return {"diff_peaks": diff_peaks_result}
 
 
-# Interpolación genérica (Helper Function)
 def build_symmetric_matrix(data: list[SpectrumInput]):
-    x_ref = np.array([v if v is not None else 0.0 for v in data[0].x])
-    Y_list = []
+    """
+    Construye una matriz de datos alineada mediante interpolación en el rango común.
+    Garantiza ordenamiento monotónico para Scipy/Numpy.
+    """
+    all_x = []
+    for s in data:
+        x = np.array([v if v is not None else 0.0 for v in s.x])
+        all_x.append(x)
     
+    # Rango común (Intersección)
+    min_global = max([np.min(x) for x in all_x])
+    max_global = min([np.max(x) for x in all_x])
+    
+    if min_global >= max_global:
+        raise ValueError("No hay un rango común de Wavenumbers entre los espectros seleccionados.")
+        
+    # Eje X Maestro ordenado ascendentemente
+    x_ref = np.linspace(min_global, max_global, num=1000) 
+    
+    Y_list = []
     for s in data:
         x_s = np.array([v if v is not None else 0.0 for v in s.x])
         y_s = np.array([v if v is not None else 0.0 for v in s.y])
-        y_s = np.nan_to_num(y_s, nan=0.0, posinf=0.0, neginf=0.0)
+        y_s = np.nan_to_num(y_s, nan=0.0)
         
-        if not np.array_equal(x_ref, x_s):
-            Y_list.append(np.interp(x_ref, x_s, y_s))
-        else:
-            Y_list.append(y_s)
-    return np.array(Y_list)
+        # Asegurar orden ascendente para np.interp
+        idx_sort = np.argsort(x_s)
+        x_s, y_s = x_s[idx_sort], y_s[idx_sort]
+        
+        y_interp = np.interp(x_ref, x_s, y_s)
+        Y_list.append(y_interp)
+        
+    return np.array(Y_list), x_ref
 
 @app.post("/api/pca")
 async def calculate_pca(data: list[SpectrumInput]):
     try:
         if len(data) < 2: return {"error": "Se requieren al menos 2 espectros."}
         names = [s.name for s in data]
-        Y = build_symmetric_matrix(data)
+        Y, _ = build_symmetric_matrix(data)
         
         n_comps = min(2, Y.shape[0])
         pca = PCA(n_components=n_comps)
@@ -226,7 +248,7 @@ async def calculate_hca(data: list[SpectrumInput]):
     try:
         if len(data) < 2: return {"error": "Se requieren al menos 2 espectros."}
         names = [s.name for s in data]
-        Y = build_symmetric_matrix(data)
+        Y, _ = build_symmetric_matrix(data)
         
         Z = linkage(Y, method='ward', metric='euclidean')
         ddata = dendrogram(Z, labels=names, no_plot=True)
@@ -244,7 +266,7 @@ async def calculate_correlation(data: list[SpectrumInput]):
     try:
         if len(data) < 2: return {"error": "Se requieren al menos 2 espectros."}
         names = [s.name for s in data]
-        Y = build_symmetric_matrix(data)
+        Y, _ = build_symmetric_matrix(data)
         
         corr_matrix = np.corrcoef(Y)
         return {
@@ -263,8 +285,7 @@ async def calculate_plsda(data: PlsdaRequest):
         names = [s.name for s in data.spectra]
         labels_raw = [s.label for s in data.spectra]
         
-        Y_features = build_symmetric_matrix(data.spectra)
-        x_ref = np.array([v if v is not None else 0.0 for v in data.spectra[0].x])
+        Y_features, x_ref = build_symmetric_matrix(data.spectra)
         
         # Binarización One-Hot de etiquetas de texto
         le = LabelBinarizer()

@@ -57,7 +57,10 @@ def parse_spectroscopy_file(decoded_content):
                 continue
     if not cleaned_data:
         raise ValueError("No se encontraron datos numéricos válidos en el archivo.")
-    return pd.DataFrame(cleaned_data, columns=['Wavenumber', 'Absorbance'])
+    df = pd.DataFrame(cleaned_data, columns=['Wavenumber', 'Absorbance'])
+    # Ordenamiento Monotónico (Hotfix)
+    df = df.sort_values(by='Wavenumber', ascending=True).reset_index(drop=True)
+    return df
 
 def load_and_align_spectra(uploaded_files):
     """
