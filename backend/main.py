@@ -266,10 +266,31 @@ async def calculate_hca(data: list[SpectrumInput]):
     try:
         if len(data) < 2: return {"error": "Se requieren al menos 2 espectros."}
         names = [s.name for s in data]
+        
+        # 1. Limpieza automática de etiquetas para legibilidad
+        clean_labels = [
+            str(name).replace('.csv', '')
+                     .replace('.txt', '')
+                     .replace('CONVERTED_T2A_', '')
+                     .replace('prom_', '')
+            for name in names
+        ]
+        
         Y, _ = build_symmetric_matrix(data)
         
         Z = linkage(Y, method='ward', metric='euclidean')
-        ddata = dendrogram(Z, labels=names, no_plot=True)
+        
+        # 2. Generación del dendrograma sin truncamiento
+        ddata = dendrogram(
+            Z, 
+            labels=clean_labels, 
+            no_plot=True,
+            truncate_mode=None, # Fundamental para que no desaparezca ninguna muestra
+            leaf_rotation=90.,
+            leaf_font_size=10.,
+            show_contracted=False
+        )
+        
         return {
             "type": "hca",
             "icoord": ddata['icoord'],

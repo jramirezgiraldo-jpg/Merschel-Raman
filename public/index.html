@@ -1256,7 +1256,7 @@
             
             const tickVals = data.ivl.map((_, i) => 5 + i * 10);
             layout.title = 'Agrupamiento Jerárquico (HCA: Ward, Euclidiana)';
-            layout.xaxis = { tickvals: tickVals, ticktext: data.ivl, tickangle: 45, showgrid: false };
+            layout.xaxis = { tickvals: tickVals, ticktext: data.ivl, tickangle: 90, showgrid: false };
             layout.yaxis = { title: 'Distancia Euclidiana', showgrid: true, gridcolor: '#e2e8f0' };
             Plotly.react('chemo-graph', traces, layout);
             
