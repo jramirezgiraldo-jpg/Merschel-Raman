@@ -47,10 +47,26 @@ def load_and_align_spectra(uploaded_files):
     for uploaded_file in uploaded_files:
         try:
             name = uploaded_file.name
-            raw_content = uploaded_file.getvalue().decode('utf-8')
-            sep = ',' if (',' in raw_content and raw_content.count(',') > raw_content.count('\t')) else None
-            df = pd.read_csv(io.StringIO(raw_content), sep=sep, header=None, engine='python')
+            content = uploaded_file.getvalue()
+            
+            # Intento de decodificación múltiple (Lectura Políglota)
+            decoded_content = None
+            for encoding in ['utf-8', 'utf-16', 'latin-1', 'cp1252']:
+                try:
+                    decoded_content = content.decode(encoding)
+                    break 
+                except UnicodeDecodeError:
+                    continue
+            
+            if decoded_content is None:
+                st.error(f"❌ No se pudo determinar la codificación del archivo {name}")
+                continue
+
+            # Detección automática de delimitador y carga con Pandas
+            sep = ',' if (',' in decoded_content and decoded_content.count(',') > decoded_content.count('\t')) else None
+            df = pd.read_csv(io.StringIO(decoded_content), sep=sep, header=None, engine='python', on_bad_lines='skip')
             data = df.to_numpy()
+            
             if data.shape[0] < data.shape[1] and data.shape[0] <= 5:
                 data = data.T
             spec = data[:, :2].astype(float)
@@ -58,7 +74,9 @@ def load_and_align_spectra(uploaded_files):
             if len(spec) >= 10:
                 all_raw_spectra.append(spec)
                 filenames.append(name)
-        except: continue
+        except Exception as e:
+            st.error(f"⚠️ Error procesando {uploaded_file.name}: {str(e)}")
+            continue
 
     if not all_raw_spectra: return None, None, None
 
