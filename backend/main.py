@@ -65,6 +65,26 @@ app.add_middleware(
 )
 
 # Modelos de datos para el Body de la petición (JSON)
+def format_scientific_name(name: str, use_latex: bool = False):
+    """
+    Limpia el nombre del archivo y aplica formato de cursiva si parece un nombre científico.
+    """
+    # Eliminar extensiones y sufijos comunes
+    clean = re.sub(r'\.(csv|txt|asc|dat)$', '', name, flags=re.IGNORECASE)
+    clean = re.sub(r'(_|-)(raman|ftir|muestra|raw|proc|corr)\d*', '', clean, flags=re.IGNORECASE)
+    clean = clean.strip()
+    
+    # Si tiene dos o más palabras, asumimos que es un nombre científico (Binomial)
+    parts = clean.split()
+    if len(parts) >= 2:
+        if use_latex:
+            # Reemplazar espacios por espacios escapados para LaTeX math mode
+            tex_name = r"\ ".join(parts)
+            return f"$\\mathit{{{tex_name}}}$"
+        else:
+            return f"<i>{clean}</i>"
+    return clean
+
 class SpectrumData(BaseModel):
     name: str
     x: List[Optional[float]]
@@ -311,7 +331,9 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
         # Agrupación Taxonómica Automática (Orden Alfabético de Especies)
         orig_names = [s.name for s in request.spectra]
         sorted_indices = sorted(range(len(orig_names)), key=lambda i: orig_names[i])
-        names = [orig_names[i] for i in sorted_indices]
+        
+        # Nombres formateados para HTML (cursiva)
+        names = [format_scientific_name(orig_names[i], use_latex=False) for i in sorted_indices]
         Y_matrix = Y_matrix_raw[sorted_indices]
         n_samples = len(names)
         
@@ -645,7 +667,12 @@ async def calculate_pca(data: ChemoRequest):
         for i, n in enumerate(names):
             pc1 = float(scores[i][0])
             pc2 = float(scores[i][1]) if n_comps > 1 else 0.0
-            scores_out.append({"name": n, "pc1": pc1, "pc2": pc2})
+            scores_out.append({
+                "name": n, 
+                "scientific_name": format_scientific_name(n, use_latex=False),
+                "pc1": pc1, 
+                "pc2": pc2
+            })
             
         return {
             "type": "pca",
@@ -663,36 +690,27 @@ async def calculate_hca(data: ChemoRequest):
         if len(data.spectra) < 2: return {"error": "Se requieren al menos 2 espectros."}
         names = [s.name for s in data.spectra]
         
-        # 1. Limpieza automática de etiquetas para legibilidad
-        clean_labels = [
-            str(name).replace('.csv', '')
-                     .replace('.txt', '')
-                     .replace('CONVERTED_T2A_', '')
-                     .replace('prom_', '')
-            for name in names
-        ]
-        
         Y, _ = prepare_chemometric_matrix(data)
         
         Z = linkage(Y, method=data.linkage_method, metric='euclidean')
         
-        # 2. Generación del dendrograma sin truncamiento
+        # Generación del dendrograma para extracción de coordenadas
         ddata = dendrogram(
             Z, 
-            labels=clean_labels, 
+            labels=names, 
             no_plot=True,
             truncate_mode=None, 
-            color_threshold=data.color_threshold, # Umbral dinámico
-            leaf_rotation=90.,
-            leaf_font_size=10.,
-            show_contracted=False
+            color_threshold=data.color_threshold
         )
+        
+        # Formatear nombres de las hojas (eje X del dendrograma)
+        scientific_ivl = [format_scientific_name(n, use_latex=False) for n in ddata['ivl']]
         
         return {
             "type": "hca",
             "icoord": ddata['icoord'],
             "dcoord": ddata['dcoord'],
-            "ivl": ddata['ivl'],
+            "ivl": scientific_ivl,
             "metadata": get_treatment_metadata(data)
         }
     except Exception as e:
@@ -703,7 +721,8 @@ async def calculate_hca(data: ChemoRequest):
 async def calculate_correlation(data: ChemoRequest):
     try:
         if len(data.spectra) < 2: return {"error": "Se requieren al menos 2 espectros."}
-        names = [s.name for s in data.spectra]
+        orig_names = [s.name for s in data.spectra]
+        names = [format_scientific_name(n, use_latex=False) for n in orig_names]
         Y, _ = prepare_chemometric_matrix(data)
         
         corr_matrix = np.corrcoef(Y)
@@ -750,6 +769,7 @@ async def calculate_plsda(data: PlsdaRequest):
                 scores_grouped[grp] = []
             scores_grouped[grp].append({
                 "name": names[i],
+                "scientific_name": format_scientific_name(names[i], use_latex=False),
                 "lv1": float(scores[i, 0]) if n_comps > 0 else 0.0,
                 "lv2": float(scores[i, 1]) if n_comps > 1 else 0.0
             })

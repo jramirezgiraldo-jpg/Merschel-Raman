@@ -657,6 +657,18 @@
     let currentBaseline = 'none', currentDerivative = 'none', currentSmoothing = 'none', currentNorm = 'none';
     let currentTreatmentLegend = 'Procesamiento: Ninguno (Datos crudos)';
 
+    function format_scientific_name_js(name) {
+        if (!name) return "";
+        let clean = name.replace(/\.(csv|txt|asc|dat)$/i, '')
+                        .replace(/(_|-)(raman|ftir|muestra|raw|proc|corr)\d*/i, '')
+                        .trim();
+        let parts = clean.split(/\s+/);
+        if (parts.length >= 2) {
+            return `<i>${clean}</i>`;
+        }
+        return clean;
+    }
+
     function updateTreatmentLegendText() {
         if(currentBaseline === 'none' && currentDerivative === 'none' && currentSmoothing === 'none' && currentNorm === 'none') {
             currentTreatmentLegend = "Procesamiento: Ninguno (Datos crudos)";
@@ -1302,10 +1314,10 @@
             // Trazado de Scores (Dispersión de Clases)
             const colores = ['#2563eb', '#ef4444', '#10b981', '#f59e0b', '#7c3aed']; // Palette
             const tracesScores = Object.keys(data.scores).map((grupo, idx) => ({
-                name: grupo,
+                name: format_scientific_name_js(grupo),
                 x: data.scores[grupo].map(d => d.lv1),
                 y: data.scores[grupo].map(d => d.lv2),
-                text: data.scores[grupo].map(d => d.name),
+                text: data.scores[grupo].map(d => d.scientific_name || d.name),
                 mode: 'markers+text',
                 textposition: 'top center',
                 marker: { size: 10, color: colores[idx % colores.length], line: {width: 1, color: 'white'} }
@@ -1348,7 +1360,7 @@
             const traces = [{
                 x: data.scores.map(s => s.pc1),
                 y: data.scores.map(s => s.pc2),
-                text: data.scores.map(s => s.name),
+                text: data.scores.map(s => s.scientific_name || s.name),
                 mode: 'markers+text',
                 textposition: 'top center',
                 marker: { size: 10, color: 'var(--primary)', line: {color: 'var(--primary-dark)', width: 2} }
@@ -1435,7 +1447,7 @@
         const traces = data.names.map((name, i) => ({
             x: data.x_ref,
             y: data.y_matrix[i],
-            name: name,
+            name: format_scientific_name_js(name),
             type: 'scatter',
             mode: 'lines',
             line: { width: 1.5, color: palette[i % palette.length] }
@@ -1480,7 +1492,7 @@
             <th style="padding:10px; border-bottom:2px solid var(--border);">Wavenumber (cm⁻¹)</th>
             <th style="padding:10px; border-bottom:2px solid var(--border);">Asignación Sugerida</th>`;
         names.forEach(n => {
-            headerHtml += `<th style="padding:10px; border-bottom:2px solid var(--border);">${n} (Int.)</th>`;
+            headerHtml += `<th style="padding:10px; border-bottom:2px solid var(--border);">${format_scientific_name_js(n)} (Int.)</th>`;
         });
         headerHtml += `</tr>`;
         head.innerHTML = headerHtml;
