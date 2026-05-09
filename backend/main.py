@@ -342,27 +342,30 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
             groups.append(np.mean(current_group))
             
         def get_assignment(wn, meth):
-            # RAMAN EXCLUSIVES
+            # TÉCNICA ESPECÍFICA
             if meth == "RAMAN":
                 if 1000 <= wn <= 1010: return "Respiración de anillo: Fenilalanina (Proteínas)"
-                if 1440 <= wn <= 1460: return "Deformación CH2: Flexión (Lípidos)"
-            # FTIR EXCLUSIVES
             elif meth == "FTIR":
-                if 1730 <= wn <= 1750: return "Estiramiento C=O: Ésteres (Lípidos/Triglicéridos)"
-                if 1230 <= wn <= 1260: return "Estiramiento P=O: Fosfatos (Ácidos Nucleicos)"
-                if 1070 <= wn <= 1100: return "Estiramiento C-O: Carbohidratos (Polisacáridos)"
+                if 1735 <= wn <= 1745: return "Estiramiento C=O: Ésteres de Lípidos"
             
-            # COMUNES
+            # DICCIONARIO CIENTÍFICO AMPLIADO (Fingerprint)
             if 1650 <= wn <= 1670: return "Estiramiento C=O: Amida I (Proteínas)"
+            if 1570 <= wn <= 1585: return "Vibración de anillo: Guanina / Adenina (Ácidos Nucleicos)"
             if 1540 <= wn <= 1560: return "Deformación N-H: Amida II (Proteínas)"
             if 1445 <= wn <= 1455: return "Deformación CH2: Flexión (Lípidos)"
+            if 1300 <= wn <= 1315: return "Deformación CH2: Lípidos (Twisting/Wagging)"
+            if 1240 <= wn <= 1260: return "Estiramiento P=O asimétrico: Fosfatos (Ácidos Nucleicos/Fosfolípidos)"
+            if 1120 <= wn <= 1135: return "Estiramiento C-N / C-C: Proteínas y Lípidos"
+            if 1070 <= wn <= 1090: return "Estiramiento C-O: Esqueleto (Carbohidratos/Polisacáridos)"
+            if 930 <= wn <= 980: return "Estiramiento C-C: Esqueleto Proteico / Polisacáridos"
+            if 810 <= wn <= 830: return "Estiramiento O-P-O: Ácidos Nucleicos (ARN/ADN)"
             
-            # CATEGORÍAS POR RANGO (REEMPLAZO DE GENÉRICOS)
+            # CATEGORÍAS POR RANGO
             if 1500 <= wn <= 1800: return "Vibración Bioquímica: Proteínas"
             if 1200 <= wn < 1500: return "Vibración Bioquímica: Lípidos / Mixta"
             if 900 <= wn < 1200: return "Vibración Bioquímica: Carbohidratos / ADN"
             
-            return "Vibración Bioquímica (Región Fingerprint)"
+            return "Vibración Bioquímica identificada (Fingerprint)"
 
         # Clasificación y Recolección
         common_rows = []
@@ -411,7 +414,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
         unique_rows_compiled = []
         for n in names:
             if unique_by_sample[n]:
-                unique_rows_compiled.append(f'<tr class="row-group-header"><td colspan="{n_samples + 2}"><b>Marcadores Específicos: {n}</b></td></tr>')
+                unique_rows_compiled.append(f'<tr class="row-group-header"><td colspan="{n_samples + 2}"><b>Biomarcadores Únicos de: {n}</b></td></tr>')
                 unique_rows_compiled.extend(unique_by_sample[n])
 
         headers_samples = "".join([f"<th>{n}</th>" for n in names])
@@ -423,36 +426,46 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
             <meta charset="UTF-8">
             <title>Caracterización Profesional Hershell Raman</title>
             <style>
-                body {{ font-family: 'Open Sans', Arial, sans-serif; background: #fdfdfd; color: #333; padding: 50px 50px 50px 220px; line-height: 1.6; margin-bottom: 100px; }}
-                .container {{ background: #fff; padding: 40px; border-radius: 2px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: visible; }}
-                .brand {{ text-align: right; font-size: 0.7rem; color: #aaa; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }}
-                h1 {{ color: #00796b; text-align: center; font-weight: 800; border-bottom: 4px solid #009b77; padding-bottom: 5px; margin-bottom: 5px; }}
+                body {{ font-family: 'Open Sans', Arial, sans-serif; background: #fdfdfd; color: #333; padding: 40px; line-height: 1.6; margin-bottom: 100px; }}
+                .main-container {{ margin-left: 240px; }}
+                .report-card {{ background: #fff; padding: 40px; border-radius: 4px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: visible; }}
+                .brand-header {{ text-align: right; font-size: 0.7rem; color: #aaa; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }}
+                h1 {{ color: #00796b; text-align: center; font-weight: 800; border-bottom: 4px solid #009b77; padding-bottom: 5px; margin-bottom: 5px; margin-top: 0; }}
                 .subtitle {{ text-align: center; color: #666; font-size: 0.9rem; margin-bottom: 30px; font-style: italic; }}
                 
-                /* PANEL FILTROS LATERAL */
-                .sidebar-filters {{
-                    position: fixed; left: 20px; top: 100px; width: 180px; z-index: 2000;
-                    display: flex; flex-direction: column; gap: 10px;
+                /* PANEL CONSOLA LATERAL IZQUIERDA */
+                .sidebar-console {{
+                    position: fixed; left: 15px; top: 40px; width: 220px; z-index: 9999;
+                    display: flex; flex-direction: column; gap: 20px;
                 }}
+                .sidebar-group {{ background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }}
+                .sidebar-label {{ font-size: 0.65rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: bold; display: block; }}
+                
+                .btn-list {{ display: flex; flex-direction: column; gap: 8px; }}
                 .filter-btn {{
-                    padding: 12px; background: #fff; border: 1px solid #ddd; border-radius: 6px;
-                    cursor: pointer; font-size: 0.75rem; font-weight: bold; text-align: left;
-                    transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                    padding: 10px; background: #f8fafc; border: 1px solid #eee; border-radius: 6px;
+                    cursor: pointer; font-size: 0.7rem; font-weight: bold; text-align: left;
+                    transition: all 0.2s;
                 }}
-                .filter-btn:hover {{ background: #f8fafc; border-color: #009b77; }}
+                .filter-btn:hover {{ background: #f1f5f9; border-color: #009b77; }}
                 .filter-btn.active {{ background: #009b77; color: white; border-color: #009b77; }}
 
+                .legend-box {{ display: flex; flex-direction: column; gap: 8px; }}
+                .l-item {{ display: flex; align-items: center; gap: 10px; font-size: 0.7rem; font-weight: bold; color: #444; }}
+                .box {{ width: 14px; height: 14px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.1); }}
+
+                /* TABLA Y ESTILOS */
                 table {{ 
                     width: 100%; 
                     border-collapse: separate; 
                     border-spacing: 0; 
-                    margin-top: 20px; 
+                    margin-top: 10px; 
                 }}
                 thead th {{ 
                     position: -webkit-sticky;
                     position: sticky; 
-                    top: 0; 
-                    z-index: 9999;
+                    top: -40px; 
+                    z-index: 999;
                     background-color: #009b77 !important; 
                     color: #fff; 
                     padding: 15px; 
@@ -469,25 +482,6 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                 .char-text-common {{ color: #00796b; }}
                 .char-text-shared {{ color: #1e40af; }}
                 .char-text-unique {{ color: #92400e; }}
-                
-                .leyenda-quimiometria {{
-                    position: fixed;
-                    bottom: 20px;
-                    right: 20px;
-                    background: rgba(255, 255, 255, 0.95);
-                    padding: 15px;
-                    border: 2px solid #009b77;
-                    border-radius: 10px;
-                    z-index: 10000;
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-                    font-family: Arial, sans-serif;
-                    font-size: 11px;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 8px;
-                }}
-                .l-item {{ display: flex; align-items: center; gap: 10px; font-weight: bold; }}
-                .box {{ width: 14px; height: 14px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.1); }}
                 .footer {{ margin-top: 50px; text-align: center; font-size: 0.7rem; color: #bbb; }}
             </style>
             <script>
@@ -508,41 +502,50 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
             </script>
         </head>
         <body>
-            <nav class="sidebar-filters">
-                <button class="filter-btn active" onclick="filterRows('all', this)">Ver Tabla Completa</button>
-                <button class="filter-btn" onclick="filterRows('row-common', this)">Coincidencias Totales</button>
-                <button class="filter-btn" onclick="filterRows('row-shared', this)">Compartidos</button>
-                <button class="filter-btn" onclick="filterRows('row-unique', this)">Diferenciadores Únicos</button>
-            </nav>
-
-            <div class="leyenda-quimiometria">
-                <div style="font-size:9px; color:#888; margin-bottom:4px; text-transform:uppercase; letter-spacing:1px;">Categorización Taxonómica ({method})</div>
-                <div class="l-item"><div class="box" style="background:#f1fcf9; border-color:#009b77;"></div> VERDE: Común (100%)</div>
-                <div class="l-item"><div class="box" style="background:#f0f7ff; border-color:#1e40af;"></div> AZUL: Compartido</div>
-                <div class="l-item"><div class="box" style="background:#fff9f0; border-color:#92400e;"></div> NARANJA: Único (Biomarcador)</div>
+            <div class="sidebar-console">
+                <div class="sidebar-group">
+                    <span class="sidebar-label">Filtros de Análisis</span>
+                    <div class="btn-list">
+                        <button class="filter-btn active" onclick="filterRows('all', this)">Ver Tabla Completa</button>
+                        <button class="filter-btn" onclick="filterRows('row-common', this)">Coincidencias Totales</button>
+                        <button class="filter-btn" onclick="filterRows('row-shared', this)">Picos Compartidos</button>
+                        <button class="filter-btn" onclick="filterRows('row-unique', this)">Diferenciadores Únicos</button>
+                    </div>
+                </div>
+                
+                <div class="sidebar-group">
+                    <span class="sidebar-label">Categorización ({method})</span>
+                    <div class="legend-box">
+                        <div class="l-item"><div class="box" style="background:#f1fcf9; border-color:#009b77;"></div> COMÚN (100%)</div>
+                        <div class="l-item"><div class="box" style="background:#f0f7ff; border-color:#1e40af;"></div> COMPARTIDO</div>
+                        <div class="l-item"><div class="box" style="background:#fff9f0; border-color:#92400e;"></div> ÚNICO (Biomarcador)</div>
+                    </div>
+                </div>
             </div>
 
-            <div class="container">
-                <div class="brand">Hershell-Raman | High Performance Analysis</div>
-                <h1>REPORTE DE CARACTERIZACIÓN {method}</h1>
-                <div class="subtitle">Análisis de Marcadores Bioquímicos en la Región Fingerprint (800 - 1800 cm⁻¹)</div>
-                
-                <table>
-                    <thead>
-                        <tr>
-                            <th>CARACTERÍSTICAS</th>
-                            <th>VIBRACIÓN / BIOMOLÉCULA</th>
-                            {headers_samples}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {"".join(common_rows)}
-                        {"".join(shared_rows)}
-                        {"".join(unique_rows_compiled)}
-                    </tbody>
-                </table>
+            <div class="main-container">
+                <div class="report-card">
+                    <div class="brand-header">Hershell-Raman | Scientific Publication Standard</div>
+                    <h1>REPORTE TAXONÓMICO {method}</h1>
+                    <div class="subtitle">Análisis de Marcadores Bioquímicos en la Región Fingerprint (800 - 1800 cm⁻¹)</div>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>CARACTERÍSTICAS</th>
+                                <th>VIBRACIÓN / BIOMOLÉCULA</th>
+                                {headers_samples}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {"".join(common_rows)}
+                            {"".join(shared_rows)}
+                            {"".join(unique_rows_compiled)}
+                        </tbody>
+                    </table>
 
-                <div class="footer">Generado automáticamente bajo estándar de publicación científica - Hershell-Raman v9.6</div>
+                    <div class="footer">Generado automáticamente bajo estándar de publicación científica - Hershell-Raman v9.7</div>
+                </div>
             </div>
         </body>
         </html>"""
