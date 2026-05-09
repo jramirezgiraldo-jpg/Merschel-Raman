@@ -329,13 +329,6 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                     current_group = [x]
             groups.append(np.mean(current_group))
             
-        def get_region(wn):
-            if wn > 2800: return "Lípidos / C-H"
-            if 1500 <= wn <= 1800: return "Proteínas / Amidas"
-            if 1200 <= wn < 1500: return "Región Mixta"
-            if 900 <= wn < 1200: return "Carbohidratos / ADN"
-            return "Huella Dactilar"
-
         def get_assignment(wn):
             if 1630 <= wn <= 1680: return "Amida I (Proteínas)"
             if 1040 <= wn <= 1070: return "Polisacáridos"
@@ -344,41 +337,47 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
             if 1000 <= wn <= 1010: return "Fenilalanina"
             return "Vibración Específica"
 
-        rows_html = ""
+        # Clasificación y Recolección
+        common_rows = []
+        shared_rows = []
+        unique_rows = []
+
         for g_wn in groups:
             present_in = []
-            intensities = []
+            wn_values = []
             for s_idx, name in enumerate(names):
                 match = next((p for p in spectra_peak_details[s_idx] if abs(p["x"] - g_wn) <= 5.0), None)
                 if match:
                     present_in.append(name)
-                    intensities.append(f"<b>{match['y']:.3f}</b>")
+                    wn_values.append(f"{match['x']:.1f}")
                 else:
-                    intensities.append("-")
+                    wn_values.append("-")
             
             count = len(present_in)
-            if count == n_samples:
-                cat = "COINCIDENCIA (COMÚN)"
-                row_class = "cat-common"
-            elif count > 1:
-                cat = f"COMPARTIDO ({', '.join(present_in)})"
-                row_class = "cat-shared"
-            else:
-                cat = f"DIFERENCIADOR (ÚNICO: {present_in[0]})"
-                row_class = "cat-unique"
-                
-            region = get_region(g_wn)
             assignment = get_assignment(g_wn)
-            intensities_tds = "".join([f"<td>{val}</td>" for val in intensities])
+            sample_cols = "".join([f"<td>{v}</td>" for v in wn_values])
             
-            rows_html += f"""
-            <tr class="{row_class}">
-                <td>{region}</td>
-                <td>{g_wn:.1f}</td>
-                <td contenteditable="true">{assignment}</td>
-                {intensities_tds}
-                <td>{cat}</td>
-            </tr>"""
+            if count == n_samples:
+                common_rows.append(f"""
+                <tr class="row-common">
+                    <td class="char-text-common"><b>COINCIDENCIA COMÚN</b></td>
+                    <td>{assignment}</td>
+                    {sample_cols}
+                </tr>""")
+            elif count > 1:
+                shared_rows.append(f"""
+                <tr class="row-shared">
+                    <td class="char-text-shared"><b>Compartido ({' y '.join(present_in)})</b></td>
+                    <td>{assignment}</td>
+                    {sample_cols}
+                </tr>""")
+            else:
+                unique_rows.append(f"""
+                <tr class="row-unique">
+                    <td class="char-text-unique"><b>Diferenciador Único ({present_in[0]})</b></td>
+                    <td>{assignment}</td>
+                    {sample_cols}
+                </tr>""")
 
         headers_samples = "".join([f"<th>{n}</th>" for n in names])
         
@@ -387,48 +386,51 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
         <html>
         <head>
             <meta charset="UTF-8">
-            <title>Caracterización Hershell Raman</title>
+            <title>Caracterización Profesional Hershell Raman</title>
             <style>
-                body {{ font-family: 'Open Sans', sans-serif; background: #fafafa; color: #333; padding: 40px; }}
-                .report-box {{ background: #fff; padding: 30px; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: relative; }}
-                .watermark {{ position: absolute; top: 15px; right: 20px; font-size: 0.7rem; color: #999; letter-spacing: 1px; }}
-                h1 {{ color: #064e3b; text-align: center; margin-bottom: 30px; border-bottom: 3px solid #064e3b; padding-bottom: 10px; }}
+                body {{ font-family: 'Open Sans', Arial, sans-serif; background: #fdfdfd; color: #333; padding: 50px; line-height: 1.6; }}
+                .container {{ background: #fff; padding: 40px; border-radius: 2px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }}
+                .brand {{ text-align: right; font-size: 0.7rem; color: #aaa; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }}
+                h1 {{ color: #00796b; text-align: center; font-weight: 800; border-bottom: 4px solid #009b77; padding-bottom: 15px; margin-bottom: 30px; }}
                 table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
-                th {{ background: #064e3b; color: #fff; padding: 12px; text-align: left; font-size: 0.85rem; text-transform: uppercase; }}
-                td {{ padding: 10px; border-bottom: 1px solid #eee; font-size: 0.85rem; }}
-                .cat-common {{ background-color: #ecfdf5; }} /* Verde muy claro */
-                .cat-shared {{ background-color: #eff6ff; }} /* Azul muy claro */
-                .cat-unique {{ background-color: #fffaf1; }} /* Naranja/Crema muy claro */
-                .legend {{ margin-top: 20px; display: flex; gap: 20px; font-size: 0.75rem; font-weight: bold; }}
-                .l-item {{ display: flex; align-items: center; gap: 6px; }}
-                .dot {{ width: 12px; height: 12px; border-radius: 2px; }}
-                .footer {{ margin-top: 40px; text-align: center; font-size: 0.7rem; color: #aaa; }}
+                thead th {{ background: #009b77; color: #fff; padding: 15px; text-align: left; font-size: 0.8rem; text-transform: uppercase; border: 1px solid #008966; }}
+                tbody td {{ padding: 12px; border: 1px solid #eee; font-size: 0.85rem; }}
+                .row-common {{ background-color: #f1fcf9; }}
+                .row-shared {{ background-color: #f0f7ff; }}
+                .row-unique {{ background-color: #fff9f0; }}
+                .char-text-common {{ color: #00796b; }}
+                .char-text-shared {{ color: #1e40af; }}
+                .char-text-unique {{ color: #92400e; }}
+                .legend {{ margin-top: 30px; display: flex; gap: 30px; padding: 20px; background: #f8fafc; border-radius: 4px; }}
+                .l-item {{ display: flex; align-items: center; gap: 10px; font-size: 0.8rem; font-weight: bold; }}
+                .box {{ width: 18px; height: 18px; border-radius: 2px; }}
+                .footer {{ margin-top: 50px; text-align: center; font-size: 0.7rem; color: #bbb; }}
             </style>
         </head>
         <body>
-            <div class="report-box">
-                <div class="watermark">HERSHELL-RAMAN | ANÁLISIS TAXONÓMICO</div>
-                <h1>DIFERENCIACIÓN TAXONÓMICA ESPECTRAL</h1>
+            <div class="container">
+                <div class="brand">Hershell-Raman | High Performance Chemometrics</div>
+                <h1>REPORTE DE CARACTERIZACIÓN MULTIESPECIE</h1>
                 <table>
                     <thead>
                         <tr>
-                            <th>Características</th>
-                            <th>cm⁻¹ (Prom)</th>
-                            <th>Vibración / Biomolécula</th>
+                            <th>CARACTERÍSTICAS</th>
+                            <th>VIBRACIÓN / BIOMOLÉCULA</th>
                             {headers_samples}
-                            <th>Categoría Taxonómica</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {rows_html}
+                        {"".join(common_rows)}
+                        {"".join(shared_rows)}
+                        {"".join(unique_rows)}
                     </tbody>
                 </table>
                 <div class="legend">
-                    <div class="l-item"><div class="dot" style="background:#ecfdf5; border:1px solid #10b981;"></div> COMÚN (100%)</div>
-                    <div class="l-item"><div class="dot" style="background:#eff6ff; border:1px solid #3b82f6;"></div> COMPARTIDO</div>
-                    <div class="l-item"><div class="dot" style="background:#fffaf1; border:1px solid #f59e0b;"></div> ÚNICO</div>
+                    <div class="l-item"><div class="box" style="background:#f1fcf9; border:1px solid #009b77;"></div> COINCIDENCIA COMÚN</div>
+                    <div class="l-item"><div class="box" style="background:#f0f7ff; border:1px solid #1e40af;"></div> COMPARTIDO</div>
+                    <div class="l-item"><div class="box" style="background:#fff9f0; border:1px solid #92400e;"></div> DIFERENCIADOR ÚNICO</div>
                 </div>
-                <div class="footer">Este informe es dinámico y se ajusta según el número de muestras (N={n_samples}).</div>
+                <div class="footer">Este informe jerárquico es generado dinámicamente para N={n_samples} especies analizadas.</div>
             </div>
         </body>
         </html>"""
