@@ -65,23 +65,32 @@ app.add_middleware(
 )
 
 # Modelos de datos para el Body de la petición (JSON)
+def clean_sample_name(name: str):
+    """
+    Limpia el nombre del archivo eliminando extensiones y sufijos comunes.
+    Ej: 'Cryptosporidium_parvum_Raman.csv' -> 'Cryptosporidium parvum'
+    """
+    # Eliminar extensiones (.csv, .txt, .txt.txt)
+    clean = re.sub(r'(\.(csv|txt|asc|dat))+$', '', name, flags=re.IGNORECASE)
+    # Eliminar guiones bajos o sufijos comunes
+    clean = re.sub(r'(_|-)(raman|ftir|muestra|raw|proc|corr)\d*', '', clean, flags=re.IGNORECASE)
+    # Reemplazar guiones bajos por espacios para un nombre limpio
+    clean = clean.replace('_', ' ').strip()
+    return clean
+
 def format_scientific_name(name: str, use_latex: bool = False):
     """
-    Limpia el nombre del archivo y aplica formato de cursiva si parece un nombre científico.
+    Aplica formato de cursiva taxonómica si el nombre parece binomial.
     """
-    # Eliminar extensiones y sufijos comunes
-    clean = re.sub(r'\.(csv|txt|asc|dat)$', '', name, flags=re.IGNORECASE)
-    clean = re.sub(r'(_|-)(raman|ftir|muestra|raw|proc|corr)\d*', '', clean, flags=re.IGNORECASE)
-    clean = clean.strip()
-    
-    # Si tiene dos o más palabras, asumimos que es un nombre científico (Binomial)
+    clean = clean_sample_name(name)
     parts = clean.split()
     if len(parts) >= 2:
         if use_latex:
-            # Reemplazar espacios por espacios escapados para LaTeX math mode
+            # Formato TeX para Matplotlib
             tex_name = r"\ ".join(parts)
             return f"$\\mathit{{{tex_name}}}$"
         else:
+            # Formato HTML para el reporte
             return f"<i>{clean}</i>"
     return clean
 
@@ -647,15 +656,23 @@ def get_treatment_metadata(data: ChemoRequest):
     r_min, r_max = data.params.range[0], data.params.range[1]
     scale = data.params.scale.upper() if data.params.scale != "none" else "Ninguno"
     metadata = f"Tratamiento: Escalado {scale} | Rango: {r_min:.1f} - {r_max:.1f} cm⁻¹"
-    if data.analysis_type == "hca":
-        metadata += f" | Enlace: {data.linkage_method.capitalize()}"
     return metadata
+
+def save_plot_to_base64():
+    import io
+    import base64
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight', dpi=150)
+    buf.seek(0)
+    img_str = base64.b64encode(buf.read()).decode('utf-8')
+    plt.close()
+    return img_str
 
 @app.post("/api/pca")
 async def calculate_pca(data: ChemoRequest):
     try:
         if len(data.spectra) < 2: return {"error": "Se requieren al menos 2 espectros."}
-        names = [s.name for s in data.spectra]
+        names = [clean_sample_name(s.name) for s in data.spectra]
         Y, _ = prepare_chemometric_matrix(data)
         
         n_comps = min(2, Y.shape[0])
@@ -674,10 +691,24 @@ async def calculate_pca(data: ChemoRequest):
                 "pc2": pc2
             })
             
+        # Generar Imagen Matplotlib para Estándar Científico
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        plt.figure(figsize=(9, 6))
+        plot_labels = [format_scientific_name(n, use_latex=True) for n in names]
+        sns.scatterplot(x=scores[:, 0], y=scores[:, 1] if n_comps > 1 else np.zeros_like(scores[:, 0]), 
+                        hue=plot_labels, palette='viridis', s=100, alpha=0.8)
+        plt.title(f'Análisis de Componentes Principales (PCA)\n{get_treatment_metadata(data)}')
+        plt.xlabel(f'PC1 ({evr[0]:.1f}%)')
+        plt.ylabel(f'PC2 ({evr[1]:.1f}%)' if n_comps > 1 else 'PC2')
+        plt.grid(True, linestyle='--', alpha=0.6)
+        img_b64 = save_plot_to_base64()
+
         return {
             "type": "pca",
             "scores": scores_out,
             "explained_variance": [float(evr[0]), float(evr[1]) if n_comps > 1 else 0.0],
+            "plot_image": img_b64,
             "metadata": get_treatment_metadata(data)
         }
     except Exception as e:
@@ -688,13 +719,22 @@ async def calculate_pca(data: ChemoRequest):
 async def calculate_hca(data: ChemoRequest):
     try:
         if len(data.spectra) < 2: return {"error": "Se requieren al menos 2 espectros."}
-        names = [s.name for s in data.spectra]
+        names = [clean_sample_name(s.name) for s in data.spectra]
         
         Y, _ = prepare_chemometric_matrix(data)
         
         Z = linkage(Y, method=data.linkage_method, metric='euclidean')
         
-        # Generación del dendrograma para extracción de coordenadas
+        # Generar Imagen Matplotlib para Estándar Científico
+        import matplotlib.pyplot as plt
+        plt.figure(figsize=(10, 7))
+        plot_labels = [format_scientific_name(n, use_latex=True) for n in names]
+        dendrogram(Z, labels=plot_labels, orientation='top', color_threshold=data.color_threshold)
+        plt.title(f"Dendrograma de Agrupamiento Jerárquico (HCA)\n{get_treatment_metadata(data)}")
+        plt.ylabel("Distancia Euclidiana")
+        img_b64 = save_plot_to_base64()
+
+        # Re-generar para JSON coords (Plotly)
         ddata = dendrogram(
             Z, 
             labels=names, 
@@ -711,6 +751,7 @@ async def calculate_hca(data: ChemoRequest):
             "icoord": ddata['icoord'],
             "dcoord": ddata['dcoord'],
             "ivl": scientific_ivl,
+            "plot_image": img_b64,
             "metadata": get_treatment_metadata(data)
         }
     except Exception as e:

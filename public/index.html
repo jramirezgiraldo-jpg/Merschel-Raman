@@ -1355,6 +1355,7 @@
         };
 
         const subtitle = `<br><span style="font-size:12px; color:#64748b; font-weight:normal;">${data.metadata || ''}</span>`;
+        const container = document.getElementById('chemo-graph');
 
         if (data.type === "pca") {
             const traces = [{
@@ -1365,48 +1366,60 @@
                 textposition: 'top center',
                 marker: { size: 10, color: 'var(--primary)', line: {color: 'var(--primary-dark)', width: 2} }
             }];
-            
-            layout.title = 'Análisis de Componentes Principales (Scores)' + subtitle;
-            layout.xaxis = { title: `PC1 (${data.explained_variance[0].toFixed(1)}%)`, zeroline: true, gridcolor: '#e2e8f0' };
-            layout.yaxis = { title: `PC2 (${data.explained_variance[1].toFixed(1)}%)`, zeroline: true, gridcolor: '#e2e8f0' };
+            layout.title = 'Análisis de Componentes Principales (PCA)' + subtitle;
+            layout.xaxis = { title: `PC1 (${data.explained_variance[0].toFixed(1)}%)` };
+            layout.yaxis = { title: `PC2 (${data.explained_variance[1].toFixed(1)}%)` };
             Plotly.react('chemo-graph', traces, layout);
-            
         } else if (data.type === "hca") {
-            const traces = [];
-            for (let i = 0; i < data.icoord.length; i++) {
-                traces.push({
-                    x: data.icoord[i],
-                    y: data.dcoord[i],
-                    mode: 'lines',
-                    line: { color: 'var(--text-main)', width: 1.5 },
-                    hoverinfo: 'none',
-                    showlegend: false
-                });
-            }
-            
-            const tickVals = data.ivl.map((_, i) => 5 + i * 10);
-            layout.title = 'Agrupamiento Jerárquico (HCA: Ward, Euclidiana)' + subtitle;
-            layout.xaxis = { tickvals: tickVals, ticktext: data.ivl, tickangle: 90, showgrid: false };
-            layout.yaxis = { title: 'Distancia Euclidiana', showgrid: true, gridcolor: '#e2e8f0' };
+            const traces = data.icoord.map((x, i) => ({
+                x: x, y: data.dcoord[i],
+                type: 'scatter', mode: 'lines',
+                line: { color: '#475569', width: 1.5 },
+                showlegend: false
+            }));
+            layout.title = 'Dendrograma HCA' + subtitle;
+            layout.xaxis = {
+                tickvals: data.icoord.map(x => (x[1] + x[2]) / 2),
+                ticktext: data.ivl,
+                tickangle: 45
+            };
+            layout.yaxis = { title: 'Distancia Euclidiana' };
             Plotly.react('chemo-graph', traces, layout);
-            
         } else if (data.type === "correlation") {
-            const palette = document.getElementById('heatmap-palette').value;
             const traces = [{
                 z: data.matrix,
                 x: data.labels,
                 y: data.labels,
                 type: 'heatmap',
-                colorscale: palette,
+                colorscale: 'Viridis',
                 zmin: -1, zmax: 1
             }];
-            
             layout.title = 'Matriz de Correlación de Pearson' + subtitle;
             layout.xaxis = { tickangle: 45 };
             layout.yaxis = { autorange: 'reversed' }; 
             layout.margin.l = 100;
             Plotly.react('chemo-graph', traces, layout);
         }
+
+        // Botón para descargar gráfico científico (Matplotlib Base64)
+        if (data.plot_image) {
+            let downloadDiv = document.getElementById('chemo-download-container');
+            if (!downloadDiv) {
+                downloadDiv = document.createElement('div');
+                downloadDiv.id = 'chemo-download-container';
+                downloadDiv.style.marginTop = '12px';
+                downloadDiv.style.textAlign = 'center';
+                container.parentNode.appendChild(downloadDiv);
+            }
+            downloadDiv.innerHTML = `<button class="primary" style="font-size:0.75rem; background:#00796b; border-color:#00796b; width:100%;" onclick="downloadScientificPlot('${data.plot_image}', '${data.type}')">📥 Descargar Gráfico Científico (Estándar Q1 - PNG)</button>`;
+        }
+    }
+
+    function downloadScientificPlot(base64, type) {
+        const link = document.createElement('a');
+        link.href = 'data:image/png;base64,' + base64;
+        link.download = `${type}_scientific_standard.png`;
+        link.click();
     }
 
     let lastCharData = null;
