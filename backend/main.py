@@ -106,8 +106,9 @@ class CompareRequest(BaseModel):
     spectra: List[SpectrumData]
 
 class CharacterizeRequest(BaseModel):
-    spectra: List[SpectrumData]
+    spectra: list[SpectrumInput]
     prominence: float = 0.05
+    method: str = "Raman"
 
 # Ruta para servir nuestra UI Front-end
 @app.get("/", response_class=HTMLResponse)
@@ -298,6 +299,7 @@ async def characterize_spectra(request: CharacterizeRequest):
 @app.post("/api/report")
 async def generate_taxonomic_report(request: CharacterizeRequest):
     try:
+        method = request.method.upper()
         # 1. Alineación y Matrix Builder
         Y_matrix_full, x_ref_full = build_symmetric_matrix(request.spectra)
         
@@ -339,19 +341,33 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                     current_group = [x]
             groups.append(np.mean(current_group))
             
-        def get_assignment(wn):
+        def get_assignment(wn, meth):
+            # RAMAN EXCLUSIVES
+            if meth == "RAMAN":
+                if 1000 <= wn <= 1010: return "Respiración de anillo: Fenilalanina (Proteínas)"
+                if 1440 <= wn <= 1460: return "Deformación CH2: Flexión (Lípidos)"
+            # FTIR EXCLUSIVES
+            elif meth == "FTIR":
+                if 1730 <= wn <= 1750: return "Estiramiento C=O: Ésteres (Lípidos/Triglicéridos)"
+                if 1230 <= wn <= 1260: return "Estiramiento P=O: Fosfatos (Ácidos Nucleicos)"
+                if 1070 <= wn <= 1100: return "Estiramiento C-O: Carbohidratos (Polisacáridos)"
+            
+            # COMUNES
             if 1650 <= wn <= 1670: return "Estiramiento C=O: Amida I (Proteínas)"
             if 1540 <= wn <= 1560: return "Deformación N-H: Amida II (Proteínas)"
             if 1445 <= wn <= 1455: return "Deformación CH2: Flexión (Lípidos)"
-            if 1240 <= wn <= 1250: return "Estiramiento P=O asimétrico: Fosfatos (Ácidos Nucleicos)"
-            if 1070 <= wn <= 1090: return "Estiramiento C-O: Esqueleto (Carbohidratos/Polisacáridos)"
-            if 1003 <= wn <= 1005: return "Respiración de anillo: Fenilalanina (Aminoácidos)"
-            return "Vibración Específica Fingerprint"
+            
+            # CATEGORÍAS POR RANGO (REEMPLAZO DE GENÉRICOS)
+            if 1500 <= wn <= 1800: return "Vibración Bioquímica: Proteínas"
+            if 1200 <= wn < 1500: return "Vibración Bioquímica: Lípidos / Mixta"
+            if 900 <= wn < 1200: return "Vibración Bioquímica: Carbohidratos / ADN"
+            
+            return "Vibración Bioquímica (Región Fingerprint)"
 
         # Clasificación y Recolección
         common_rows = []
         shared_rows = []
-        unique_rows = []
+        unique_by_sample = {n: [] for n in names}
 
         for g_wn in groups:
             present_in = []
@@ -365,7 +381,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                     wn_values.append("-")
             
             count = len(present_in)
-            assignment = get_assignment(g_wn)
+            assignment = get_assignment(g_wn, method)
             sample_cols = "".join([f"<td>{v}</td>" for v in wn_values])
             
             if count == n_samples:
@@ -383,12 +399,20 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                     {sample_cols}
                 </tr>""")
             else:
-                unique_rows.append(f"""
+                unique_owner = present_in[0]
+                unique_by_sample[unique_owner].append(f"""
                 <tr class="row-unique">
-                    <td class="char-text-unique"><b>Diferenciador Único ({present_in[0]})</b></td>
+                    <td class="char-text-unique"><b>Diferenciador Único ({unique_owner})</b></td>
                     <td>{assignment}</td>
                     {sample_cols}
                 </tr>""")
+
+        # Ensamblar filas únicas agrupadas
+        unique_rows_compiled = []
+        for n in names:
+            if unique_by_sample[n]:
+                unique_rows_compiled.append(f'<tr class="row-group-header"><td colspan="{n_samples + 2}"><b>Marcadores Específicos: {n}</b></td></tr>')
+                unique_rows_compiled.extend(unique_by_sample[n])
 
         headers_samples = "".join([f"<th>{n}</th>" for n in names])
         
@@ -428,7 +452,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                     position: -webkit-sticky;
                     position: sticky; 
                     top: 0; 
-                    z-index: 999;
+                    z-index: 9999;
                     background-color: #009b77 !important; 
                     color: #fff; 
                     padding: 15px; 
@@ -438,6 +462,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                     border-bottom: 2px solid #333;
                 }}
                 tbody td {{ padding: 12px; border: 1px solid #eee; font-size: 0.85rem; }}
+                .row-group-header {{ background: #f8fafc; color: #64748b; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }}
                 .row-common {{ background-color: #f1fcf9; }}
                 .row-shared {{ background-color: #f0f7ff; }}
                 .row-unique {{ background-color: #fff9f0; }}
@@ -469,6 +494,10 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                 function filterRows(type, btn) {{
                     const rows = document.querySelectorAll('tbody tr');
                     rows.forEach(r => {{
+                        if (r.classList.contains('row-group-header')) {{
+                            r.style.display = (type === 'all' || type === 'row-unique') ? '' : 'none';
+                            return;
+                        }}
                         if (type === 'all') r.style.display = '';
                         else if (r.classList.contains(type)) r.style.display = '';
                         else r.style.display = 'none';
@@ -487,15 +516,15 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
             </nav>
 
             <div class="leyenda-quimiometria">
-                <div style="font-size:9px; color:#888; margin-bottom:4px; text-transform:uppercase; letter-spacing:1px;">Categorización Taxonómica</div>
+                <div style="font-size:9px; color:#888; margin-bottom:4px; text-transform:uppercase; letter-spacing:1px;">Categorización Taxonómica ({method})</div>
                 <div class="l-item"><div class="box" style="background:#f1fcf9; border-color:#009b77;"></div> VERDE: Común (100%)</div>
                 <div class="l-item"><div class="box" style="background:#f0f7ff; border-color:#1e40af;"></div> AZUL: Compartido</div>
                 <div class="l-item"><div class="box" style="background:#fff9f0; border-color:#92400e;"></div> NARANJA: Único (Biomarcador)</div>
             </div>
 
             <div class="container">
-                <div class="brand">Hershell-Raman | Scientific Standard</div>
-                <h1>REPORTE DE CARACTERIZACIÓN</h1>
+                <div class="brand">Hershell-Raman | High Performance Analysis</div>
+                <h1>REPORTE DE CARACTERIZACIÓN {method}</h1>
                 <div class="subtitle">Análisis de Marcadores Bioquímicos en la Región Fingerprint (800 - 1800 cm⁻¹)</div>
                 
                 <table>
@@ -509,11 +538,11 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                     <tbody>
                         {"".join(common_rows)}
                         {"".join(shared_rows)}
-                        {"".join(unique_rows)}
+                        {"".join(unique_rows_compiled)}
                     </tbody>
                 </table>
 
-                <div class="footer">Generado automáticamente bajo estándar de publicación científica - Hershell-Raman v9.5</div>
+                <div class="footer">Generado automáticamente bajo estándar de publicación científica - Hershell-Raman v9.6</div>
             </div>
         </body>
         </html>"""

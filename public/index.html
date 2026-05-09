@@ -652,6 +652,7 @@
     let spectraList = [], processedSpectra = [], selectedPeaks = [], isPeakMode=false;
     let trainingSet = [], predictSet = [];
     let currentYTitle = 'Absorbancia';
+    let currentSpectrumMethod = 'Raman';
     
     let currentBaseline = 'none', currentDerivative = 'none', currentSmoothing = 'none', currentNorm = 'none';
     let currentTreatmentLegend = 'Procesamiento: Ninguno (Datos crudos)';
@@ -915,7 +916,11 @@
         }
     }
 
-    function setSpectrumType(t) { currentYTitle = t==='FTIR'?'Absorbancia':'Intensidad'; Plotly.relayout('spectrum-graph',{yaxis:{title:currentYTitle}}); }
+    function setSpectrumType(t) { 
+        currentSpectrumMethod = t;
+        currentYTitle = t==='FTIR'?'Absorbancia':'Intensidad'; 
+        Plotly.relayout('spectrum-graph',{yaxis:{title:currentYTitle}}); 
+    }
     function convertAbsToTrans() { processedSpectra.forEach(s=>s.y=s.y.map(v=>100*10**(-v))); currentYTitle='%T'; currentTreatmentLegend = 'Conversión: Transmitancia'; draw(processedSpectra,'processed-graph'); }
     function convertTransToAbs() { processedSpectra.forEach(s=>s.y=s.y.map(v=>-Math.log10(v/100))); currentYTitle='Abs'; currentTreatmentLegend = 'Conversión: Absorbancia'; draw(processedSpectra,'processed-graph'); }
     function applyATRCorrection() { processedSpectra.forEach(s=>s.y=s.y.map((v,i)=>v*s.x[i]/1000)); currentTreatmentLegend = 'Corrección: ATR'; draw(processedSpectra,'processed-graph'); }
@@ -1522,7 +1527,8 @@
                 x: s.x,
                 y: s.y
             })),
-            prominence: parseFloat(document.getElementById('char-prominence').value)
+            prominence: parseFloat(document.getElementById('char-prominence').value),
+            method: currentSpectrumMethod
         };
 
         try {
