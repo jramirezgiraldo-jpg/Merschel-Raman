@@ -65,13 +65,17 @@ app.add_middleware(
 )
 
 # Modelos de datos para el Body de la petición (JSON)
+import os
+
 def clean_sample_name(name: str):
     """
     Limpia el nombre del archivo eliminando extensiones y sufijos comunes.
-    Ej: 'Cryptosporidium_parvum_Raman.csv' -> 'Cryptosporidium parvum'
+    Utiliza os.path.splitext para mayor robustez estructural.
     """
-    # Eliminar extensiones (.csv, .txt, .txt.txt)
-    clean = re.sub(r'(\.(csv|txt|asc|dat))+$', '', name, flags=re.IGNORECASE)
+    # Eliminar extensión principal
+    clean = os.path.splitext(name)[0]
+    # Eliminar extensiones secundarias si existen (ej .txt.txt)
+    clean = re.sub(r'(\.(csv|txt|asc|dat))+$', '', clean, flags=re.IGNORECASE)
     # Eliminar guiones bajos o sufijos comunes
     clean = re.sub(r'(_|-)(raman|ftir|muestra|raw|proc|corr)\d*', '', clean, flags=re.IGNORECASE)
     # Reemplazar guiones bajos por espacios para un nombre limpio
@@ -80,19 +84,18 @@ def clean_sample_name(name: str):
 
 def format_scientific_name(name: str, use_latex: bool = False):
     """
-    Aplica formato de cursiva taxonómica si el nombre parece binomial.
+    Aplica formato de cursiva taxonómica OBLIGATORIO para Plotly/HTML.
     """
     clean = clean_sample_name(name)
-    parts = clean.split()
-    if len(parts) >= 2:
-        if use_latex:
-            # Formato TeX para Matplotlib
+    if use_latex:
+        parts = clean.split()
+        if len(parts) >= 2:
             tex_name = r"\ ".join(parts)
             return f"$\\mathit{{{tex_name}}}$"
-        else:
-            # Formato HTML para el reporte
-            return f"<i>{clean}</i>"
-    return clean
+        return clean
+    else:
+        # Envoltorio HTML para renderizado en Plotly
+        return f"<i>{clean}</i>"
 
 class SpectrumData(BaseModel):
     name: str
@@ -185,7 +188,7 @@ async def process_spectra(request: ProcessRequest):
                 y = np.convolve(y, kernel, mode='same')
                 
             processed_results.append({
-                "name": request.spectra[idx].name,
+                "name": format_scientific_name(request.spectra[idx].name),
                 "x": x.tolist(),
                 "y": y.tolist()
             })
@@ -231,7 +234,7 @@ async def comparar_espectros_avanzado(data: CompareRequest):
                         break
             if is_diff:
                 unique_peaks.append({"x": p1["x"], "y": p1["y"], "type": diff_type})
-        diff_peaks_result[spec.name] = unique_peaks
+        diff_peaks_result[format_scientific_name(spec.name)] = unique_peaks
         
     return {"diff_peaks": diff_peaks_result}
 
@@ -243,7 +246,7 @@ async def characterize_spectra(request: CharacterizeRequest):
             
         # 1. Alineación y Matrix Builder
         Y_matrix, x_ref = build_symmetric_matrix(request.spectra)
-        names = [s.name for s in request.spectra]
+        names = [format_scientific_name(s.name) for s in request.spectra]
         
         all_peaks_x = []
         spectra_peak_details = [] # List of dicts per spectrum
@@ -341,8 +344,8 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
         orig_names = [s.name for s in request.spectra]
         sorted_indices = sorted(range(len(orig_names)), key=lambda i: orig_names[i])
         
-        # Nombres formateados para HTML (cursiva)
-        names = [format_scientific_name(orig_names[i], use_latex=False) for i in sorted_indices]
+        # Nombres formateados para HTML (cursiva) y Plotly
+        names = [format_scientific_name(orig_names[i]) for i in sorted_indices]
         Y_matrix = Y_matrix_raw[sorted_indices]
         n_samples = len(names)
         
@@ -684,9 +687,10 @@ async def calculate_pca(data: ChemoRequest):
         for i, n in enumerate(names):
             pc1 = float(scores[i][0])
             pc2 = float(scores[i][1]) if n_comps > 1 else 0.0
+            formatted = format_scientific_name(n)
             scores_out.append({
                 "name": n, 
-                "scientific_name": format_scientific_name(n, use_latex=False),
+                "scientific_name": formatted,
                 "pc1": pc1, 
                 "pc2": pc2
             })
@@ -744,7 +748,7 @@ async def calculate_hca(data: ChemoRequest):
         )
         
         # Formatear nombres de las hojas (eje X del dendrograma)
-        scientific_ivl = [format_scientific_name(n, use_latex=False) for n in ddata['ivl']]
+        scientific_ivl = [format_scientific_name(n) for n in ddata['ivl']]
         
         return {
             "type": "hca",
@@ -763,7 +767,7 @@ async def calculate_correlation(data: ChemoRequest):
     try:
         if len(data.spectra) < 2: return {"error": "Se requieren al menos 2 espectros."}
         orig_names = [s.name for s in data.spectra]
-        names = [format_scientific_name(n, use_latex=False) for n in orig_names]
+        names = [format_scientific_name(n) for n in orig_names]
         Y, _ = prepare_chemometric_matrix(data)
         
         corr_matrix = np.corrcoef(Y)
@@ -810,7 +814,7 @@ async def calculate_plsda(data: PlsdaRequest):
                 scores_grouped[grp] = []
             scores_grouped[grp].append({
                 "name": names[i],
-                "scientific_name": format_scientific_name(names[i], use_latex=False),
+                "scientific_name": format_scientific_name(names[i]),
                 "lv1": float(scores[i, 0]) if n_comps > 0 else 0.0,
                 "lv2": float(scores[i, 1]) if n_comps > 1 else 0.0
             })
