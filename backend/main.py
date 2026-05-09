@@ -336,11 +336,12 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
             groups.append(np.mean(current_group))
             
         def get_assignment(wn):
-            if 1650 <= wn <= 1670: return "Amida I (Proteínas)"
-            if 1540 <= wn <= 1560: return "Amida II (Proteínas)"
-            if 1440 <= wn <= 1460: return "Deformación CH2 (Lípidos)"
-            if 1240 <= wn <= 1260: return "Fosfatos asimétricos (Ácidos Nucleicos)"
-            if 1000 <= wn <= 1100: return "Estiramiento C-O (Carbohidratos/Polisacáridos)"
+            if 1650 <= wn <= 1670: return "Estiramiento C=O: Amida I (Proteínas)"
+            if 1540 <= wn <= 1560: return "Deformación N-H: Amida II (Proteínas)"
+            if 1445 <= wn <= 1455: return "Deformación CH2: Flexión (Lípidos)"
+            if 1240 <= wn <= 1250: return "Estiramiento P=O asimétrico: Fosfatos (Ácidos Nucleicos)"
+            if 1070 <= wn <= 1090: return "Estiramiento C-O: Esqueleto (Carbohidratos/Polisacáridos)"
+            if 1003 <= wn <= 1005: return "Respiración de anillo: Fenilalanina (Aminoácidos)"
             return "Vibración Específica Fingerprint"
 
         # Clasificación y Recolección
@@ -366,7 +367,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
             if count == n_samples:
                 common_rows.append(f"""
                 <tr class="row-common">
-                    <td class="char-text-common"><b>COINCIDENCIA COMÚN</b></td>
+                    <td class="char-text-common"><b>COINCIDENCIA COMÚN (100%)</b></td>
                     <td>{assignment}</td>
                     {sample_cols}
                 </tr>""")
@@ -394,13 +395,18 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
             <meta charset="UTF-8">
             <title>Caracterización Profesional Hershell Raman</title>
             <style>
-                body {{ font-family: 'Open Sans', Arial, sans-serif; background: #fdfdfd; color: #333; padding: 50px; line-height: 1.6; }}
-                .container {{ background: #fff; padding: 40px; border-radius: 2px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }}
+                body {{ font-family: 'Open Sans', Arial, sans-serif; background: #fdfdfd; color: #333; padding: 50px; line-height: 1.6; margin-bottom: 100px; }}
+                .container {{ background: #fff; padding: 40px; border-radius: 2px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: visible; }}
                 .brand {{ text-align: right; font-size: 0.7rem; color: #aaa; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }}
                 h1 {{ color: #00796b; text-align: center; font-weight: 800; border-bottom: 4px solid #009b77; padding-bottom: 5px; margin-bottom: 5px; }}
                 .subtitle {{ text-align: center; color: #666; font-size: 0.9rem; margin-bottom: 30px; font-style: italic; }}
                 table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
-                thead th {{ background: #009b77; color: #fff; padding: 15px; text-align: left; font-size: 0.8rem; text-transform: uppercase; border: 1px solid #008966; }}
+                thead th {{ 
+                    position: sticky; top: 0; z-index: 100;
+                    background: #009b77; color: #fff; padding: 15px; 
+                    text-align: left; font-size: 0.8rem; text-transform: uppercase; 
+                    border: 1px solid #008966; 
+                }}
                 tbody td {{ padding: 12px; border: 1px solid #eee; font-size: 0.85rem; }}
                 .row-common {{ background-color: #f1fcf9; }}
                 .row-shared {{ background-color: #f0f7ff; }}
@@ -408,17 +414,26 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                 .char-text-common {{ color: #00796b; }}
                 .char-text-shared {{ color: #1e40af; }}
                 .char-text-unique {{ color: #92400e; }}
-                .legend {{ margin-top: 30px; display: flex; gap: 30px; padding: 20px; background: #f8fafc; border-radius: 4px; }}
-                .l-item {{ display: flex; align-items: center; gap: 10px; font-size: 0.8rem; font-weight: bold; }}
-                .box {{ width: 18px; height: 18px; border-radius: 2px; }}
+                
+                .fixed-legend {{
+                    position: fixed; bottom: 20px; right: 20px; z-index: 1000;
+                    background: rgba(255,255,255,0.95); padding: 12px; 
+                    border: 1px solid #ddd; border-radius: 8px; 
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                    backdrop-filter: blur(4px);
+                    display: flex; flex-direction: column; gap: 8px;
+                }}
+                .l-item {{ display: flex; align-items: center; gap: 10px; font-size: 0.75rem; font-weight: bold; }}
+                .box {{ width: 16px; height: 16px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.1); }}
                 .footer {{ margin-top: 50px; text-align: center; font-size: 0.7rem; color: #bbb; }}
             </style>
         </head>
         <body>
             <div class="container">
-                <div class="brand">Hershell-Raman | High Performance Chemometrics</div>
+                <div class="brand">Hershell-Raman | Scientific Publication Standard</div>
                 <h1>REPORTE DE CARACTERIZACIÓN MULTIESPECIE</h1>
-                <div class="subtitle">Región de Análisis: Fingerprint (800 - 1800 cm⁻¹)</div>
+                <div class="subtitle">Análisis de Marcadores Bioquímicos en la Región Fingerprint (800 - 1800 cm⁻¹)</div>
+                
                 <table>
                     <thead>
                         <tr>
@@ -433,12 +448,15 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                         {"".join(unique_rows)}
                     </tbody>
                 </table>
-                <div class="legend">
-                    <div class="l-item"><div class="box" style="background:#f1fcf9; border:1px solid #009b77;"></div> COINCIDENCIA COMÚN</div>
-                    <div class="l-item"><div class="box" style="background:#f0f7ff; border:1px solid #1e40af;"></div> COMPARTIDO</div>
-                    <div class="l-item"><div class="box" style="background:#fff9f0; border:1px solid #92400e;"></div> DIFERENCIADOR ÚNICO</div>
+
+                <div class="fixed-legend">
+                    <div style="font-size:0.65rem; color:#888; margin-bottom:4px; text-transform:uppercase; letter-spacing:1px;">Leyenda de Coincidencias</div>
+                    <div class="l-item"><div class="box" style="background:#f1fcf9; border-color:#009b77;"></div> COINCIDENCIA COMÚN</div>
+                    <div class="l-item"><div class="box" style="background:#f0f7ff; border-color:#1e40af;"></div> COMPARTIDO</div>
+                    <div class="l-item"><div class="box" style="background:#fff9f0; border-color:#92400e;"></div> DIFERENCIADOR ÚNICO</div>
                 </div>
-                <div class="footer">Este informe jerárquico es generado dinámicamente para N={n_samples} especies analizadas en la zona de huella dactilar.</div>
+
+                <div class="footer">Generado automáticamente bajo estándar de publicación científica - Hershell-Raman v9.0</div>
             </div>
         </body>
         </html>"""
