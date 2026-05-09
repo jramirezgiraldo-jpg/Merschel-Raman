@@ -400,12 +400,25 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                 .brand {{ text-align: right; font-size: 0.7rem; color: #aaa; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }}
                 h1 {{ color: #00796b; text-align: center; font-weight: 800; border-bottom: 4px solid #009b77; padding-bottom: 5px; margin-bottom: 5px; }}
                 .subtitle {{ text-align: center; color: #666; font-size: 0.9rem; margin-bottom: 30px; font-style: italic; }}
-                table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
+                
+                table {{ 
+                    width: 100%; 
+                    border-collapse: separate; 
+                    border-spacing: 0; 
+                    margin-top: 20px; 
+                }}
                 thead th {{ 
-                    position: sticky; top: 0; z-index: 100;
-                    background: #009b77; color: #fff; padding: 15px; 
-                    text-align: left; font-size: 0.8rem; text-transform: uppercase; 
-                    border: 1px solid #008966; 
+                    position: -webkit-sticky;
+                    position: sticky; 
+                    top: 0; 
+                    z-index: 9999;
+                    background-color: #009b77 !important; 
+                    color: #fff; 
+                    padding: 15px; 
+                    text-align: left; 
+                    font-size: 0.8rem; 
+                    text-transform: uppercase; 
+                    border-bottom: 2px solid #333;
                 }}
                 tbody td {{ padding: 12px; border: 1px solid #eee; font-size: 0.85rem; }}
                 .row-common {{ background-color: #f1fcf9; }}
@@ -415,20 +428,35 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                 .char-text-shared {{ color: #1e40af; }}
                 .char-text-unique {{ color: #92400e; }}
                 
-                .fixed-legend {{
-                    position: fixed; bottom: 20px; right: 20px; z-index: 1000;
-                    background: rgba(255,255,255,0.95); padding: 12px; 
-                    border: 1px solid #ddd; border-radius: 8px; 
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                    backdrop-filter: blur(4px);
-                    display: flex; flex-direction: column; gap: 8px;
+                .leyenda-quimiometria {{
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    background: rgba(255, 255, 255, 0.95);
+                    padding: 15px;
+                    border: 2px solid #009b77;
+                    border-radius: 10px;
+                    z-index: 10000;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                    font-family: Arial, sans-serif;
+                    font-size: 12px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
                 }}
-                .l-item {{ display: flex; align-items: center; gap: 10px; font-size: 0.75rem; font-weight: bold; }}
+                .l-item {{ display: flex; align-items: center; gap: 10px; font-weight: bold; }}
                 .box {{ width: 16px; height: 16px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.1); }}
                 .footer {{ margin-top: 50px; text-align: center; font-size: 0.7rem; color: #bbb; }}
             </style>
         </head>
         <body>
+            <div class="leyenda-quimiometria">
+                <div style="font-size:10px; color:#888; margin-bottom:4px; text-transform:uppercase; letter-spacing:1px;">Código de Colores</div>
+                <div class="l-item"><div class="box" style="background:#f1fcf9; border-color:#009b77;"></div> 🟩 Verde: Coincidencia Común (100%)</div>
+                <div class="l-item"><div class="box" style="background:#f0f7ff; border-color:#1e40af;"></div> 🟦 Azul: Compartido entre especies</div>
+                <div class="l-item"><div class="box" style="background:#fff9f0; border-color:#92400e;"></div> 🟧 Naranja: Diferenciador Único (Biomarcador)</div>
+            </div>
+
             <div class="container">
                 <div class="brand">Hershell-Raman | Scientific Publication Standard</div>
                 <h1>REPORTE DE CARACTERIZACIÓN MULTIESPECIE</h1>
@@ -449,14 +477,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                     </tbody>
                 </table>
 
-                <div class="fixed-legend">
-                    <div style="font-size:0.65rem; color:#888; margin-bottom:4px; text-transform:uppercase; letter-spacing:1px;">Leyenda de Coincidencias</div>
-                    <div class="l-item"><div class="box" style="background:#f1fcf9; border-color:#009b77;"></div> COINCIDENCIA COMÚN</div>
-                    <div class="l-item"><div class="box" style="background:#f0f7ff; border-color:#1e40af;"></div> COMPARTIDO</div>
-                    <div class="l-item"><div class="box" style="background:#fff9f0; border-color:#92400e;"></div> DIFERENCIADOR ÚNICO</div>
-                </div>
-
-                <div class="footer">Generado automáticamente bajo estándar de publicación científica - Hershell-Raman v9.0</div>
+                <div class="footer">Generado automáticamente bajo estándar de publicación científica - Hershell-Raman v9.1</div>
             </div>
         </body>
         </html>"""
