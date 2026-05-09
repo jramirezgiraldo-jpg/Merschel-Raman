@@ -299,7 +299,13 @@ async def characterize_spectra(request: CharacterizeRequest):
 async def generate_taxonomic_report(request: CharacterizeRequest):
     try:
         # 1. Alineación y Matrix Builder
-        Y_matrix, x_ref = build_symmetric_matrix(request.spectra)
+        Y_matrix_full, x_ref_full = build_symmetric_matrix(request.spectra)
+        
+        # 2. Recorte forzado a la región Fingerprint (800 - 1800 cm⁻¹)
+        mask = (x_ref_full >= 800) & (x_ref_full <= 1800)
+        x_ref = x_ref_full[mask]
+        Y_matrix = Y_matrix_full[:, mask]
+        
         names = [s.name for s in request.spectra]
         n_samples = len(names)
         
@@ -330,12 +336,12 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
             groups.append(np.mean(current_group))
             
         def get_assignment(wn):
-            if 1630 <= wn <= 1680: return "Amida I (Proteínas)"
-            if 1040 <= wn <= 1070: return "Polisacáridos"
-            if 1070 < wn <= 1100: return "Ácidos Nucleicos / Fosfatos"
-            if 1440 <= wn <= 1460: return "CH2 Bending (Lípidos)"
-            if 1000 <= wn <= 1010: return "Fenilalanina"
-            return "Vibración Específica"
+            if 1650 <= wn <= 1670: return "Amida I (Proteínas)"
+            if 1540 <= wn <= 1560: return "Amida II (Proteínas)"
+            if 1440 <= wn <= 1460: return "Deformación CH2 (Lípidos)"
+            if 1240 <= wn <= 1260: return "Fosfatos asimétricos (Ácidos Nucleicos)"
+            if 1000 <= wn <= 1100: return "Estiramiento C-O (Carbohidratos/Polisacáridos)"
+            return "Vibración Específica Fingerprint"
 
         # Clasificación y Recolección
         common_rows = []
@@ -391,7 +397,8 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                 body {{ font-family: 'Open Sans', Arial, sans-serif; background: #fdfdfd; color: #333; padding: 50px; line-height: 1.6; }}
                 .container {{ background: #fff; padding: 40px; border-radius: 2px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }}
                 .brand {{ text-align: right; font-size: 0.7rem; color: #aaa; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }}
-                h1 {{ color: #00796b; text-align: center; font-weight: 800; border-bottom: 4px solid #009b77; padding-bottom: 15px; margin-bottom: 30px; }}
+                h1 {{ color: #00796b; text-align: center; font-weight: 800; border-bottom: 4px solid #009b77; padding-bottom: 5px; margin-bottom: 5px; }}
+                .subtitle {{ text-align: center; color: #666; font-size: 0.9rem; margin-bottom: 30px; font-style: italic; }}
                 table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
                 thead th {{ background: #009b77; color: #fff; padding: 15px; text-align: left; font-size: 0.8rem; text-transform: uppercase; border: 1px solid #008966; }}
                 tbody td {{ padding: 12px; border: 1px solid #eee; font-size: 0.85rem; }}
@@ -411,6 +418,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
             <div class="container">
                 <div class="brand">Hershell-Raman | High Performance Chemometrics</div>
                 <h1>REPORTE DE CARACTERIZACIÓN MULTIESPECIE</h1>
+                <div class="subtitle">Región de Análisis: Fingerprint (800 - 1800 cm⁻¹)</div>
                 <table>
                     <thead>
                         <tr>
@@ -430,7 +438,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                     <div class="l-item"><div class="box" style="background:#f0f7ff; border:1px solid #1e40af;"></div> COMPARTIDO</div>
                     <div class="l-item"><div class="box" style="background:#fff9f0; border:1px solid #92400e;"></div> DIFERENCIADOR ÚNICO</div>
                 </div>
-                <div class="footer">Este informe jerárquico es generado dinámicamente para N={n_samples} especies analizadas.</div>
+                <div class="footer">Este informe jerárquico es generado dinámicamente para N={n_samples} especies analizadas en la zona de huella dactilar.</div>
             </div>
         </body>
         </html>"""
