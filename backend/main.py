@@ -65,17 +65,22 @@ app.add_middleware(
 )
 
 # Modelos de datos para el Body de la petición (JSON)
-import os
-
 def clean_sample_name(name: str):
     """
     Limpia el nombre del archivo eliminando extensiones y sufijos comunes.
     Utiliza os.path.splitext para mayor robustez estructural.
     """
+    import os
     # Eliminar extensión principal
-    clean = os.path.splitext(name)[0]
+    base = os.path.basename(name)
+    clean = os.path.splitext(base)[0]
     # Eliminar extensiones secundarias si existen (ej .txt.txt)
-    clean = re.sub(r'(\.(csv|txt|asc|dat))+$', '', clean, flags=re.IGNORECASE)
+    while True:
+        root, ext = os.path.splitext(clean)
+        if ext.lower() in ['.csv', '.txt', '.asc', '.dat']:
+            clean = root
+        else:
+            break
     # Eliminar guiones bajos o sufijos comunes
     clean = re.sub(r'(_|-)(raman|ftir|muestra|raw|proc|corr)\d*', '', clean, flags=re.IGNORECASE)
     # Reemplazar guiones bajos por espacios para un nombre limpio
@@ -399,7 +404,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
             if 1200 <= wn < 1500: return "Vibración Bioquímica: Lípidos / Mixta"
             if 900 <= wn < 1200: return "Vibración Bioquímica: Carbohidratos / ADN"
             
-            return "Vibración Bioquímica identificada (Fingerprint)"
+            return "Vibración Bioquímica (Específica)"
 
         # Clasificación y Recolección
         common_rows = []
@@ -498,7 +503,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                 thead th {{ 
                     position: -webkit-sticky;
                     position: sticky; 
-                    top: -40px; 
+                    top: 0; 
                     z-index: 999;
                     background-color: #009b77 !important; 
                     color: #fff; 
