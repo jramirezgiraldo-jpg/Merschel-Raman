@@ -1460,37 +1460,50 @@
     }
 
     function drawCharGraph(data) {
-        const traces = data.names.map((name, i) => ({
-            x: data.x_ref,
-            y: data.y_matrix[i],
-            name: format_scientific_name_js(name),
-            type: 'scatter',
-            mode: 'lines',
-            line: { width: 1.5, color: palette[i % palette.length] }
-        }));
-
-        const annotations = [];
-        data.table.forEach(p => {
-            annotations.push({
-                x: p.wavenumber,
-                y: Math.max(...data.names.map(n => p[n] || 0)),
-                text: p.wavenumber.toString(),
-                showarrow: true,
-                arrowhead: 2,
-                ax: 0,
-                ay: -30,
-                font: { size: 10, color: 'var(--text-main)' },
-                arrowcolor: '#64748b'
+        const traces = [];
+        
+        data.names.forEach((name, i) => {
+            const color = palette[i % palette.length];
+            
+            // Trazo de la línea del espectro
+            traces.push({
+                x: data.x_ref,
+                y: data.y_matrix[i],
+                name: name, // Ya viene con <i> del backend
+                legendgroup: name,
+                type: 'scatter',
+                mode: 'lines',
+                line: { width: 1.5, color: color },
+                showlegend: true
             });
+            
+            // Trazo de los puntos (picos) identificados para este espectro
+            if (data.peaks && data.peaks[i]) {
+                traces.push({
+                    x: data.peaks[i].map(p => p.x),
+                    y: data.peaks[i].map(p => p.y),
+                    name: `Picos ${name}`,
+                    legendgroup: name,
+                    type: 'scatter',
+                    mode: 'markers',
+                    marker: { 
+                        size: 8, 
+                        color: color, 
+                        symbol: 'diamond', 
+                        line: { width: 1, color: 'white' } 
+                    },
+                    showlegend: false
+                });
+            }
         });
 
         const layout = {
-            title: 'Espectros Superpuestos con Picos Identificados',
+            title: 'Identificación de Picos Multiespectral',
             xaxis: { title: 'cm⁻¹', autorange: 'reversed' },
             yaxis: { title: currentYTitle },
             margin: { t: 60, b: 40, l: 55, r: 20 },
             paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
-            annotations: annotations
+            hovermode: 'closest'
         };
 
         Plotly.react('char-graph', traces, layout, { responsive: true });

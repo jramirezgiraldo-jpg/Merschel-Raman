@@ -293,13 +293,21 @@ async def characterize_spectra(request: CharacterizeRequest):
             
         # 4. Generación de Tabla y Asignaciones
         def get_assignment(wn):
-            if 1630 <= wn <= 1680: return "Amida I (Proteínas)"
-            if 1050 <= wn <= 1100: return "Ácidos Nucleicos / Fosfatos"
-            if 2800 <= wn <= 3000: return "Lípidos (C-H streching)"
-            if 1400 <= wn <= 1500: return "Lípidos/Proteínas (CH2 bending)"
-            if 980 <= wn <= 1020: return "Fenilalanina"
-            if 1230 <= wn <= 1280: return "Amida III / Fosfatos"
-            return "Asignación Desconocida"
+            # DICCIONARIO ROBUSTO CIENTÍFICO (800-1800 cm-1)
+            if 1650 <= wn <= 1675: return "Estiramiento C=O: Amida I (Proteínas)"
+            if 1540 <= wn <= 1560: return "Deformación N-H: Amida II (Proteínas)"
+            if 1440 <= wn <= 1455: return "Deformación CH2: Flexión de cadenas (Lípidos)"
+            if 1240 <= wn <= 1265: return "Estiramiento P=O asimétrico: Fosfodiéster (Ácidos Nucleicos)"
+            if 1070 <= wn <= 1090: return "Estiramiento C-O: Enlaces Glicosídicos (Carbohidratos)"
+            if 1003 <= wn <= 1005: return "Respiración del anillo: Fenilalanina (Proteínas)"
+            if 930 <= wn <= 950:   return "Vibración C-C: Esqueleto proteico (α-hélice)"
+            
+            # REGIONES BIOQUÍMICAS (FALLBACK ESPECÍFICO)
+            if 1500 <= wn <= 1800: return "Región de Proteínas (Fingerprint)"
+            if 1200 <= wn < 1500: return "Región de Lípidos / Ácidos Nucleicos"
+            if 900 <= wn < 1200: return "Región de Carbohidratos / Ácidos Nucleicos"
+            
+            return "Señal vibracional en zona Fingerprint"
 
         table_data = []
         for g_wn in groups:
