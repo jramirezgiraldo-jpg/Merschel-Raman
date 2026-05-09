@@ -141,6 +141,7 @@
     <button class="nav-item" onclick="switchTab('supervisada')" style="color:var(--red);">4. Supervisado</button>
     <button class="nav-item" onclick="switchTab('results')">5. Resultados</button>
     <button class="nav-item" onclick="switchTab('image-comparison')" style="color:var(--purple);">6. Comparador</button>
+    <button class="nav-item" onclick="switchTab('characterization')" style="color:var(--primary-dark);">7. Caracterización</button>
   </nav>
 
   <div class="status-strip">
@@ -497,6 +498,55 @@
         </div>
     </section>
 
+    <section id="characterization" class="section">
+        <div class="card">
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <span class="toolbar-label">CONTROL DE CARACTERIZACIÓN</span>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:12px;">Identificación multiespectral y asignación vibracional.</p>
+                    
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:0.7rem; font-weight:bold;">Prominencia (Sensibilidad):</label>
+                        <div style="display:flex;gap:5px;align-items:center;">
+                            <input type="range" id="char-prominence" min="0.01" max="0.5" step="0.01" value="0.05" style="flex:1">
+                            <output id="char-prom-val" style="font-size:0.7rem;">0.05</output>
+                        </div>
+                    </div>
+
+                    <div class="toolbar-buttons" style="flex-direction:column; gap:8px;">
+                        <button class="primary" style="width:100%" onclick="characterizeSpectra()">🔍 Identificar Picos (Automático)</button>
+                        <button class="secondary" style="width:100%" onclick="renderCharTableUI()">💾 Generar Tabla de Caracterización</button>
+                        <button class="btn-download-table" style="width:100%; justify-content:center;" onclick="downloadCharTable()">📥 Descargar Tabla (CSV)</button>
+                    </div>
+                </div>
+                <div id="char-status" style="margin-top:10px; font-size:0.75rem; color:var(--primary); font-weight:bold;"></div>
+            </div>
+            <div class="workspace-wrapper">
+                <div class="workspace-header">
+                    <span style="font-size:0.85rem; font-weight:700; color:var(--text-main);">Análisis de Picos y Asignaciones Biomoleculares</span>
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column; padding: 10px; gap: 10px; overflow: hidden; background: white;">
+                    <div class="graph-container" id="char-graph" style="flex: 1.2; min-height: 300px; border: 1px solid var(--border); border-radius: 8px;"></div>
+                    <div class="table-view-container" style="flex: 1; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+                        <div class="table-scroll">
+                            <table id="char-table" style="width:100%; border-collapse:collapse;">
+                                <thead id="char-table-head">
+                                    <tr style="background:#f1f5f9;">
+                                        <th style="padding:10px; border-bottom:2px solid var(--border);">Wavenumber (cm⁻¹)</th>
+                                        <th style="padding:10px; border-bottom:2px solid var(--border);">Asignación Sugerida</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="char-table-body">
+                                    <tr><td colspan="2" style="text-align:center; padding:3rem; color:#94a3b8;">Sin datos. Realiza la identificación automática.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
   </main>
 
   <div id="converter-modal"><div class="modal-box"><h3>Conversor</h3><p>Convierte archivos de espectros.</p><button onclick="document.getElementById('converter-modal').style.display='none'">Cerrar</button></div></div>
@@ -706,13 +756,18 @@
         safeAddListener('btn-update-chemo', 'click', () => {
             runChemometrics(currentChemoType);
         });
+
+        const cP = document.getElementById('char-prominence'), cPV = document.getElementById('char-prom-val');
+        if(cP && cPV) cP.oninput = () => cPV.value = parseFloat(cP.value).toFixed(2);
+        
+        initPlot('char-graph', 'Visualización de Picos Identificados');
     };
 
     function switchTab(id) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        const idx = ['upload', 'preprocessing', 'chemometrics', 'supervisada', 'results', 'image-comparison'].indexOf(id);
+        const idx = ['upload', 'preprocessing', 'chemometrics', 'supervisada', 'results', 'image-comparison', 'characterization'].indexOf(id);
         if(idx>=0) document.querySelectorAll('.nav-item')[idx].classList.add('active');
         
         // Disparador de redibujado de la tabla PLS-DA al entrar a la viñeta
@@ -1357,6 +1412,126 @@
             layout.margin.l = 100;
             Plotly.react('chemo-graph', traces, layout);
         }
+    }
+
+    let lastCharData = null;
+
+    async function characterizeSpectra() {
+        if(!processedSpectra || processedSpectra.length === 0) return alert("Carga y procesa espectros primero.");
+        document.getElementById('char-status').innerText = "Identificando picos en Backend...";
+        
+        const payload = {
+            spectra: processedSpectra.map(s => ({
+                name: s.name,
+                x: s.x,
+                y: s.y
+            })),
+            prominence: parseFloat(document.getElementById('char-prominence').value)
+        };
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/characterize`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if(!response.ok) throw new Error("HTTP " + response.status);
+            const data = await response.json();
+            
+            lastCharData = data;
+            drawCharGraph(data);
+            document.getElementById('char-status').innerText = "Identificación exitosa ✓";
+            alert("Picos identificados. Haz clic en 'Generar Tabla' para ver el desglose.");
+        } catch(e) {
+            console.error(e);
+            document.getElementById('char-status').innerText = "Error en caracterización.";
+        }
+    }
+
+    function drawCharGraph(data) {
+        const traces = data.names.map((name, i) => ({
+            x: data.x_ref,
+            y: data.y_matrix[i],
+            name: name,
+            type: 'scatter',
+            mode: 'lines',
+            line: { width: 1.5, color: palette[i % palette.length] }
+        }));
+
+        const annotations = [];
+        data.table.forEach(p => {
+            annotations.push({
+                x: p.wavenumber,
+                y: Math.max(...data.names.map(n => p[n] || 0)),
+                text: p.wavenumber.toString(),
+                showarrow: true,
+                arrowhead: 2,
+                ax: 0,
+                ay: -30,
+                font: { size: 10, color: 'var(--text-main)' },
+                arrowcolor: '#64748b'
+            });
+        });
+
+        const layout = {
+            title: 'Espectros Superpuestos con Picos Identificados',
+            xaxis: { title: 'cm⁻¹', autorange: 'reversed' },
+            yaxis: { title: currentYTitle },
+            margin: { t: 60, b: 40, l: 55, r: 20 },
+            paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+            annotations: annotations
+        };
+
+        Plotly.react('char-graph', traces, layout, { responsive: true });
+    }
+
+    function renderCharTableUI() {
+        if(!lastCharData) return alert("Primero realiza la identificación de picos.");
+        
+        const head = document.getElementById('char-table-head');
+        const body = document.getElementById('char-table-body');
+        const names = lastCharData.names;
+
+        // Header
+        let headerHtml = `<tr style="background:#f1f5f9;">
+            <th style="padding:10px; border-bottom:2px solid var(--border);">Wavenumber (cm⁻¹)</th>
+            <th style="padding:10px; border-bottom:2px solid var(--border);">Asignación Sugerida</th>`;
+        names.forEach(n => {
+            headerHtml += `<th style="padding:10px; border-bottom:2px solid var(--border);">${n} (Int.)</th>`;
+        });
+        headerHtml += `</tr>`;
+        head.innerHTML = headerHtml;
+
+        // Body
+        let bodyHtml = "";
+        lastCharData.table.forEach(row => {
+            bodyHtml += `<tr>
+                <td style="font-weight:bold;">${row.wavenumber}</td>
+                <td style="color:var(--primary);">${row.assignment}</td>`;
+            names.forEach(n => {
+                bodyHtml += `<td>${row[n] !== undefined ? row[n].toFixed(4) : '-'}</td>`;
+            });
+            bodyHtml += `</tr>`;
+        });
+        body.innerHTML = bodyHtml;
+    }
+
+    function downloadCharTable() {
+        if(!lastCharData) return alert("No hay datos para descargar.");
+        const names = lastCharData.names;
+        let csv = "Wavenumber;Asignacion;" + names.join(";") + "\n";
+        lastCharData.table.forEach(row => {
+            let line = `${row.wavenumber};${row.assignment}`;
+            names.forEach(n => {
+                line += `;${row[n] !== undefined ? row[n].toString().replace('.', ',') : ''}`;
+            });
+            csv += line + "\n";
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute("download", "caracterizacion_picos.csv");
+        link.click();
     }
   </script>
 </body>

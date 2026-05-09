@@ -105,6 +105,10 @@ class ChemoRequest(BaseModel):
 class CompareRequest(BaseModel):
     spectra: List[SpectrumData]
 
+class CharacterizeRequest(BaseModel):
+    spectra: List[SpectrumData]
+    prominence: float = 0.05
+
 # Ruta para servir nuestra UI Front-end
 @app.get("/", response_class=HTMLResponse)
 async def read_index():
@@ -200,6 +204,96 @@ async def comparar_espectros_avanzado(data: CompareRequest):
         diff_peaks_result[spec.name] = unique_peaks
         
     return {"diff_peaks": diff_peaks_result}
+
+@app.post("/api/characterize")
+async def characterize_spectra(request: CharacterizeRequest):
+    try:
+        if not request.spectra:
+            return {"error": "No hay espectros para caracterizar."}
+            
+        # 1. Alineación y Matrix Builder
+        Y_matrix, x_ref = build_symmetric_matrix(request.spectra)
+        names = [s.name for s in request.spectra]
+        
+        all_peaks_x = []
+        spectra_peak_details = [] # List of dicts per spectrum
+        
+        # 2. Detección individual para encontrar anchos y prominencias reales
+        for idx, y in enumerate(Y_matrix):
+            # Normalización local para find_peaks si es necesario, 
+            # pero usaremos la prominencia absoluta escalada por el rango del espectro
+            local_range = np.max(y) - np.min(y)
+            prom = request.prominence * local_range if local_range > 0 else 0.1
+            
+            peaks, props = signal.find_peaks(y, prominence=prom, width=True)
+            
+            current_spec_peaks = []
+            for i, p_idx in enumerate(peaks):
+                wn = float(x_ref[p_idx])
+                inte = float(y[p_idx])
+                width = float(props['widths'][i]) # FWHM aproximado por scipy
+                current_spec_peaks.append({"x": wn, "y": inte, "width": width})
+                all_peaks_x.append(wn)
+            
+            spectra_peak_details.append(current_spec_peaks)
+            
+        if not all_peaks_x:
+            return {"peaks": [], "table": []}
+            
+        # 3. Consolidación de picos (Clustering por cercanía)
+        all_peaks_x.sort()
+        groups = []
+        if all_peaks_x:
+            current_group = [all_peaks_x[0]]
+            for x in all_peaks_x[1:]:
+                if x - current_group[-1] <= 6.0: # Tolerancia de 6 cm-1
+                    current_group.append(x)
+                else:
+                    groups.append(np.mean(current_group))
+                    current_group = [x]
+            groups.append(np.mean(current_group))
+            
+        # 4. Generación de Tabla y Asignaciones
+        def get_assignment(wn):
+            if 1630 <= wn <= 1680: return "Amida I (Proteínas)"
+            if 1050 <= wn <= 1100: return "Ácidos Nucleicos / Fosfatos"
+            if 2800 <= wn <= 3000: return "Lípidos (C-H streching)"
+            if 1400 <= wn <= 1500: return "Lípidos/Proteínas (CH2 bending)"
+            if 980 <= wn <= 1020: return "Fenilalanina"
+            if 1230 <= wn <= 1280: return "Amida III / Fosfatos"
+            return "Asignación Desconocida"
+
+        table_data = []
+        for g_wn in groups:
+            row = {
+                "wavenumber": round(g_wn, 1),
+                "assignment": get_assignment(g_wn)
+            }
+            # Encontrar intensidades para cada muestra
+            for s_idx, name in enumerate(names):
+                # Buscar si hay un pico en este grupo para esta muestra
+                match = next((p for p in spectra_peak_details[s_idx] if abs(p["x"] - g_wn) <= 5.0), None)
+                if match:
+                    row[name] = round(match["y"], 4)
+                    row[f"{name}_width"] = round(match["width"], 2)
+                else:
+                    # Si no hay pico, tomamos el valor interpolado de la matriz
+                    idx_nearest = np.abs(x_ref - g_wn).argmin()
+                    row[name] = round(float(Y_matrix[s_idx, idx_nearest]), 4)
+                    row[f"{name}_width"] = None
+                    
+            table_data.append(row)
+            
+        return {
+            "peaks": spectra_peak_details, 
+            "table": table_data,
+            "x_ref": x_ref.tolist(),
+            "y_matrix": Y_matrix.tolist(),
+            "names": names
+        }
+    except Exception as e:
+        print(traceback.format_exc())
+        return JSONResponse(status_code=500, content={"detail": str(e)})
 
 
 def build_symmetric_matrix(data: list[SpectrumInput]):
