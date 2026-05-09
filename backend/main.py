@@ -304,9 +304,13 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
         # 2. Recorte forzado a la región Fingerprint (800 - 1800 cm⁻¹)
         mask = (x_ref_full >= 800) & (x_ref_full <= 1800)
         x_ref = x_ref_full[mask]
-        Y_matrix = Y_matrix_full[:, mask]
+        Y_matrix_raw = Y_matrix_full[:, mask]
         
-        names = [s.name for s in request.spectra]
+        # Agrupación Taxonómica Automática (Orden Alfabético de Especies)
+        orig_names = [s.name for s in request.spectra]
+        sorted_indices = sorted(range(len(orig_names)), key=lambda i: orig_names[i])
+        names = [orig_names[i] for i in sorted_indices]
+        Y_matrix = Y_matrix_raw[sorted_indices]
         n_samples = len(names)
         
         all_peaks_x = []
@@ -395,12 +399,25 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
             <meta charset="UTF-8">
             <title>Caracterización Profesional Hershell Raman</title>
             <style>
-                body {{ font-family: 'Open Sans', Arial, sans-serif; background: #fdfdfd; color: #333; padding: 50px; line-height: 1.6; margin-bottom: 100px; }}
+                body {{ font-family: 'Open Sans', Arial, sans-serif; background: #fdfdfd; color: #333; padding: 50px 50px 50px 220px; line-height: 1.6; margin-bottom: 100px; }}
                 .container {{ background: #fff; padding: 40px; border-radius: 2px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: visible; }}
                 .brand {{ text-align: right; font-size: 0.7rem; color: #aaa; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }}
                 h1 {{ color: #00796b; text-align: center; font-weight: 800; border-bottom: 4px solid #009b77; padding-bottom: 5px; margin-bottom: 5px; }}
                 .subtitle {{ text-align: center; color: #666; font-size: 0.9rem; margin-bottom: 30px; font-style: italic; }}
                 
+                /* PANEL FILTROS LATERAL */
+                .sidebar-filters {{
+                    position: fixed; left: 20px; top: 100px; width: 180px; z-index: 2000;
+                    display: flex; flex-direction: column; gap: 10px;
+                }}
+                .filter-btn {{
+                    padding: 12px; background: #fff; border: 1px solid #ddd; border-radius: 6px;
+                    cursor: pointer; font-size: 0.75rem; font-weight: bold; text-align: left;
+                    transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                }}
+                .filter-btn:hover {{ background: #f8fafc; border-color: #009b77; }}
+                .filter-btn.active {{ background: #009b77; color: white; border-color: #009b77; }}
+
                 table {{ 
                     width: 100%; 
                     border-collapse: separate; 
@@ -411,7 +428,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                     position: -webkit-sticky;
                     position: sticky; 
                     top: 0; 
-                    z-index: 9999;
+                    z-index: 999;
                     background-color: #009b77 !important; 
                     color: #fff; 
                     padding: 15px; 
@@ -439,27 +456,46 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                     z-index: 10000;
                     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
                     font-family: Arial, sans-serif;
-                    font-size: 12px;
+                    font-size: 11px;
                     display: flex;
                     flex-direction: column;
                     gap: 8px;
                 }}
                 .l-item {{ display: flex; align-items: center; gap: 10px; font-weight: bold; }}
-                .box {{ width: 16px; height: 16px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.1); }}
+                .box {{ width: 14px; height: 14px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.1); }}
                 .footer {{ margin-top: 50px; text-align: center; font-size: 0.7rem; color: #bbb; }}
             </style>
+            <script>
+                function filterRows(type, btn) {{
+                    const rows = document.querySelectorAll('tbody tr');
+                    rows.forEach(r => {{
+                        if (type === 'all') r.style.display = '';
+                        else if (r.classList.contains(type)) r.style.display = '';
+                        else r.style.display = 'none';
+                    }});
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                }}
+            </script>
         </head>
         <body>
+            <nav class="sidebar-filters">
+                <button class="filter-btn active" onclick="filterRows('all', this)">Ver Tabla Completa</button>
+                <button class="filter-btn" onclick="filterRows('row-common', this)">Coincidencias Totales</button>
+                <button class="filter-btn" onclick="filterRows('row-shared', this)">Compartidos</button>
+                <button class="filter-btn" onclick="filterRows('row-unique', this)">Diferenciadores Únicos</button>
+            </nav>
+
             <div class="leyenda-quimiometria">
-                <div style="font-size:10px; color:#888; margin-bottom:4px; text-transform:uppercase; letter-spacing:1px;">Código de Colores</div>
-                <div class="l-item"><div class="box" style="background:#f1fcf9; border-color:#009b77;"></div> 🟩 Verde: Coincidencia Común (100%)</div>
-                <div class="l-item"><div class="box" style="background:#f0f7ff; border-color:#1e40af;"></div> 🟦 Azul: Compartido entre especies</div>
-                <div class="l-item"><div class="box" style="background:#fff9f0; border-color:#92400e;"></div> 🟧 Naranja: Diferenciador Único (Biomarcador)</div>
+                <div style="font-size:9px; color:#888; margin-bottom:4px; text-transform:uppercase; letter-spacing:1px;">Categorización Taxonómica</div>
+                <div class="l-item"><div class="box" style="background:#f1fcf9; border-color:#009b77;"></div> VERDE: Común (100%)</div>
+                <div class="l-item"><div class="box" style="background:#f0f7ff; border-color:#1e40af;"></div> AZUL: Compartido</div>
+                <div class="l-item"><div class="box" style="background:#fff9f0; border-color:#92400e;"></div> NARANJA: Único (Biomarcador)</div>
             </div>
 
             <div class="container">
-                <div class="brand">Hershell-Raman | Scientific Publication Standard</div>
-                <h1>REPORTE DE CARACTERIZACIÓN MULTIESPECIE</h1>
+                <div class="brand">Hershell-Raman | Scientific Standard</div>
+                <h1>REPORTE DE CARACTERIZACIÓN</h1>
                 <div class="subtitle">Análisis de Marcadores Bioquímicos en la Región Fingerprint (800 - 1800 cm⁻¹)</div>
                 
                 <table>
@@ -477,7 +513,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                     </tbody>
                 </table>
 
-                <div class="footer">Generado automáticamente bajo estándar de publicación científica - Hershell-Raman v9.1</div>
+                <div class="footer">Generado automáticamente bajo estándar de publicación científica - Hershell-Raman v9.5</div>
             </div>
         </body>
         </html>"""

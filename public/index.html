@@ -239,29 +239,6 @@
                     </div>
                 </div>
 
-                <div class="toolbar-group" id="grp-peak" style="flex:1;">
-                    <span class="toolbar-label">DETECCIÓN DE PICOS</span>
-                    <div style="margin-bottom:5px;">
-                        <label style="font-size:0.7rem;">Umbral de Prominencia (0-1):</label>
-                        <div style="display:flex;gap:5px;">
-                            <input type="range" id="peak-sensitivity" min="0.01" max="1.0" step="0.01" value="0.2" style="flex:1">
-                            <output id="sens-val" style="font-size:0.7rem;">0.20</output>
-                        </div>
-                    </div>
-                    <div style="margin-bottom:5px;">
-                        <label style="font-size:0.7rem;">Ventana de Búsqueda (pts):</label>
-                        <div style="display:flex;gap:5px;">
-                            <input type="range" id="peak-window" min="1" max="50" step="1" value="5" style="flex:1">
-                            <output id="window-val" style="font-size:0.7rem;">5</output>
-                        </div>
-                    </div>
-                    <div class="toolbar-buttons">
-                        <button id="auto-peak-btn" class="primary" style="flex:2;" onclick="autoDetectPeaks()" data-title="Algoritmo Búsqueda Máximos Locales" data-desc="Escanea el vector espectral buscando puntos que sean el máximo absoluto dentro de la 'Ventana de búsqueda', siempre que superen el 'Umbral'." data-math="\max(y_{i-w} \dots y_{i+w}) > \text{Umbral}">🔍 Detectar</button>
-                        <button id="toggle-peak-mode" style="flex:1;" onclick="togglePeaks()" data-title="Anotación Manual" data-desc="Activa el cursor en cruz. Haz clic directamente sobre la curva para registrar un pico específico que el algoritmo haya omitido." data-math="Event(x_i, y_i)">✏️</button>
-                        <button id="clear-peaks" class="btn-delete" style="flex:1;" onclick="clearPeaks()" data-title="Limpiar Matriz de Picos" data-desc="Elimina todos los marcadores y vacía la tabla de asignaciones vibracionales." data-math="Peaks = [\emptyset]">🗑️</button>
-                    </div>
-                </div>
-
                 <div class="config-panel">
                     <span class="toolbar-label" style="display:block; margin-bottom:8px;">CONFIGURACIÓN DE HERRAMIENTAS</span>
                     <div class="config-item"><span>Tipo Espectro</span><input type="checkbox" checked onchange="toggleTool('grp-tipo', this)"></div>
@@ -516,7 +493,7 @@
                     <div class="toolbar-buttons" style="flex-direction:column; gap:8px;">
                         <button class="primary" style="width:100%" onclick="characterizeSpectra()">🔍 Identificar Picos (Automático)</button>
                         <button class="secondary" style="width:100%" onclick="renderCharTableUI()">💾 Generar Tabla de Caracterización</button>
-                        <button class="primary" style="width:100%; background:var(--purple); border-color:var(--purple);" onclick="generateTaxonomicReport()">📄 Generar Reporte de Caracterización Profesional</button>
+                        <button class="primary" style="width:100%; background:var(--purple); border-color:var(--purple);" onclick="generateTaxonomicReport()">📄 Generar reporte de caracterización</button>
                         <button class="btn-download-table" style="width:100%; justify-content:center;" onclick="downloadCharTable()">📥 Descargar Tabla (CSV)</button>
                     </div>
                 </div>
