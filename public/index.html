@@ -516,7 +516,7 @@
                     <div class="toolbar-buttons" style="flex-direction:column; gap:8px;">
                         <button class="primary" style="width:100%" onclick="characterizeSpectra()">🔍 Identificar Picos (Automático)</button>
                         <button class="secondary" style="width:100%" onclick="renderCharTableUI()">💾 Generar Tabla de Caracterización</button>
-                        <button class="primary" style="width:100%; background:var(--purple); border-color:var(--purple);" onclick="generateTaxonomicReport()">📄 Generar Reporte de Diferenciación (HTML)</button>
+                        <button class="primary" style="width:100%; background:var(--purple); border-color:var(--purple);" onclick="generateTaxonomicReport()">📊 Generar Tabla de Diferenciación Taxonómica</button>
                         <button class="btn-download-table" style="width:100%; justify-content:center;" onclick="downloadCharTable()">📥 Descargar Tabla (CSV)</button>
                     </div>
                 </div>
@@ -1560,7 +1560,7 @@
             const blob = new Blob([data.html], { type: 'text/html' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.setAttribute("download", "analisis_caracterizacion.html");
+            link.setAttribute("download", "Caracterizacion_Hershell_Raman.html");
             link.click();
             document.getElementById('char-status').innerText = "Reporte descargado ✓";
         } catch(e) {

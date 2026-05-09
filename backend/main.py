@@ -298,7 +298,7 @@ async def characterize_spectra(request: CharacterizeRequest):
 @app.post("/api/report")
 async def generate_taxonomic_report(request: CharacterizeRequest):
     try:
-        # Reutilizar lógica de caracterización
+        # 1. Alineación y Matrix Builder
         Y_matrix, x_ref = build_symmetric_matrix(request.spectra)
         names = [s.name for s in request.spectra]
         n_samples = len(names)
@@ -322,7 +322,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
         if all_peaks_x:
             current_group = [all_peaks_x[0]]
             for x in all_peaks_x[1:]:
-                if x - current_group[-1] <= 4.0: # Tolerancia ±4 cm-1
+                if x - current_group[-1] <= 5.0: # Tolerancia ±5 cm-1
                     current_group.append(x)
                 else:
                     groups.append(np.mean(current_group))
@@ -338,7 +338,8 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
 
         def get_assignment(wn):
             if 1630 <= wn <= 1680: return "Amida I (Proteínas)"
-            if 1050 <= wn <= 1100: return "Ácidos Nucleicos / Fosfatos"
+            if 1040 <= wn <= 1070: return "Polisacáridos"
+            if 1070 < wn <= 1100: return "Ácidos Nucleicos / Fosfatos"
             if 1440 <= wn <= 1460: return "CH2 Bending (Lípidos)"
             if 1000 <= wn <= 1010: return "Fenilalanina"
             return "Vibración Específica"
@@ -348,7 +349,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
             present_in = []
             intensities = []
             for s_idx, name in enumerate(names):
-                match = next((p for p in spectra_peak_details[s_idx] if abs(p["x"] - g_wn) <= 4.0), None)
+                match = next((p for p in spectra_peak_details[s_idx] if abs(p["x"] - g_wn) <= 5.0), None)
                 if match:
                     present_in.append(name)
                     intensities.append(f"<b>{match['y']:.3f}</b>")
@@ -357,18 +358,17 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
             
             count = len(present_in)
             if count == n_samples:
-                cat = "UNIVERSAL"
-                row_class = "cat-universal"
+                cat = "COINCIDENCIA (COMÚN)"
+                row_class = "cat-common"
             elif count > 1:
-                cat = "COMPARTIDO"
+                cat = f"COMPARTIDO ({', '.join(present_in)})"
                 row_class = "cat-shared"
             else:
-                cat = "DIFERENCIADOR"
+                cat = f"DIFERENCIADOR (ÚNICO: {present_in[0]})"
                 row_class = "cat-unique"
                 
             region = get_region(g_wn)
             assignment = get_assignment(g_wn)
-            
             intensities_tds = "".join([f"<td>{val}</td>" for val in intensities])
             
             rows_html += f"""
@@ -377,7 +377,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                 <td>{g_wn:.1f}</td>
                 <td contenteditable="true">{assignment}</td>
                 {intensities_tds}
-                <td><strong>{cat}</strong></td>
+                <td>{cat}</td>
             </tr>"""
 
         headers_samples = "".join([f"<th>{n}</th>" for n in names])
@@ -387,56 +387,51 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
         <html>
         <head>
             <meta charset="UTF-8">
-            <title>Informe de Diferenciación Taxonómica</title>
+            <title>Caracterización Hershell Raman</title>
             <style>
-                body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; color: #333; margin: 0; padding: 40px; }}
-                .report-container {{ background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; overflow: hidden; }}
-                h1 {{ color: #1a5f7a; border-bottom: 2px solid #1a5f7a; padding-bottom: 10px; }}
-                .watermark {{ position: absolute; top: 10px; right: 10px; font-size: 0.8rem; color: #ccc; font-weight: bold; transform: rotate(0deg); }}
-                table {{ width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; }}
-                th {{ background: #1a5f7a; color: #fff; padding: 12px; text-align: left; }}
-                td {{ padding: 10px; border-bottom: 1px solid #eee; }}
-                .cat-universal {{ background-color: #e8f5e9; }}
-                .cat-shared {{ background-color: #fff3e0; }}
-                .cat-unique {{ background-color: #ffebee; border-left: 5px solid #d32f2f; }}
-                .legend {{ margin-top: 20px; display: flex; gap: 20px; font-size: 0.8rem; }}
-                .legend-item {{ display: flex; align-items: center; gap: 5px; }}
-                .box {{ width: 15px; height: 15px; border-radius: 3px; }}
-                .footer {{ margin-top: 30px; font-size: 0.7rem; color: #777; text-align: center; }}
+                body {{ font-family: 'Open Sans', sans-serif; background: #fafafa; color: #333; padding: 40px; }}
+                .report-box {{ background: #fff; padding: 30px; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: relative; }}
+                .watermark {{ position: absolute; top: 15px; right: 20px; font-size: 0.7rem; color: #999; letter-spacing: 1px; }}
+                h1 {{ color: #064e3b; text-align: center; margin-bottom: 30px; border-bottom: 3px solid #064e3b; padding-bottom: 10px; }}
+                table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
+                th {{ background: #064e3b; color: #fff; padding: 12px; text-align: left; font-size: 0.85rem; text-transform: uppercase; }}
+                td {{ padding: 10px; border-bottom: 1px solid #eee; font-size: 0.85rem; }}
+                .cat-common {{ background-color: #ecfdf5; }} /* Verde muy claro */
+                .cat-shared {{ background-color: #eff6ff; }} /* Azul muy claro */
+                .cat-unique {{ background-color: #fffaf1; }} /* Naranja/Crema muy claro */
+                .legend {{ margin-top: 20px; display: flex; gap: 20px; font-size: 0.75rem; font-weight: bold; }}
+                .l-item {{ display: flex; align-items: center; gap: 6px; }}
+                .dot {{ width: 12px; height: 12px; border-radius: 2px; }}
+                .footer {{ margin-top: 40px; text-align: center; font-size: 0.7rem; color: #aaa; }}
             </style>
         </head>
         <body>
-            <div class="report-container">
-                <div class="watermark">Hershell-Raman | Análisis Taxonómico</div>
-                <h1>Informe de Diferenciación Taxonómica</h1>
-                <p>Análisis comparativo de picos espectrales para la identificación de biomarcadores.</p>
-                
+            <div class="report-box">
+                <div class="watermark">HERSHELL-RAMAN | ANÁLISIS TAXONÓMICO</div>
+                <h1>DIFERENCIACIÓN TAXONÓMICA ESPECTRAL</h1>
                 <table>
                     <thead>
                         <tr>
-                            <th>Región</th>
+                            <th>Características</th>
                             <th>cm⁻¹ (Prom)</th>
-                            <th>Asignación Vibracional</th>
+                            <th>Vibración / Biomolécula</th>
                             {headers_samples}
-                            <th>Categoría</th>
+                            <th>Categoría Taxonómica</th>
                         </tr>
                     </thead>
                     <tbody>
                         {rows_html}
                     </tbody>
                 </table>
-                
                 <div class="legend">
-                    <div class="legend-item"><div class="box" style="background:#e8f5e9;"></div> Universal (100%)</div>
-                    <div class="legend-item"><div class="box" style="background:#fff3e0;"></div> Compartido (>1 sp)</div>
-                    <div class="legend-item"><div class="box" style="background:#ffebee; border:1px solid #d32f2f;"></div> Diferenciador (Único)</div>
+                    <div class="l-item"><div class="dot" style="background:#ecfdf5; border:1px solid #10b981;"></div> COMÚN (100%)</div>
+                    <div class="l-item"><div class="dot" style="background:#eff6ff; border:1px solid #3b82f6;"></div> COMPARTIDO</div>
+                    <div class="l-item"><div class="dot" style="background:#fffaf1; border:1px solid #f59e0b;"></div> ÚNICO</div>
                 </div>
-                
-                <div class="footer">Generado automáticamente por Hershell-Raman V8.2 - Pipeline Quimiométrico Avanzado</div>
+                <div class="footer">Este informe es dinámico y se ajusta según el número de muestras (N={n_samples}).</div>
             </div>
         </body>
         </html>"""
-        
         return {"html": html_report}
     except Exception as e:
         print(traceback.format_exc())
