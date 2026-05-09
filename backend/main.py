@@ -381,30 +381,27 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
             groups.append(np.mean(current_group))
             
         def get_assignment(wn, meth):
-            # TÉCNICA ESPECÍFICA
-            if meth == "RAMAN":
-                if 1000 <= wn <= 1010: return "Respiración de anillo: Fenilalanina (Proteínas)"
-            elif meth == "FTIR":
-                if 1735 <= wn <= 1745: return "Estiramiento C=O: Ésteres de Lípidos"
+            # TÉCNICA ESPECÍFICA (FTIR / RAMAN)
+            if meth == "FTIR" and 1730 <= wn <= 1750: 
+                return "Estiramiento C=O: Ésteres (Triglicéridos/Lípidos)"
+            if 1003 <= wn <= 1005: 
+                return "Respiración del anillo: Fenilalanina (Proteínas)"
             
-            # DICCIONARIO CIENTÍFICO AMPLIADO (Fingerprint)
-            if 1650 <= wn <= 1670: return "Estiramiento C=O: Amida I (Proteínas)"
-            if 1570 <= wn <= 1585: return "Vibración de anillo: Guanina / Adenina (Ácidos Nucleicos)"
+            # DICCIONARIO CIENTÍFICO DE ALTA PRECISIÓN (800-1800 cm-1)
+            if 1650 <= wn <= 1675: return "Estiramiento C=O: Amida I (Proteínas)"
             if 1540 <= wn <= 1560: return "Deformación N-H: Amida II (Proteínas)"
-            if 1445 <= wn <= 1455: return "Deformación CH2: Flexión (Lípidos)"
-            if 1300 <= wn <= 1315: return "Deformación CH2: Lípidos (Twisting/Wagging)"
-            if 1240 <= wn <= 1260: return "Estiramiento P=O asimétrico: Fosfatos (Ácidos Nucleicos/Fosfolípidos)"
-            if 1120 <= wn <= 1135: return "Estiramiento C-N / C-C: Proteínas y Lípidos"
-            if 1070 <= wn <= 1090: return "Estiramiento C-O: Esqueleto (Carbohidratos/Polisacáridos)"
-            if 930 <= wn <= 980: return "Estiramiento C-C: Esqueleto Proteico / Polisacáridos"
-            if 810 <= wn <= 830: return "Estiramiento O-P-O: Ácidos Nucleicos (ARN/ADN)"
+            if 1440 <= wn <= 1460: return "Deformación CH2/CH3: Flexión (Lípidos/Proteínas)"
+            if 1240 <= wn <= 1260: return "Estiramiento P=O asimétrico: Fosfodiéster (Ácidos Nucleicos/Fosfolípidos)"
+            if 1070 <= wn <= 1090: return "Estiramiento C-O: Enlaces Glicosídicos (Carbohidratos/Polisacáridos)"
+            if 930 <= wn <= 955:   return "Vibración C-C: Esqueleto de α-hélice (Proteínas)"
+            if 810 <= wn <= 835:   return "Estiramiento simétrico O-P-O: Grupos Fosfato (Ácidos Nucleicos)"
             
-            # CATEGORÍAS POR RANGO
-            if 1500 <= wn <= 1800: return "Vibración Bioquímica: Proteínas"
-            if 1200 <= wn < 1500: return "Vibración Bioquímica: Lípidos / Mixta"
-            if 900 <= wn < 1200: return "Vibración Bioquímica: Carbohidratos / ADN"
+            # CATEGORÍAS POR REGIÓN BIOQUÍMICA (FALLBACK)
+            if 1500 <= wn <= 1800: return "Vibración compleja en región de Proteínas"
+            if 1200 <= wn < 1500: return "Vibración compleja en región de Lípidos / Ácidos Nucleicos"
+            if 900 <= wn < 1200: return "Vibración compleja en región de Carbohidratos / ADN"
             
-            return "Vibración Bioquímica (Específica)"
+            return "Señal vibracional detectada en zona Fingerprint"
 
         # Clasificación y Recolección
         common_rows = []
