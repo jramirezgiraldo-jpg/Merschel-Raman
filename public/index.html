@@ -694,16 +694,27 @@
         { range: [3070, 3060], vib: "Estiramiento =C-H", group: "Alqueno", bio: "Ácidos grasos insaturados" },
         { range: [2960, 2920], vib: "Estiramiento CH2/CH3", group: "Alquilo", bio: "Lípidos y Proteínas" },
         { range: [1745, 1735], vib: "Estiramiento C=O", group: "Éster", bio: "Ésteres de lípidos" },
-        { range: [1665, 1650], vib: "Amida I (Hélice alfa)", group: "Péptido", bio: "Proteínas" },
-        { range: [1640, 1630], vib: "Amida I (Lámina beta)", group: "Péptido", bio: "Proteínas" },
-        { range: [1550, 1540], vib: "Amida II", group: "Péptido", bio: "Proteínas" },
-        { range: [1460, 1440], vib: "Flexión CH2/CH3", group: "Alquilo", bio: "Lípidos/Proteínas" },
-        { range: [1250, 1240], vib: "Estiramiento asim. PO2-", group: "Fosfato", bio: "ADN/ARN/Fosfolípidos" },
-        { range: [1090, 1080], vib: "Estiramiento sim. PO2-", group: "Fosfato", bio: "Esqueleto Ácidos Nucleicos" },
+        { range: [1675, 1650], vib: "Estiramiento C=O: Amida I", group: "Péptido", bio: "Proteínas" },
+        { range: [1560, 1540], vib: "Deformación N-H: Amida II", group: "Péptido", bio: "Proteínas" },
+        { range: [1480, 1400], vib: "Deformación C-H2 / C-H3 (Scissoring/Flexión)", group: "Alquilo", bio: "Lípidos / Cadenas alifáticas" },
+        { range: [1400, 1300], vib: "Deformación C-H (Torsión/Wagging)", group: "Alquilo", bio: "Colágeno / Proteínas" },
+        { range: [1300, 1200], vib: "Estiramiento asimétrico P=O y Deformación N-H", group: "Fosfato/Amida", bio: "Ácidos Nucleicos / Amida III" },
+        { range: [1180, 1150], vib: "Estiramiento asimétrico C-O-C", group: "Éter", bio: "Carbohidratos / Enlaces Glicosídicos" },
+        { range: [1090, 1070], vib: "Estiramiento C-O", group: "Éter", bio: "Carbohidratos" },
+        { range: [1050, 1000], vib: "Estiramiento C-O y C-N", group: "Residuo", bio: "Glucógeno / Residuos de aminoácidos" },
         { range: [1005, 1003], vib: "Respiración del anillo", group: "Aromático", bio: "Fenilalanina (Proteínas)" },
-        { range: [950, 850], vib: "Región Carbohidratos", group: "Azúcar", bio: "Carbohidratos y Glucógeno" },
+        { range: [950, 900],   vib: "Estiramiento C-C y Deformación C-H", group: "Esqueleto", bio: "Carbohidratos/Proteínas" },
         { range: [520, 480], vib: "Enlaces S-S", group: "Sulfuro", bio: "Puentes disulfuro" }
     ];
+
+    function getFallbackInfo(x) {
+        if (x > 1560) return {vib:"Deformación N-H y Estiramiento C=O", group:"Mixto", bio:"Interacción de Proteínas"};
+        if (x > 1480 && x < 1540) return {vib:"Deformación C-H y Estiramiento C-N", group:"Amida mixta", bio:"Proteínas"};
+        if (x > 1090 && x < 1150) return {vib:"Tensión de esqueleto C-C y C-O", group:"Mixto", bio:"Carbohidratos complejos"};
+        if (x > 950 && x < 1000) return {vib:"Vibración de estiramiento esquelético C-C", group:"Alifático", bio:"Modo alifático"};
+        if (x < 900) return {vib:"Tensión de esqueleto C-C y deformaciones anulares", group:"Esqueleto", bio:"Carbohidratos"};
+        return {vib:"Tensión de esqueleto vibracional mixta", group:"Interacción", bio:"Fingerprint"};
+    }
 
     let spectraList = [], processedSpectra = [], selectedPeaks = [], isPeakMode=false;
     let trainingSet = [], predictSet = [];
@@ -1184,7 +1195,7 @@
                     let isMax=true;
                     for(let j=1; j<=win; j++) if(y[i]<y[i-j] || y[i]<y[i+j]) isMax=false;
                     if(isMax) {
-                        let info = library.find(l => (x[i] <= l.range[0] + 4 && x[i] >= l.range[1] - 4)) || {vib:"Vibración compleja / Región de huella digital", group:"No ID", bio:"Desconocido"};
+                        let info = library.find(l => (x[i] <= l.range[0] + 4 && x[i] >= l.range[1] - 4)) || getFallbackInfo(x[i]);
                         selectedPeaks.push({x:x[i], y:y[i], info:info, spectrumName:spectrumName}); 
                         i+=win;
                     }
@@ -1223,7 +1234,7 @@
         if (closestIndex !== -1 && minDistance <= 10) {
             selectedPeaks.splice(closestIndex, 1);
         } else {
-            let info = library.find(l => (x <= l.range[0] + 4 && x >= l.range[1] - 4)) || {vib:"Vibración compleja / Región de huella digital", group:"Manual", bio:"Desconocido"};
+            let info = library.find(l => (x <= l.range[0] + 4 && x >= l.range[1] - 4)) || getFallbackInfo(x);
             selectedPeaks.push({x, y, info, spectrumName});
         }
         
