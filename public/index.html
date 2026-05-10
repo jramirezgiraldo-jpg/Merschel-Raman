@@ -504,6 +504,7 @@
                             <button class="primary" style="flex:1; font-size:0.7rem; padding:4px;" onclick="addManualPeak()">➕ Añadir</button>
                         </div>
                         <button class="secondary" style="width:100%; font-size:0.7rem; padding:4px; color:#ef4444; border-color:#fca5a5;" id="btn-remove-peak" onclick="removeSelectedPeak()">❌ Borrar Pico Seleccionado</button>
+                        <button class="secondary" id="btn-toggle-char-mode" style="width:100%; font-size:0.7rem; padding:4px; margin-top:8px;" onclick="toggleCharPeakMode()">🖱️ Activar Selección por Clic</button>
                     </div>
                 </div>
                 <div id="char-status" style="margin-top:10px; font-size:0.75rem; color:var(--primary); font-weight:bold;"></div>
@@ -1515,7 +1516,12 @@
             yaxis: { title: currentYTitle },
             margin: { t: 60, b: 40, l: 55, r: 20 },
             paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
-            hovermode: 'closest'
+            hovermode: 'closest',
+            legend: { 
+                itemsizing: 'constant', 
+                traceorder: 'normal',
+                font: { size: 10 }
+            }
         };
 
         Plotly.react('char-graph', traces, layout, { responsive: true });
@@ -1553,9 +1559,27 @@
     }
 
     let lastClickedCharPeak = null;
+    let isCharPeakMode = false;
+
+    function toggleCharPeakMode() {
+        isCharPeakMode = !isCharPeakMode;
+        const btn = document.getElementById('btn-toggle-char-mode');
+        btn.classList.toggle('primary', isCharPeakMode);
+        btn.classList.toggle('secondary', !isCharPeakMode);
+        btn.innerText = isCharPeakMode ? '🖱️ Modo Selección Activo' : '🖱️ Activar Selección por Clic';
+        document.getElementById('char-graph').style.cursor = isCharPeakMode ? 'crosshair' : 'default';
+    }
+
     function handleCharPeakClick(data) {
-        if (data.points && data.points.length > 0) {
-            const p = data.points[0];
+        if (!data.points || data.points.length === 0) return;
+        const p = data.points[0];
+        
+        if (isCharPeakMode) {
+            // Añadir pico mediante clic
+            document.getElementById('manual-peak-val').value = p.x.toFixed(1);
+            addManualPeak();
+        } else {
+            // Seleccionar para borrar
             lastClickedCharPeak = p.x;
             document.getElementById('char-status').innerText = `Seleccionado: ${p.x.toFixed(1)} cm⁻¹`;
             document.getElementById('btn-remove-peak').style.background = '#fee2e2';
