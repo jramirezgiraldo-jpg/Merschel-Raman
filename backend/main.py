@@ -316,20 +316,28 @@ async def characterize_spectra(request: CharacterizeRequest):
         # 4. Generación de Tabla y Asignaciones
         def get_assignment(wn):
             # DICCIONARIO ROBUSTO CIENTÍFICO (800-1800 cm-1)
+            # 1. Picos ultra-específicos (Prioridad máxima)
             if 1650 <= wn <= 1675: return "Estiramiento C=O: Amida I (Proteínas)"
             if 1540 <= wn <= 1560: return "Deformación N-H: Amida II (Proteínas)"
-            if 1440 <= wn <= 1455: return "Deformación CH2: Flexión de cadenas (Lípidos)"
-            if 1240 <= wn <= 1265: return "Estiramiento P=O asimétrico: Fosfodiéster (Ácidos Nucleicos)"
             if 1070 <= wn <= 1090: return "Estiramiento C-O: Enlaces Glicosídicos (Carbohidratos)"
             if 1003 <= wn <= 1005: return "Respiración del anillo: Fenilalanina (Proteínas)"
-            if 930 <= wn <= 950:   return "Vibración C-C: Esqueleto proteico (α-hélice)"
             
-            # REGIONES BIOQUÍMICAS (FALLBACK ESPECÍFICO)
-            if 1500 <= wn <= 1800: return "Región de Proteínas (Fingerprint)"
-            if 1200 <= wn < 1500: return "Región de Lípidos / Ácidos Nucleicos"
-            if 900 <= wn < 1200: return "Región de Carbohidratos / Ácidos Nucleicos"
+            # 2. Rangos principales y modos vibracionales anchos (Nuevos requerimientos)
+            if 1400 <= wn <= 1480: return "Deformación C-H2 / C-H3 (Scissoring/Flexión): Lípidos / Cadenas alifáticas"
+            if 1300 <= wn < 1400: return "Deformación C-H (Torsión/Wagging): Colágeno / Proteínas"
+            if 1200 <= wn < 1300: return "Estiramiento asimétrico P=O y Deformación N-H: Ácidos Nucleicos / Amida III"
+            if 1150 <= wn <= 1180: return "Estiramiento asimétrico C-O-C: Carbohidratos / Enlaces Glicosídicos"
+            if 1000 <= wn <= 1050: return "Estiramiento C-O y C-N: Glucógeno / Residuos de aminoácidos"
+            if 900 <= wn <= 950: return "Estiramiento C-C y Deformación C-H: Carbohidratos/Proteínas"
             
-            return "Señal vibracional en zona Fingerprint"
+            # 3. Regla del Modo Predominante para valles o "zonas muertas" (Sin fallbacks ambiguos)
+            if wn > 1560: return "Deformación N-H y Estiramiento C=O: Interacción de Proteínas"
+            if 1480 < wn < 1540: return "Deformación C-H y Estiramiento C-N: Amida II mixta (Proteínas)"
+            if 1090 < wn < 1150: return "Tensión de esqueleto C-C y C-O: Carbohidratos complejos"
+            if 950 < wn < 1000: return "Vibración de estiramiento esquelético C-C: Modo alifático"
+            if wn < 900: return "Tensión de esqueleto C-C y deformaciones anulares: Carbohidratos"
+            
+            return "Tensión de esqueleto vibracional mixta: Interacción Fingerprint"
 
         table_data = []
         for g_wn in groups:
