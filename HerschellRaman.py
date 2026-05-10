@@ -224,7 +224,7 @@ else:
                     title="Análisis Bioespectroscópico (Procesado en Render)",
                     xaxis_title="Wavenumber", 
                     yaxis_title="Intensidad",
-                    margin=dict(r=250) # MANTENER LEYENDA VISIBLE
+                    margin=dict(l=60, r=250, t=50, b=50) # MANTENER LEYENDA VISIBLE
                 )
                 st.plotly_chart(fig, use_container_width=True)
     else:
