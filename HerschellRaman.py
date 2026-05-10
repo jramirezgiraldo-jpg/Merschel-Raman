@@ -208,10 +208,13 @@ else:
                     if not clean_name or clean_name.strip() == "":
                         clean_name = "Espectro Recuperado"
                         
+                    # BYPASS DE HTML: Formato LaTeX para cursiva matemática
+                    nombre_cursiva_latex = r"$\mathit{" + clean_name.strip() + r"}$"
+                        
                     fig.add_trace(go.Scatter(
                         x=spec["x"], 
                         y=spec["y"], 
-                        name=clean_name.strip(), # STRING PURO: CERO CONCATENACIONES, CERO HTML
+                        name=nombre_cursiva_latex,  # INYECCIÓN LATEX (CERO HTML)
                         mode='lines',
                         showlegend=True,
                         line=dict(width=1.5)

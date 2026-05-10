@@ -754,9 +754,11 @@
     /**
      * getTraceName(nameStr)
      * — Versión pura para leyendas de Plotly sin HTML.
+     * — BYPASS DE HTML: Formato LaTeX para cursiva matemática
      */
     function getTraceName(nameStr) {
-        return extractCleanName(nameStr);
+        const clean = extractCleanName(nameStr);
+        return `$\\mathit{${clean}}$`;
     }
 
     // Alias para compatibilidad
@@ -1006,10 +1008,13 @@
             }
             nombre = nombre.trim();
             
+            // BYPASS DE HTML: Formato LaTeX para cursiva matemática
+            const nombre_cursiva_latex = `$\\mathit{${nombre}}$`;
+            
             return { 
                 x: s.x, 
                 y: s.y, 
-                name: nombre, // STRING PLANO, CERO HTML
+                name: nombre_cursiva_latex, // INYECCIÓN LATEX (CERO HTML)
                 type: 'scatter', 
                 mode: 'lines', 
                 line: { width: 1.5, color: palette[idx % palette.length] },
