@@ -5,6 +5,7 @@ import io
 import os
 import requests
 from scipy.interpolate import interp1d
+import plotly.graph_objects as go
 
 # =================================================================
 # CONFIGURACIÓN DE DESPLIEGUE (PRODUCCIÓN RENDER)
@@ -188,10 +189,40 @@ else:
             if result:
                 st.success("✅ Procesamiento completado exitosamente en el servidor.")
                 # Visualización
-                first_spec = result["spectra"][0]
                 fig = go.Figure()
-                fig.add_trace(go.Scatter(x=first_spec["x"], y=first_spec["y"], name=first_spec["name"]))
-                fig.update_layout(title=f"Resultado: {first_spec['name']}", xaxis_title="Wavenumber", yaxis_title="Intensidad")
+                
+                for spec in result["spectra"]:
+                    raw_name = str(spec["name"])
+                    
+                    # 1. Eliminar explícitamente el bug "i>" y cualquier tag
+                    clean_name = raw_name.replace('i>', '').replace('<i>', '').replace('</i>', '')
+                    clean_name = clean_name.replace('<', '').replace('>', '')
+                    
+                    # 2. PURGA REGEX: Mantener SOLO letras, números, espacios y guiones
+                    clean_name = re.sub(r'[^a-zA-Z0-9\s\-]', '', clean_name)
+                    
+                    # 3. Limpiar extensiones y residuos
+                    clean_name = clean_name.replace('csv', '').replace('txt', '').replace('asc', '').strip()
+                    
+                    # 4. Fallback seguro
+                    if not clean_name or clean_name.strip() == "":
+                        clean_name = "Espectro Recuperado"
+                        
+                    fig.add_trace(go.Scatter(
+                        x=spec["x"], 
+                        y=spec["y"], 
+                        name=clean_name.strip(), # STRING PURO: CERO CONCATENACIONES, CERO HTML
+                        mode='lines',
+                        showlegend=True,
+                        line=dict(width=1.5)
+                    ))
+                    
+                fig.update_layout(
+                    title="Análisis Bioespectroscópico (Procesado en Render)",
+                    xaxis_title="Wavenumber", 
+                    yaxis_title="Intensidad",
+                    margin=dict(r=250) # MANTENER LEYENDA VISIBLE
+                )
                 st.plotly_chart(fig, use_container_width=True)
     else:
         st.error("❌ Error de alineación. Verifica los rangos de tus archivos.")

@@ -12,8 +12,10 @@ from sklearn.preprocessing import LabelBinarizer
 from fastapi.middleware.cors import CORSMiddleware
 import re
 import pandas as pd
-import traceback
 from scipy.interpolate import interp1d
+from joblib import Parallel, delayed
+import hashlib
+import os
 
 def parse_spectroscopy_file(decoded_content: str):
     """
@@ -67,44 +69,56 @@ app.add_middleware(
 # Modelos de datos para el Body de la petición (JSON)
 def clean_sample_name(name: str):
     """
-    Limpia el nombre del archivo eliminando extensiones y sufijos comunes.
-    Utiliza os.path.splitext para mayor robustez estructural.
+    Purga forzada: elimina cualquier rastro de HTML o extensión de forma agresiva.
     """
-    import os
-    # Eliminar extensión principal
-    base = os.path.basename(name)
-    clean = os.path.splitext(base)[0]
-    # Eliminar extensiones secundarias si existen (ej .txt.txt)
-    while True:
-        root, ext = os.path.splitext(clean)
-        if ext.lower() in ['.csv', '.txt', '.asc', '.dat']:
-            clean = root
-        else:
-            break
-    # Eliminar guiones bajos o sufijos comunes
-    clean = re.sub(r'(_|-)(raman|ftir|muestra|raw|proc|corr)\d*', '', clean, flags=re.IGNORECASE)
-    # Reemplazar guiones bajos por espacios para un nombre limpio
-    clean = clean.replace('_', ' ').strip()
+    nombre = str(name)
+    # 1. Eliminar explícitamente el bug "i>" y cualquier tag
+    nombre = nombre.replace('i>', '').replace('<i>', '').replace('</i>', '')
     
-    # Fallback si quedó vacío por limpieza agresiva
-    if not clean:
-        clean = os.path.splitext(os.path.basename(name))[0]
+    # 2. PURGA REGEX: Mantener SOLO letras, números, espacios y guiones
+    import re
+    nombre = re.sub(r'[^a-zA-Z0-9\s\-]', '', nombre)
+    
+    # 3. Limpiar extensiones y residuos
+    nombre = nombre.replace('csv', '').replace('txt', '').replace('asc', '').strip()
+    
+    # 4. Fallback seguro
+    if not nombre or nombre.strip() == "":
+        nombre = "Espectro Recuperado"
+        
+    return nombre.strip()
+
+def get_clean_italic_name(filename: str) -> str:
+    """
+    Función canónica de nomenclatura científica (espejo del get_clean_italic_name() de JS).
+    SIEMPRE devuelve "Nombre Limpio" garantizando que NO haya HTML.
+    a) Elimina extensiones (.csv, .txt, .asc, .dat) via os.path.splitext
+    b) Limpia guiones bajos y términos técnicos (Raman, FTIR, raw, proc)
+    """
+    clean = clean_sample_name(filename)
+    # Garantía de contenido: si el nombre quedó vacío, usar fallback
+    if not clean or not clean.strip() or clean == "i>":
+        clean = "Espectro Desconocido"
     return clean
 
-def format_scientific_name(name: str, use_latex: bool = False):
+def format_scientific_name(name: str, use_latex: bool = False) -> str:
     """
-    Aplica formato de cursiva taxonómica OBLIGATORIO para Plotly/HTML.
+    Alias de get_clean_italic_name() para compatibilidad con código existente.
+    Soporta formato LaTeX (Matplotlib) y HTML (Plotly).
     """
     clean = clean_sample_name(name)
+    if not clean or not clean.strip() or clean == "i>":
+        clean = "Espectro Desconocido"
     if use_latex:
-        parts = clean.split()
-        if len(parts) >= 2:
-            tex_name = r"\ ".join(parts)
-            return f"$\\mathit{{{tex_name}}}$"
-        return clean
-    else:
-        # Envoltorio HTML OBLIGATORIO
-        return f"<i>{clean}</i>"
+        return f"$\\mathit{{{clean}}}$"
+    return clean
+
+# --- CACHE DE PROCESAMIENTO ---
+_process_cache = {}
+
+def get_payload_hash(payload_dict):
+    import json
+    return hashlib.md5(json.dumps(payload_dict, sort_keys=True, default=str).encode()).hexdigest()
 
 class SpectrumData(BaseModel):
     name: str
@@ -159,33 +173,29 @@ async def read_index():
 @app.post("/api/process")
 async def process_spectra(request: ProcessRequest):
     try:
+        # 1. Caching Check
+        cache_key = get_payload_hash(request.dict())
+        if cache_key in _process_cache:
+            return _process_cache[cache_key]
+
         baseline_algo = request.config.baseline
         smoothing_algo = request.config.smoothing
         
-        # 1. Alinear todos los espectros al rango común (Evitar length mismatch)
-        # build_symmetric_matrix ya implementa el Hotfix de ordenamiento y rango común
         Y_matrix, x_ref = build_symmetric_matrix(request.spectra)
-        
-        # 2. Creación de la matriz final NUEVA (Master DataFrame)
-        # Filas = Muestras, Columnas = Wavenumbers
-        df_final = pd.DataFrame(Y_matrix, columns=x_ref)
+        df_vals = Y_matrix
         
         baseline_fitter = Baseline()
-        processed_results = []
         
-        # 3. Paso al pre-procesamiento iterativo sobre la matriz alineada
-        for idx, row in df_final.iterrows():
-            y = row.values
-            x = x_ref # Eje X Maestro
-            
+        def process_one(idx):
+            y = df_vals[idx].copy()
             # Corrección de Línea Base
             if baseline_algo == "als":
                 y_base, _ = baseline_fitter.asls(y, lam=1e5, p=0.01)
-                y = y - y_base
+                y -= y_base
             elif baseline_algo == "rollingball":
                 half_window = max(5, len(y) // 20)
                 y_base, _ = baseline_fitter.rolling_ball(y, half_window=half_window)
-                y = y - y_base
+                y -= y_base
                 
             # Suavizado
             if smoothing_algo == "savgol":
@@ -196,16 +206,22 @@ async def process_spectra(request: ProcessRequest):
                 kernel = np.ones(5) / 5.0
                 y = np.convolve(y, kernel, mode='same')
                 
-            processed_results.append({
-                "name": format_scientific_name(request.spectra[idx].name),
-                "x": x.tolist(),
+            return {
+                # CRÍTICO: Devolver nombre limpio SIN tags HTML.
+                "name": clean_sample_name(request.spectra[idx].name),
+                "x": x_ref.tolist(),
                 "y": y.tolist()
-            })
+            }
             
-        return {"spectra": processed_results}
+        # Ejecución en Paralelo (Vectorización de pipeline)
+        processed_results = Parallel(n_jobs=-1)(delayed(process_one)(i) for i in range(len(df_vals)))
+        
+        res = {"spectra": processed_results}
+        _process_cache[cache_key] = res
+        return res
     except Exception as e:
-        error_trace = traceback.format_exc()
-        print(error_trace) 
+        import traceback
+        print(traceback.format_exc()) 
         return JSONResponse(status_code=500, content={"detail": f"Error matemático en Pipeline: {str(e)}"})
 
 @app.post("/comparar")
@@ -243,7 +259,8 @@ async def comparar_espectros_avanzado(data: CompareRequest):
                         break
             if is_diff:
                 unique_peaks.append({"x": p1["x"], "y": p1["y"], "type": diff_type})
-        diff_peaks_result[format_scientific_name(spec.name)] = unique_peaks
+        # Usar nombre limpio sin HTML para claves del diccionario JSON
+        diff_peaks_result[clean_sample_name(spec.name)] = unique_peaks
         
     return {"diff_peaks": diff_peaks_result}
 
@@ -255,7 +272,8 @@ async def characterize_spectra(request: CharacterizeRequest):
             
         # 1. Alineación y Matrix Builder
         Y_matrix, x_ref = build_symmetric_matrix(request.spectra)
-        names = [format_scientific_name(s.name) for s in request.spectra]
+        # clean_sample_name: texto plano, sin formato HTML.
+        names = [clean_sample_name(s.name) for s in request.spectra]
         
         all_peaks_x = []
         spectra_peak_details = [] # List of dicts per spectrum
@@ -361,7 +379,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
         orig_names = [s.name for s in request.spectra]
         sorted_indices = sorted(range(len(orig_names)), key=lambda i: orig_names[i])
         
-        # Nombres formateados para HTML (cursiva) y Plotly
+        # Nombres formateados para reportes HTML y Plotly
         names = [format_scientific_name(orig_names[i]) for i in sorted_indices]
         Y_matrix = Y_matrix_raw[sorted_indices]
         n_samples = len(names)
@@ -695,10 +713,10 @@ async def calculate_pca(data: ChemoRequest):
         for i, n in enumerate(names):
             pc1 = float(scores[i][0])
             pc2 = float(scores[i][1]) if n_comps > 1 else 0.0
-            formatted = format_scientific_name(n)
+            clean = clean_sample_name(data.spectra[i].name)
             scores_out.append({
-                "name": n, 
-                "scientific_name": formatted,
+                "name": clean, 
+                "scientific_name": clean,  # Sin HTML
                 "pc1": pc1, 
                 "pc2": pc2
             })
@@ -755,8 +773,8 @@ async def calculate_hca(data: ChemoRequest):
             color_threshold=data.color_threshold
         )
         
-        # Formatear nombres de las hojas (eje X del dendrograma)
-        scientific_ivl = [format_scientific_name(n) for n in ddata['ivl']]
+        # Nombres de hojas del dendrograma: texto plano sin HTML
+        scientific_ivl = [clean_sample_name(n) for n in ddata['ivl']]
         
         return {
             "type": "hca",
@@ -775,7 +793,8 @@ async def calculate_correlation(data: ChemoRequest):
     try:
         if len(data.spectra) < 2: return {"error": "Se requieren al menos 2 espectros."}
         orig_names = [s.name for s in data.spectra]
-        names = [format_scientific_name(n) for n in orig_names]
+        # Nombres limpios sin HTML para etiquetas del heatmap
+        names = [clean_sample_name(n) for n in orig_names]
         Y, _ = prepare_chemometric_matrix(data)
         
         corr_matrix = np.corrcoef(Y)
@@ -821,8 +840,8 @@ async def calculate_plsda(data: PlsdaRequest):
             if grp not in scores_grouped:
                 scores_grouped[grp] = []
             scores_grouped[grp].append({
-                "name": names[i],
-                "scientific_name": format_scientific_name(names[i]),
+                "name": clean_sample_name(names[i]),
+                "scientific_name": clean_sample_name(names[i]),  # Sin HTML; frontend formatea
                 "lv1": float(scores[i, 0]) if n_comps > 0 else 0.0,
                 "lv2": float(scores[i, 1]) if n_comps > 1 else 0.0
             })

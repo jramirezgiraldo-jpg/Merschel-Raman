@@ -114,10 +114,59 @@
     #full-screen-modal, #about-modal, #converter-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: none; justify-content: center; align-items: center; }
     .modal-box { background: white; width: 500px; padding: 20px; border-radius: 8px; max-height: 90vh; overflow-y: auto; }
 
+    /* LOADING OVERLAY MODO INVESTIGADOR */
+    #loading-overlay { 
+        display: none; 
+        position: fixed; 
+        top: 0; left: 0; 
+        width: 100%; height: 100%; 
+        background: rgba(15, 23, 42, 0.85); /* Deep Dark */
+        backdrop-filter: blur(12px); 
+        z-index: 20000; 
+        flex-direction: column; 
+        justify-content: center; 
+        align-items: center; 
+        text-align: center; 
+    }
+    .loader-wave { display: flex; align-items: center; gap: 8px; height: 60px; }
+    .wave-line { 
+        width: 8px; height: 20px; 
+        background: #10b981; /* Emerald */
+        border-radius: 10px; 
+        animation: wave-anim 1.2s infinite ease-in-out; 
+    }
+    .wave-line:nth-child(2) { animation-delay: 0.15s; }
+    .wave-line:nth-child(3) { animation-delay: 0.3s; }
+    .wave-line:nth-child(4) { animation-delay: 0.45s; }
+    .wave-line:nth-child(5) { animation-delay: 0.6s; }
+
+    @keyframes wave-anim {
+        0%, 100% { height: 20px; background: #064e3b; }
+        50% { height: 60px; background: #34d399; }
+    }
+    .loader-text { margin-top: 30px; }
+    .loader-text h2 { color: #ffffff; margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: 0.5px; }
+    .loader-text p { color: #94a3b8; margin: 8px 0 0; font-size: 1rem; font-weight: 600; }
+
+    #status-text { display: none; } /* Ocultar aviso estándar */
+
     .graph-container::after { content: 'Hershell-Raman V8.2'; position: absolute; bottom: 10px; right: 10px; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); opacity: 0.2; pointer-events: none; }
   </style>
 </head>
 <body>
+
+  <div id="loading-overlay">
+    <div class="loader-wave">
+        <div class="wave-line"></div>
+        <div class="wave-line"></div>
+        <div class="wave-line"></div>
+        <div class="wave-line"></div>
+        <div class="wave-line"></div>
+    </div>
+    <div class="loader-text">
+        <h2>Procesando Espectros...</h2>
+    </div>
+  </div>
 
   <div id="science-tooltip"></div>
 
@@ -498,13 +547,10 @@
                     </div>
 
                     <div class="toolbar-group" style="border-top:1px solid #e2e8f0; padding-top:12px; margin-top:12px;">
-                        <span class="toolbar-label">EDICIÓN MANUAL</span>
-                        <div style="display:flex; gap:5px; margin-bottom:8px;">
-                            <input type="number" id="manual-peak-val" placeholder="cm⁻¹" style="width:70px; font-size:0.75rem; padding:4px; border:1px solid #cbd5e1; border-radius:4px;">
-                            <button class="primary" style="flex:1; font-size:0.7rem; padding:4px;" onclick="addManualPeak()">➕ Añadir</button>
-                        </div>
-                        <button class="secondary" style="width:100%; font-size:0.7rem; padding:4px; color:#ef4444; border-color:#fca5a5;" id="btn-remove-peak" onclick="removeSelectedPeak()">❌ Borrar Pico Seleccionado</button>
-                        <button class="secondary" id="btn-toggle-char-mode" style="width:100%; font-size:0.7rem; padding:4px; margin-top:8px;" onclick="toggleCharPeakMode()">🖱️ Activar Selección por Clic</button>
+                        <span class="toolbar-label">EDICIÓN MANUAL INTERACTIVA</span>
+                        <p style="font-size:0.65rem; color:var(--text-muted); margin-bottom:8px;">Activa el modo selección y haz clic directo en el espectro para añadir biomarcadores.</p>
+                        <button class="secondary" id="btn-toggle-char-mode" style="width:100%; font-size:0.75rem; padding:8px; margin-bottom:8px;" onclick="toggleCharPeakMode()">🖱️ Activar Selección por Clic</button>
+                        <button class="secondary" style="width:100%; font-size:0.75rem; padding:8px; color:#ef4444; border-color:#fca5a5;" id="btn-remove-peak" onclick="removeSelectedPeak()">❌ Borrar Pico Seleccionado</button>
                     </div>
                 </div>
                 <div id="char-status" style="margin-top:10px; font-size:0.75rem; color:var(--primary); font-weight:bold;"></div>
@@ -667,16 +713,55 @@
     let currentBaseline = 'none', currentDerivative = 'none', currentSmoothing = 'none', currentNorm = 'none';
     let currentTreatmentLegend = 'Procesamiento: Ninguno (Datos crudos)';
 
-    function format_scientific_name_js(name) {
-        if (!name) return "";
-        let base = name.split('/').pop().split('\\').pop();
-        let clean = base.replace(/\.[^/.]+$/, "")
-                        .replace(/(_|-)(raman|ftir|muestra|raw|proc|corr)\d*/gi, '')
-                        .replace(/_/g, ' ')
-                        .trim();
-        if (!clean) clean = base.replace(/\.[^/.]+$/, "");
-        return `<i>${clean}</i>`;
+    // ─── CONSTANTES GLOBALES DE LEYENDA ────────────────────────────────────────
+    // Aplicar a TODOS los gráficos de espectros para garantizar visibilidad total
+    const LEGEND_LAYOUT = {
+        orientation: 'v',
+        x: 1.02,
+        y: 1,
+        xanchor: 'left',
+        yanchor: 'top',
+        font: { size: 12 },
+        bgcolor: 'rgba(255,255,255,0.85)',
+        bordercolor: '#94a3b8',
+        borderwidth: 1
+    };
+    const SPECTRUM_MARGIN = { t: 60, b: 45, l: 60, r: 250 };
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * extractCleanName(raw)
+     * — Extrae texto limpio SIN ningún HTML.
+     * — Usado para: tablas, innerHTML, titles, logs.
+     * — NUNCA usa etiquetas HTML.
+     */
+    function extractCleanName(raw) {
+        let clean = String(raw || '');
+        // 1. Eliminar explícitamente el bug "i>" y tags
+        clean = clean.replace(/i>/g, '').replace(/<i>/gi, '').replace(/<\/i>/gi, '');
+        // 2. PURGA REGEX: Mantener SOLO letras, números, espacios y guiones
+        clean = clean.replace(/[^a-zA-Z0-9\s\-]/g, '');
+        // 3. Limpiar extensiones y residuos
+        clean = clean.replace(/csv/gi, '').replace(/txt/gi, '').trim();
+        
+        // 4. Fallback seguro
+        if (!clean || clean.trim() === "") {
+            clean = "Espectro Recuperado";
+        }
+        return clean.trim();
     }
+
+    /**
+     * getTraceName(nameStr)
+     * — Versión pura para leyendas de Plotly sin HTML.
+     */
+    function getTraceName(nameStr) {
+        return extractCleanName(nameStr);
+    }
+
+    // Alias para compatibilidad
+    function get_clean_italic_name(rawFilename) { return getTraceName(rawFilename); }
+    const format_scientific_name_js = get_clean_italic_name;
 
     function updateTreatmentLegendText() {
         if(currentBaseline === 'none' && currentDerivative === 'none' && currentSmoothing === 'none' && currentNorm === 'none') {
@@ -796,9 +881,11 @@
     function initPlot(id, title) {
         Plotly.newPlot(id, [], {
             title: { text: title, font: {size:12, color:'#94a3b8'} },
-            margin: { t: 60, b: 40, l: 55, r: 20 },
+            margin: SPECTRUM_MARGIN,
             xaxis: { title: 'cm⁻¹', autorange: 'reversed' },
             yaxis: { title: currentYTitle },
+            showlegend: true,
+            legend: LEGEND_LAYOUT,
             paper_bgcolor: 'transparent', plot_bgcolor: 'transparent', hovermode: 'closest'
         }, { responsive: true, displayModeBar: 'hover' }); 
         
@@ -810,16 +897,25 @@
         }
     }
 
+    // --- LOADER ---
+    function showLoader() { document.getElementById('loading-overlay').style.display = 'flex'; }
+    function hideLoader() { document.getElementById('loading-overlay').style.display = 'none'; }
+
     function loadFiles(e) {
         const files = Array.from(e.target.files); if(!files.length) return;
         spectraList = [];
+        showLoader();
         Promise.all(files.map(f => new Promise(resolve => {
             const r = new FileReader();
             r.onload = ev => {
                 const p = parseCSV(ev.target.result);
                 if(p.x.length) {
-                    const formattedName = format_scientific_name_js(f.name);
-                    spectraList.push({name: formattedName, x: p.x, y: p.y, original: {x:[...p.x], y:[...p.y]}});
+                    spectraList.push({
+                        rawName: f.name,                          // Nombre original para enviar a la API
+                        name: get_clean_italic_name(f.name),      // Nombre formateado para la leyenda
+                        x: p.x, y: p.y,
+                        original: {x:[...p.x], y:[...p.y]}
+                    });
                 }
                 resolve();
             };
@@ -830,8 +926,52 @@
             draw(spectraList, 'spectrum-graph');
             draw(processedSpectra, 'processed-graph');
             document.getElementById('count-val').innerText = spectraList.length;
-            document.getElementById('status-text').innerText = "Cargado.";
+            hideLoader();
         });
+    }
+
+    async function applyProcessing() {
+        if(!spectraList || spectraList.length === 0) return alert("Carga espectros primero.");
+        
+        showLoader();
+        try {
+            const payload = {
+                spectra: spectraList.map(s => ({ name: s.rawName || s.name, x: s.original.x, y: s.original.y })),
+                config: { baseline: currentBaseline, smoothing: currentSmoothing }
+            };
+            const response = await fetch(`${API_BASE_URL}/api/process`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if(!response.ok) throw new Error(`Error HTTP ${response.status}`);
+            const data = await response.json();
+            
+            processedSpectra = data.spectra.map((s, idx) => {
+                let x = s.x, y = s.y;
+                if (currentDerivative === 'd1') y = calcDeriv(x, y, 'd1');
+                else if (currentDerivative === 'd2') y = calcDeriv(x, y, 'd2');
+                if (currentNorm === 'minmax') y = normMinMax(y);
+                else if (currentNorm === 'snv') y = normSNV(y);
+                else if (currentNorm === 'area') y = normArea(y);
+                // s.name ya viene del backend formateado
+                return { 
+                    rawName: spectraList[idx].rawName,
+                    name: getTraceName(s.name),  // Validación final: nunca vacío
+                    x: x, y: y,
+                    original: spectraList[idx].original
+                };
+            });
+
+            updateTreatmentLegendText();
+            draw(processedSpectra, 'processed-graph'); 
+            hideLoader();
+        } catch(e) {
+            hideLoader();
+            console.error(e);
+            alert("Error en el procesamiento: " + e.message);
+        }
     }
 
     function parseCSV(txt) {
@@ -847,15 +987,35 @@
     const palette = ['#2563eb', '#ef4444', '#10b981', '#d946ef', '#f97316', '#0ea5e9', '#8b5cf6', '#eab308'];
 
     function draw(data, id, extraAnnotations = []) {
-        const traces = data.map((s, idx) => ({ 
-            x: s.x, 
-            y: s.y, 
-            name: s.name, 
-            type: 'scatter', 
-            mode: 'lines', 
-            line: {width: 1.5, color: palette[idx % palette.length]},
-            showlegend: true 
-        }));
+        const traces = data.map((s, idx) => {
+            // Extracción Forzada (Purga de la memoria corrupta)
+            let nombre = String(s.rawName || s.name || '');
+            
+            // 1. Eliminar explícitamente el bug "i>" y cualquier tag
+            nombre = nombre.replace(/i>/g, '').replace(/<i>/gi, '').replace(/<\/i>/gi, '');
+            
+            // 2. PURGA REGEX: Mantener SOLO letras, números, espacios y guiones
+            nombre = nombre.replace(/[^a-zA-Z0-9\s\-]/g, '');
+            
+            // 3. Limpiar extensiones y residuos
+            nombre = nombre.replace(/csv/gi, '').replace(/txt/gi, '').trim();
+            
+            // 4. Fallback de seguridad extrema
+            if (!nombre || nombre.trim() === "") {
+                nombre = "Espectro Recuperado";
+            }
+            nombre = nombre.trim();
+            
+            return { 
+                x: s.x, 
+                y: s.y, 
+                name: nombre, // STRING PLANO, CERO HTML
+                type: 'scatter', 
+                mode: 'lines', 
+                line: { width: 1.5, color: palette[idx % palette.length] },
+                showlegend: true 
+            };
+        });
         
         let annotationsArray = selectedPeaks.map(p => ({ 
             x: p.x, 
@@ -883,11 +1043,15 @@
             });
         }
 
-        // Plotly.react actualiza los datos sin borrar los event listeners previamente asignados
+        // Plotly.react actualiza datos sin borrar los event listeners previamente asignados
         Plotly.react(id, traces, {
-            xaxis: { title: 'cm⁻¹', autorange: 'reversed' }, yaxis: { title: currentYTitle },
-            margin: { t: 60, b: 40, l: 55, r: 20 },
-            paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+            xaxis: { title: 'cm⁻¹', autorange: 'reversed' },
+            yaxis: { title: currentYTitle },
+            margin: SPECTRUM_MARGIN,
+            showlegend: true,
+            legend: LEGEND_LAYOUT,
+            paper_bgcolor: 'transparent',
+            plot_bgcolor: 'transparent',
             annotations: annotationsArray
         }, { responsive: true, displayModeBar: 'hover' });
     }
@@ -906,7 +1070,7 @@
         
         try {
             const payload = {
-                spectra: spectraList.map(s => ({ name: s.name, x: s.original.x, y: s.original.y })),
+                spectra: spectraList.map(s => ({ name: s.rawName || s.name, x: s.original.x, y: s.original.y })),
                 config: { baseline: currentBaseline, smoothing: currentSmoothing }
             };
 
@@ -930,7 +1094,12 @@
                 let x = s.x, y = s.y;
                 if (currentDerivative === 'd1') y = calcDeriv(x, y, 'd1'); else if (currentDerivative === 'd2') y = calcDeriv(x, y, 'd2');
                 if (currentNorm === 'minmax') y = normMinMax(y); else if (currentNorm === 'snv') y = normSNV(y); else if (currentNorm === 'area') y = normArea(y);
-                return { name: s.name, x: x, y: y, original: spectraList[idx].original };
+                return { 
+                    rawName: spectraList[idx] ? spectraList[idx].rawName : undefined,
+                    name: getTraceName(s.name),  // Validación final: nunca vacío
+                    x: x, y: y,
+                    original: spectraList[idx] ? spectraList[idx].original : {x: s.x, y: s.y}
+                };
             });
 
             updateTreatmentLegendText();
@@ -977,8 +1146,16 @@
         Plotly.react('processed-graph', [
             { x: refX, y: meanY.map(y => y + 0.05), type: 'scatter', mode: 'lines', name: 'SD+', line: {width:0}, showlegend:false },
             { x: refX, y: meanY.map(y => y - 0.05), type: 'scatter', mode: 'lines', name: 'SD-', line: {width:0}, fill:'tonexty', fillcolor:'rgba(37,99,235,0.2)', showlegend:false },
-            { x: refX, y: meanY, type: 'scatter', mode: 'lines', name: 'Media', line: {color:'var(--primary)', width:2.5} }
-        ], { title: "Consolidado", margin: {t:60}, xaxis: { title: 'cm⁻¹', autorange:'reversed' }, yaxis: { title: currentYTitle }, paper_bgcolor:'transparent', plot_bgcolor:'transparent' }, { responsive: true, displayModeBar: 'hover' });
+            { x: refX, y: meanY, type: 'scatter', mode: 'lines', name: 'Media', line: {color:'var(--primary)', width:1.5} }
+        ], {
+            title: "Vista Consolidada",
+            margin: SPECTRUM_MARGIN,
+            showlegend: true,
+            legend: LEGEND_LAYOUT,
+            xaxis: { title: 'cm⁻¹', autorange:'reversed' },
+            yaxis: { title: currentYTitle },
+            paper_bgcolor:'transparent', plot_bgcolor:'transparent'
+        }, { responsive: true, displayModeBar: 'hover' });
     }
 
     function autoDetectPeaks() {
@@ -1083,16 +1260,13 @@
     }
     async function runChemometrics(type) {
         currentChemoType = type;
-        if(!processedSpectra || processedSpectra.length < 2) {
-            return alert("¡Error! Necesitamos más de 1 espectro (idealmente decenas) para armar matrices quimiométricas.");
-        }
+        if(!processedSpectra || processedSpectra.length < 2) return alert("Se requieren al menos 2 espectros.");
         
-        document.getElementById('chemo-status').innerText = `Ejecutando ${type.toUpperCase()} en Backend...`;
-        
+        showLoader();
         try {
-            // Sanear NaN/Infinity a 0.0 para que Pydantic lo reciba en list[float]
             const cleanSpectra = processedSpectra.map(s => ({
-                name: s.name,
+                // CRÍTICO: rawName nunca tiene HTML, garantiza limpieza correcta en backend
+                name: s.rawName || s.name,
                 x: s.x.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v),
                 y: s.y.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v)
             }));
@@ -1103,51 +1277,40 @@
                 linkage_method: document.getElementById('hca-linkage').value,
                 color_threshold: parseFloat(document.getElementById('hca-threshold').value) || null,
                 params: {
-                    range: [
-                        parseFloat(document.getElementById('chemo-range-min').value),
-                        parseFloat(document.getElementById('chemo-range-max').value)
-                    ],
+                    range: [parseFloat(document.getElementById('chemo-range-min').value), parseFloat(document.getElementById('chemo-range-max').value)],
                     scale: document.getElementById('chemo-scaling').value
                 }
             };
 
-            const response = await fetch(`${API_BASE_URL}/api/` + type, {
+            const response = await fetch(`${API_BASE_URL}/api/${type}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
-            if(!response.ok) throw new Error("Error HTTP " + response.status);
+            if(!response.ok) throw new Error("HTTP " + response.status);
             const data = await response.json();
-            
-            if (data.error) {
-                alert(data.error);
-                return;
-            }
-
             renderChemometrics(data);
-            document.getElementById('chemo-status').innerText = "Cálculo Exitoso ✓";
-
+            hideLoader();
         } catch(e) {
+            hideLoader();
             console.error(e);
-            document.getElementById('chemo-status').innerText = "Fallo de Ingestión API / 404 / 422.";
+            alert("Error en análisis quimiométrico.");
         }
     }
 
 // --- COMPARACIÓN DE ESPECTROS (DIFERENCIAL) ---
     async function compareSpectra() {
         if(!processedSpectra || processedSpectra.length < 2) return alert("Se requieren al menos 2 espectros para comparar.");
-        document.getElementById('comp-status').innerText = "Comparando espectros...";
-        
-        const payload = {
-            spectra: processedSpectra.map(s => ({
-                name: s.name,
-                x: s.x.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v),
-                y: s.y.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v)
-            }))
-        };
-
+        showLoader();
         try {
+            const payload = {
+                spectra: processedSpectra.map(s => ({
+                    name: s.rawName || s.name,
+                    x: s.x.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v),
+                    y: s.y.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v)
+                }))
+            };
             const response = await fetch(`${API_BASE_URL}/comparar`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1156,37 +1319,24 @@
             if(!response.ok) throw new Error("HTTP " + response.status);
             const data = await response.json();
             
-            if(data.error) {
-                document.getElementById('comp-status').innerText = "";
-                return alert(data.error);
-            }
-
             let diffAnnotations = [];
             processedSpectra.forEach((spec, idx) => {
                 const color = palette[idx % palette.length];
                 const peaks = data.diff_peaks[spec.name] || [];
                 peaks.forEach(p => {
-                    const labelText = p.type === 'Cambio de Intensidad' ? 'Δ Int.' : 'Nuevo';
                     diffAnnotations.push({
-                        x: p.x,
-                        y: p.y,
-                        text: `${p.x.toFixed(0)} (${labelText})`,
-                        showarrow: true,
-                        arrowhead: 2,
-                        ax: 0,
-                        ay: -40,
-                        font: { color: color, size: 9, weight: 'bold' },
-                        arrowcolor: color
+                        x: p.x, y: p.y, text: `${p.x.toFixed(0)} (${p.type === 'Cambio de Intensidad' ? 'Δ Int.' : 'Nuevo'})`,
+                        showarrow: true, arrowhead: 2, ax: 0, ay: -40,
+                        font: { color: color, size: 9, weight: 'bold' }, arrowcolor: color
                     });
                 });
             });
-
             draw(processedSpectra, 'comp-viewport', diffAnnotations);
-            document.getElementById('comp-status').innerText = "Comparación Completada ✓";
-
+            hideLoader();
         } catch(e) {
+            hideLoader();
             console.error(e);
-            document.getElementById('comp-status').innerText = "Error conectando con la API de comparación.";
+            alert("Error en comparación.");
         }
     }
 
@@ -1200,7 +1350,11 @@
             const r = new FileReader();
             r.onload = ev => {
                 const p = parseCSV(ev.target.result);
-                if(p.x.length) trainingSet.push({name: f.name, x: p.x, y: p.y, label: label});
+                if(p.x.length) trainingSet.push({
+                    rawName: f.name,
+                    name: f.name,
+                    x: p.x, y: p.y, label: label
+                });
                 resolve();
             };
             r.readAsText(f);
@@ -1222,7 +1376,7 @@
         
         tbody.innerHTML = Object.keys(counts).map(label => `
             <tr style="border-bottom:1px solid #f1f5f9;">
-                <td style="padding:4px 0; font-size:0.75rem;">${label}</td>
+                <td style="padding:4px 0; font-size:0.75rem;">${extractCleanName(label)}</td>
                 <td style="padding:4px 0; text-align:center; font-weight:bold; font-size:0.75rem; color:var(--primary);">${counts[label]}</td>
             </tr>
         `).join('');
@@ -1234,7 +1388,7 @@
             const r = new FileReader();
             r.onload = ev => {
                 const p = parseCSV(ev.target.result);
-                if(p.x.length) predictSet.push({name: f.name, x: p.x, y: p.y, prediction: '⏳ Esperando...'});
+                if(p.x.length) predictSet.push({ rawName: f.name, name: f.name, x: p.x, y: p.y, prediction: '\u23F3 Esperando...' });
                 resolve();
             };
             r.readAsText(f);
@@ -1249,26 +1403,20 @@
         if(!predictSet.length) return;
         tbody.innerHTML = predictSet.map(s => `
             <tr style="border-bottom:1px solid #f1f5f9;">
-                <td style="padding:4px 0; max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${s.name}">${s.name}</td>
-                <td style="padding:4px 0; text-align:right; font-weight:bold; color:${s.prediction.includes('Esperando') ? '#94a3b8' : 'var(--primary)'};">${s.prediction}</td>
+                <td style="padding:4px 0; max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"
+                    title="${extractCleanName(s.name)}">${extractCleanName(s.name)}</td>
+                <td style="padding:4px 0; text-align:right; font-weight:bold; color:${s.prediction.includes('Esperando') ? '#94a3b8' : 'var(--primary)'}">${s.prediction}</td>
             </tr>
         `).join('');
     }
 
     async function predictUnknowns() {
         if(!predictSet.length) return alert("Sube muestras ciegas para predecir.");
-        
-        const payload = {
-            spectra: predictSet.map(s => ({
-                name: s.name,
-                x: s.x.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v),
-                y: s.y.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v)
-            }))
-        };
-        
-        document.getElementById('predict-results-body').innerHTML = '<tr><td colspan=2 style="text-align:center; font-size:0.7rem;">Conectando...</td></tr>';
-        
+        showLoader();
         try {
+            const payload = {
+                spectra: predictSet.map(s => ({ name: s.name, x: s.x.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v), y: s.y.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v) }))
+            };
             const response = await fetch(`${API_BASE_URL}/api/predict`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1276,93 +1424,83 @@
             });
             if(!response.ok) throw new Error("HTTP " + response.status);
             const data = await response.json();
-            // Expected return struct: { predictions: ['Toxoplasma', 'Giardia', ...] }
             if(data.predictions) {
                 data.predictions.forEach((pred, i) => { if(predictSet[i]) predictSet[i].prediction = pred; });
                 renderPredictResults();
-            } else if (data.error) {
-                alert("Error desde backend: " + data.error);
-                renderPredictResults();
             }
+            hideLoader();
         } catch(e) {
+            hideLoader();
             console.error(e);
-            alert("Error ejecutando /api/predict. Asegúrate de que el backend esté listo.");
-            renderPredictResults();
+            alert("Error en predicción.");
         }
     }
 
     async function runPlsDa() {
-        if(!trainingSet || trainingSet.length < 3) {
-            return alert("Se necesitan al menos 3 muestras cargadas en la Base de Datos para entrenar el modelo.");
-        }
-        
-        const selAlgo = document.getElementById('algo-selector');
-        const algorithm = selAlgo ? selAlgo.value : 'PLS-DA';
-        const algoName = selAlgo && selAlgo.options[selAlgo.selectedIndex] ? selAlgo.options[selAlgo.selectedIndex].text : algorithm;
-        
-        document.getElementById('pls-status').innerText = `Entrenando modelo ${algoName}...`;
-        
+        if(!trainingSet || trainingSet.length < 3) return alert("Se necesitan al menos 3 muestras para entrenar.");
+        showLoader();
         try {
+            const selAlgo = document.getElementById('algo-selector');
+            const algorithm = selAlgo ? selAlgo.value : 'PLS-DA';
             const payload = {
                 algorithm: algorithm,
                 spectra: trainingSet.map(s => ({
-                    name: s.name,
-                    label: s.label || 'Toxoplasma',
-                    x: s.x.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v),
-                    y: s.y.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v)
+                    name: s.rawName || s.name, label: s.label || 'Toxoplasma',
+                    x: s.x.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v), y: s.y.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v)
                 })),
                 n_components: parseInt(document.getElementById('pls-comps').value) || 2
             };
-            
             const response = await fetch(`${API_BASE_URL}/api/train_model`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            
             if(!response.ok) throw new Error("HTTP " + response.status);
             const data = await response.json();
-            if(data.error) { alert(data.error); return; }
             
             const layout = { paper_bgcolor: 'transparent', plot_bgcolor: '#f8fafc', font: { family: 'Open Sans', size: 12 } };
-            
-            // Trazado de Scores (Dispersión de Clases)
-            const colores = ['#2563eb', '#ef4444', '#10b981', '#f59e0b', '#7c3aed']; // Palette
+            const colores = ['#2563eb', '#ef4444', '#10b981', '#f59e0b', '#7c3aed'];
             const tracesScores = Object.keys(data.scores).map((grupo, idx) => ({
-                name: format_scientific_name_js(grupo),
-                x: data.scores[grupo].map(d => d.lv1),
-                y: data.scores[grupo].map(d => d.lv2),
-                text: data.scores[grupo].map(d => d.scientific_name || d.name),
-                mode: 'markers+text',
-                textposition: 'top center',
+                // getTraceName devuelve el texto limpio devuelto por el backend
+                name: getTraceName(grupo),
+                x: data.scores[grupo].map(d => d.lv1), y: data.scores[grupo].map(d => d.lv2),
+                // text = etiquetas visibles sobre los puntos, también con cursivas
+                text: data.scores[grupo].map(d => getTraceName(d.scientific_name || d.name)),
+                mode: 'markers+text', textposition: 'top center',
+                showlegend: true,
                 marker: { size: 10, color: colores[idx % colores.length], line: {width: 1, color: 'white'} }
             }));
+            Plotly.react('pls-scores', tracesScores, {
+                ...layout,
+                title: 'Espacio de Clasificación (Scores PLS)',
+                margin: SPECTRUM_MARGIN,
+                showlegend: true,
+                legend: LEGEND_LAYOUT,
+                xaxis: {title: 'LV1'}, yaxis: {title: 'LV2'}
+            });
             
-            const layoutScores = { ...layout, title: 'Espacio de Clasificación Multi-Clase (Scores PLS)', xaxis: {title: 'Latent Variable 1'}, yaxis: {title: 'Latent Variable 2'} };
-            Plotly.react('pls-scores', tracesScores, layoutScores);
-            
-            // Trazado de Coeficientes VIP Absolutos / Loadings Carga de Biomarcadores
-            const traceVip = {
-                x: data.vip.x,
-                y: data.vip.y,
-                mode: 'lines',
-                line: { color: '#dc2626', width: 2 },
-                fill: 'tozeroy', fillcolor: 'rgba(220, 38, 38, 0.1)'
-            };
-            const layoutVip = { ...layout, title: 'Espectro de Biomarcadores Latentes (Coeficientes PLS)', xaxis: {title: 'cm⁻¹', autorange: 'reversed'}, yaxis: {title: 'Poder Discriminatorio Absolute Coef'} };
-            Plotly.react('pls-vip', [traceVip], layoutVip);
-            
-            document.getElementById('pls-status').innerText = "Modelo Finalizado ✓";
-
+            const traceVip = { x: data.vip.x, y: data.vip.y, mode: 'lines', line: { color: '#dc2626', width: 1.5 }, fill: 'tozeroy', fillcolor: 'rgba(220, 38, 38, 0.1)', name: 'VIP Score', showlegend: true };
+            Plotly.react('pls-vip', [traceVip], {
+                ...layout,
+                title: 'Carga de Biomarcadores Latentes (VIP)',
+                margin: SPECTRUM_MARGIN,
+                showlegend: true,
+                legend: LEGEND_LAYOUT,
+                xaxis: {title: 'cm⁻¹', autorange: 'reversed'}, yaxis: {title: 'VIP Score'}
+            });
+            hideLoader();
         } catch(e) {
+            hideLoader();
             console.error(e);
-            document.getElementById('pls-status').innerText = "Fallo de API PLS-DA.";
+            alert("Error en entrenamiento PLS-DA.");
         }
     }
 
     function renderChemometrics(data) {
         const layout = {
-            margin: { t: 60, b: 60, l: 60, r: 20 },
+            margin: SPECTRUM_MARGIN,
+            showlegend: true,
+            legend: LEGEND_LAYOUT,
             paper_bgcolor: 'transparent', 
             plot_bgcolor: '#f8fafc',
             hovermode: 'closest',
@@ -1373,14 +1511,19 @@
         const container = document.getElementById('chemo-graph');
 
         if (data.type === "pca") {
-            const traces = [{
-                x: data.scores.map(s => s.pc1),
-                y: data.scores.map(s => s.pc2),
-                text: data.scores.map(s => s.scientific_name || s.name),
+            // Un trazo por muestra para que cada nombre aparezca en la leyenda
+            const palette_pca = ['#2563eb','#ef4444','#10b981','#d946ef','#f97316','#0ea5e9','#8b5cf6','#eab308'];
+            const traces = data.scores.map((s, idx) => ({
+                x: [s.pc1],
+                y: [s.pc2],
+                // getTraceName devuelve el texto limpio
+                name: getTraceName(s.scientific_name || s.name),
+                text: [getTraceName(s.scientific_name || s.name)],
                 mode: 'markers+text',
                 textposition: 'top center',
-                marker: { size: 10, color: 'var(--primary)', line: {color: 'var(--primary-dark)', width: 2} }
-            }];
+                showlegend: true,
+                marker: { size: 11, color: palette_pca[idx % palette_pca.length], line: {color: 'white', width: 2} }
+            }));
             layout.title = 'Análisis de Componentes Principales (PCA)' + subtitle;
             layout.xaxis = { title: `PC1 (${data.explained_variance[0].toFixed(1)}%)` };
             layout.yaxis = { title: `PC2 (${data.explained_variance[1].toFixed(1)}%)` };
@@ -1393,9 +1536,10 @@
                 showlegend: false
             }));
             layout.title = 'Dendrograma HCA' + subtitle;
+            // ivl ya viene como texto plano del backend; getTraceName asegura texto limpio
             layout.xaxis = {
                 tickvals: data.icoord.map(x => (x[1] + x[2]) / 2),
-                ticktext: data.ivl,
+                ticktext: data.ivl.map(n => getTraceName(n)),
                 tickangle: 45
             };
             layout.yaxis = { title: 'Distancia Euclidiana' };
@@ -1445,7 +1589,7 @@
         
         const payload = {
             spectra: processedSpectra.map(s => ({
-                name: s.name,
+                name: s.rawName || s.name,   // rawName = sin HTML
                 x: s.x,
                 y: s.y
             })),
@@ -1481,8 +1625,8 @@
             traces.push({
                 x: data.x_ref,
                 y: data.y_matrix[i],
-                name: name, // Ya viene con <i> del backend
-                legendgroup: name,
+                name: getTraceName(name), // Se eliminan las etiquetas HTML completamente
+                legendgroup: getTraceName(name),
                 type: 'scatter',
                 mode: 'lines',
                 line: { width: 1.5, color: color },
@@ -1494,7 +1638,7 @@
                 traces.push({
                     x: data.peaks[i].map(p => p.x),
                     y: data.peaks[i].map(p => p.y),
-                    name: `Picos ${name}`,
+                    name: `Picos ${getTraceName(name)}`,
                     legendgroup: name,
                     type: 'scatter',
                     mode: 'markers',
@@ -1513,14 +1657,12 @@
             title: 'Identificación de Picos Multiespectral',
             xaxis: { title: 'cm⁻¹', autorange: 'reversed' },
             yaxis: { title: currentYTitle },
-            margin: { t: 60, b: 40, l: 55, r: 20 },
-            paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+            margin: SPECTRUM_MARGIN,
+            paper_bgcolor: 'transparent',
+            plot_bgcolor: 'transparent',
             hovermode: 'closest',
-            legend: { 
-                itemsizing: 'constant', 
-                traceorder: 'normal',
-                font: { size: 10 }
-            }
+            showlegend: true,
+            legend: LEGEND_LAYOUT
         };
 
         Plotly.react('char-graph', traces, layout, { responsive: true });
@@ -1574,9 +1716,8 @@
         const p = data.points[0];
         
         if (isCharPeakMode) {
-            // Añadir pico mediante clic
-            document.getElementById('manual-peak-val').value = p.x.toFixed(1);
-            addManualPeak();
+            // Añadir pico mediante clic DIRECTO (Sin prompt numérico)
+            addManualPeak(p.x);
         } else {
             // Seleccionar para borrar
             lastClickedCharPeak = p.x;
@@ -1585,16 +1726,17 @@
         }
     }
 
-    function addManualPeak() {
-        const val = parseFloat(document.getElementById('manual-peak-val').value);
-        if (isNaN(val)) return alert("Ingresa un valor numérico válido.");
-        if (!lastCharData) return alert("Realiza primero una identificación automática para inicializar la tabla.");
+    function addManualPeak(forcedVal = null) {
+        let val = forcedVal;
+        if (isNaN(val)) {
+            document.getElementById('char-status').innerText = "⚠️ Selecciona un punto en el espectro.";
+            return;
+        }
+        if (!lastCharData) return alert("Realiza primero una identificación automática.");
 
         const assignment = getManualAssignment(val);
-        const newRow = { wavenumber: val, assignment: assignment };
+        const newRow = { wavenumber: val.toFixed(1), assignment: assignment };
         lastCharData.names.forEach(n => {
-            const idx = Math.abs(lastCharData.x_ref.map(x => x - val)).indexOf(Math.min(...lastCharData.x_ref.map(x => Math.abs(x - val))));
-            // Simplificación: aproximar a la matriz
             const nearestIdx = lastCharData.x_ref.reduce((prev, curr, idx) => Math.abs(curr - val) < Math.abs(lastCharData.x_ref[prev] - val) ? idx : prev, 0);
             newRow[n] = lastCharData.y_matrix[lastCharData.names.indexOf(n)][nearestIdx];
         });
@@ -1602,7 +1744,6 @@
         lastCharData.table.push(newRow);
         lastCharData.table.sort((a, b) => b.wavenumber - a.wavenumber);
         
-        // Añadir a peaks para visualización (al primero por simplicidad o a todos)
         lastCharData.peaks.forEach((pList, i) => {
             const nearestIdx = lastCharData.x_ref.reduce((prev, curr, idx) => Math.abs(curr - val) < Math.abs(lastCharData.x_ref[prev] - val) ? idx : prev, 0);
             pList.push({ x: val, y: lastCharData.y_matrix[i][nearestIdx] });
@@ -1659,19 +1800,13 @@
 
     async function generateTaxonomicReport() {
         if(!processedSpectra || processedSpectra.length === 0) return alert("Carga y procesa espectros primero.");
-        document.getElementById('char-status').innerText = "Generando reporte...";
-        
-        const payload = {
-            spectra: processedSpectra.map(s => ({
-                name: s.name,
-                x: s.x,
-                y: s.y
-            })),
-            prominence: parseFloat(document.getElementById('char-prominence').value),
-            method: currentSpectrumMethod
-        };
-
+        showLoader();
         try {
+            const payload = {
+                spectra: processedSpectra.map(s => ({ name: s.rawName || s.name, x: s.x, y: s.y })),
+                prominence: parseFloat(document.getElementById('char-prominence').value),
+                method: currentSpectrumMethod
+            };
             const response = await fetch(`${API_BASE_URL}/api/report`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1679,16 +1814,16 @@
             });
             if(!response.ok) throw new Error("HTTP " + response.status);
             const data = await response.json();
-            
             const blob = new Blob([data.html], { type: 'text/html' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
             link.setAttribute("download", "Caracterizacion_Hershell_Raman.html");
             link.click();
-            document.getElementById('char-status').innerText = "Reporte descargado ✓";
+            hideLoader();
         } catch(e) {
+            hideLoader();
             console.error(e);
-            document.getElementById('char-status').innerText = "Error generando reporte.";
+            alert("Error generando reporte.");
         }
     }
   </script>
