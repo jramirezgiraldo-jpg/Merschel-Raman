@@ -496,6 +496,15 @@
                         <button class="primary" style="width:100%; background:var(--purple); border-color:var(--purple);" onclick="generateTaxonomicReport()">📄 Generar reporte de caracterización</button>
                         <button class="btn-download-table" style="width:100%; justify-content:center;" onclick="downloadCharTable()">📥 Descargar Tabla (CSV)</button>
                     </div>
+
+                    <div class="toolbar-group" style="border-top:1px solid #e2e8f0; padding-top:12px; margin-top:12px;">
+                        <span class="toolbar-label">EDICIÓN MANUAL</span>
+                        <div style="display:flex; gap:5px; margin-bottom:8px;">
+                            <input type="number" id="manual-peak-val" placeholder="cm⁻¹" style="width:70px; font-size:0.75rem; padding:4px; border:1px solid #cbd5e1; border-radius:4px;">
+                            <button class="primary" style="flex:1; font-size:0.7rem; padding:4px;" onclick="addManualPeak()">➕ Añadir</button>
+                        </div>
+                        <button class="secondary" style="width:100%; font-size:0.7rem; padding:4px; color:#ef4444; border-color:#fca5a5;" id="btn-remove-peak" onclick="removeSelectedPeak()">❌ Borrar Pico Seleccionado</button>
+                    </div>
                 </div>
                 <div id="char-status" style="margin-top:10px; font-size:0.75rem; color:var(--primary); font-weight:bold;"></div>
             </div>
@@ -795,6 +804,9 @@
         
         if(id === 'processed-graph') {
             document.getElementById(id).on('plotly_click', handlePeakClick);
+        }
+        if(id === 'char-graph') {
+            document.getElementById(id).on('plotly_click', handleCharPeakClick);
         }
     }
 
@@ -1538,6 +1550,71 @@
             bodyHtml += `</tr>`;
         });
         body.innerHTML = bodyHtml;
+    }
+
+    let lastClickedCharPeak = null;
+    function handleCharPeakClick(data) {
+        if (data.points && data.points.length > 0) {
+            const p = data.points[0];
+            lastClickedCharPeak = p.x;
+            document.getElementById('char-status').innerText = `Seleccionado: ${p.x.toFixed(1)} cm⁻¹`;
+            document.getElementById('btn-remove-peak').style.background = '#fee2e2';
+        }
+    }
+
+    function addManualPeak() {
+        const val = parseFloat(document.getElementById('manual-peak-val').value);
+        if (isNaN(val)) return alert("Ingresa un valor numérico válido.");
+        if (!lastCharData) return alert("Realiza primero una identificación automática para inicializar la tabla.");
+
+        const assignment = getManualAssignment(val);
+        const newRow = { wavenumber: val, assignment: assignment };
+        lastCharData.names.forEach(n => {
+            const idx = Math.abs(lastCharData.x_ref.map(x => x - val)).indexOf(Math.min(...lastCharData.x_ref.map(x => Math.abs(x - val))));
+            // Simplificación: aproximar a la matriz
+            const nearestIdx = lastCharData.x_ref.reduce((prev, curr, idx) => Math.abs(curr - val) < Math.abs(lastCharData.x_ref[prev] - val) ? idx : prev, 0);
+            newRow[n] = lastCharData.y_matrix[lastCharData.names.indexOf(n)][nearestIdx];
+        });
+
+        lastCharData.table.push(newRow);
+        lastCharData.table.sort((a, b) => b.wavenumber - a.wavenumber);
+        
+        // Añadir a peaks para visualización (al primero por simplicidad o a todos)
+        lastCharData.peaks.forEach((pList, i) => {
+            const nearestIdx = lastCharData.x_ref.reduce((prev, curr, idx) => Math.abs(curr - val) < Math.abs(lastCharData.x_ref[prev] - val) ? idx : prev, 0);
+            pList.push({ x: val, y: lastCharData.y_matrix[i][nearestIdx] });
+        });
+
+        drawCharGraph(lastCharData);
+        renderCharTableUI();
+    }
+
+    function removeSelectedPeak() {
+        if (!lastClickedCharPeak) return alert("Haz clic en un pico en el gráfico para seleccionarlo.");
+        if (!lastCharData) return;
+
+        lastCharData.table = lastCharData.table.filter(p => Math.abs(p.wavenumber - lastClickedCharPeak) > 2.0);
+        lastCharData.peaks.forEach((pList, i) => {
+            lastCharData.peaks[i] = pList.filter(p => Math.abs(p.x - lastClickedCharPeak) > 2.0);
+        });
+
+        lastClickedCharPeak = null;
+        document.getElementById('char-status').innerText = "Pico eliminado.";
+        document.getElementById('btn-remove-peak').style.background = '';
+        drawCharGraph(lastCharData);
+        renderCharTableUI();
+    }
+
+    function getManualAssignment(wn) {
+        if (1650 <= wn && wn <= 1675) return "Estiramiento C=O: Amida I (Proteínas)";
+        if (1540 <= wn && wn <= 1560) return "Deformación N-H: Amida II (Proteínas)";
+        if (1440 <= wn && wn <= 1455) return "Deformación CH2: Flexión (Lípidos)";
+        if (1070 <= wn && wn <= 1090) return "Estiramiento C-O: Enlaces Glicosídicos (Carbohidratos)";
+        if (1240 <= wn && wn <= 1265) return "Estiramiento P=O asimétrico: Fosfodiéster (Ácidos Nucleicos)";
+        if (1003 <= wn && wn <= 1005) return "Respiración del anillo: Fenilalanina (Proteínas)";
+        if (930 <= wn && wn <= 950)   return "Vibración C-C: Esqueleto proteico (α-hélice)";
+        if (1735 <= wn && wn <= 1745) return "Estiramiento C=O: Ésteres (Lípidos/FTIR)";
+        return "Señal vibracional en zona Fingerprint";
     }
 
     function downloadCharTable() {

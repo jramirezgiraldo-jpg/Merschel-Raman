@@ -390,26 +390,20 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
             
         def get_assignment(wn, meth):
             # TÉCNICA ESPECÍFICA (FTIR / RAMAN)
-            if meth == "FTIR" and 1730 <= wn <= 1750: 
-                return "Estiramiento C=O: Ésteres (Triglicéridos/Lípidos)"
-            if 1003 <= wn <= 1005: 
-                return "Respiración del anillo: Fenilalanina (Proteínas)"
-            
-            # DICCIONARIO CIENTÍFICO DE ALTA PRECISIÓN (800-1800 cm-1)
+            if 1003 <= wn <= 1005: return "Respiración del anillo: Fenilalanina (Proteínas)"
             if 1650 <= wn <= 1675: return "Estiramiento C=O: Amida I (Proteínas)"
-            if 1540 <= wn <= 1560: return "Deformación N-H: Amida II (Proteínas)"
-            if 1440 <= wn <= 1460: return "Deformación CH2/CH3: Flexión (Lípidos/Proteínas)"
-            if 1240 <= wn <= 1260: return "Estiramiento P=O asimétrico: Fosfodiéster (Ácidos Nucleicos/Fosfolípidos)"
-            if 1070 <= wn <= 1090: return "Estiramiento C-O: Enlaces Glicosídicos (Carbohidratos/Polisacáridos)"
-            if 930 <= wn <= 955:   return "Vibración C-C: Esqueleto de α-hélice (Proteínas)"
-            if 810 <= wn <= 835:   return "Estiramiento simétrico O-P-O: Grupos Fosfato (Ácidos Nucleicos)"
+            if 1440 <= wn <= 1455: return "Deformación CH2: Flexión (Lípidos)"
+            if 1070 <= wn <= 1090: return "Estiramiento C-O: Enlaces Glicosídicos (Carbohidratos)"
+            if 1240 <= wn <= 1265: return "Estiramiento P=O asimétrico: Fosfodiéster (Ácidos Nucleicos)"
+            if 1735 <= wn <= 1745: return "Estiramiento C=O: Ésteres (Lípidos/FTIR)"
+            if 930 <= wn <= 950:   return "Vibración C-C: Esqueleto proteico (α-hélice)"
             
-            # CATEGORÍAS POR REGIÓN BIOQUÍMICA (FALLBACK)
-            if 1500 <= wn <= 1800: return "Vibración compleja en región de Proteínas"
-            if 1200 <= wn < 1500: return "Vibración compleja en región de Lípidos / Ácidos Nucleicos"
-            if 900 <= wn < 1200: return "Vibración compleja en región de Carbohidratos / ADN"
+            # CATEGORÍAS POR REGIÓN (FALLBACK SIN 'BIOQUÍMICA')
+            if 1500 <= wn <= 1800: return "Señal compleja en región de Proteínas"
+            if 1200 <= wn < 1500: return "Señal compleja en región de Lípidos / Ácidos Nucleicos"
+            if 900 <= wn < 1200: return "Señal compleja en región de Carbohidratos / ADN"
             
-            return "Señal vibracional detectada en zona Fingerprint"
+            return "Señal vibracional identificada en zona Fingerprint"
 
         # Clasificación y Recolección
         common_rows = []
