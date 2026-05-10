@@ -1018,6 +1018,7 @@
                 type: 'scatter', 
                 mode: 'lines', 
                 line: { width: 1.5, color: palette[idx % palette.length] },
+                hoverinfo: 'x+y+name', // Optimización para selección de picos
                 showlegend: true 
             };
         });
@@ -1057,7 +1058,11 @@
             legend: LEGEND_LAYOUT,
             paper_bgcolor: 'transparent',
             plot_bgcolor: 'transparent',
-            annotations: annotationsArray
+            annotations: annotationsArray,
+            dragmode: false,       // DESACTIVA drag-to-zoom
+            clickmode: 'event',    // EVENTOS DE CLIC PUROS
+            hovermode: 'closest',  // ANCLA AL PICO
+            hoverdistance: 20      // AUMENTA RADIO DE CAPTURA
         }, { responsive: true, displayModeBar: 'hover' });
     }
 
@@ -1635,6 +1640,7 @@
                 type: 'scatter',
                 mode: 'lines',
                 line: { width: 1.5, color: color },
+                hoverinfo: 'x+y+name', // Optimización para selección de picos
                 showlegend: true
             });
             
@@ -1665,12 +1671,15 @@
             margin: SPECTRUM_MARGIN,
             paper_bgcolor: 'transparent',
             plot_bgcolor: 'transparent',
-            hovermode: 'closest',
             showlegend: true,
-            legend: LEGEND_LAYOUT
+            legend: LEGEND_LAYOUT,
+            dragmode: false,       // DESACTIVA drag-to-zoom
+            clickmode: 'event',    // EVENTOS DE CLIC PUROS
+            hovermode: 'closest',  // ANCLA AL PICO
+            hoverdistance: 20      // AUMENTA RADIO DE CAPTURA
         };
 
-        Plotly.react('char-graph', traces, layout, { responsive: true });
+        Plotly.react('char-graph', traces, layout, { responsive: true, displayModeBar: 'hover' });
     }
 
     function renderCharTableUI() {
