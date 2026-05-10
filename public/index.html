@@ -669,14 +669,13 @@
 
     function format_scientific_name_js(name) {
         if (!name) return "";
-        let clean = name.replace(/\.(csv|txt|asc|dat)$/i, '')
-                        .replace(/(_|-)(raman|ftir|muestra|raw|proc|corr)\d*/i, '')
+        let base = name.split('/').pop().split('\\').pop();
+        let clean = base.replace(/\.[^/.]+$/, "")
+                        .replace(/(_|-)(raman|ftir|muestra|raw|proc|corr)\d*/gi, '')
+                        .replace(/_/g, ' ')
                         .trim();
-        let parts = clean.split(/\s+/);
-        if (parts.length >= 2) {
-            return `<i>${clean}</i>`;
-        }
-        return clean;
+        if (!clean) clean = base.replace(/\.[^/.]+$/, "");
+        return `<i>${clean}</i>`;
     }
 
     function updateTreatmentLegendText() {
@@ -1630,15 +1629,14 @@
     }
 
     function getManualAssignment(wn) {
-        if (1650 <= wn && wn <= 1675) return "Estiramiento C=O: Amida I (Proteínas)";
-        if (1540 <= wn && wn <= 1560) return "Deformación N-H: Amida II (Proteínas)";
-        if (1440 <= wn && wn <= 1455) return "Deformación CH2: Flexión (Lípidos)";
-        if (1070 <= wn && wn <= 1090) return "Estiramiento C-O: Enlaces Glicosídicos (Carbohidratos)";
-        if (1240 <= wn && wn <= 1265) return "Estiramiento P=O asimétrico: Fosfodiéster (Ácidos Nucleicos)";
         if (1003 <= wn && wn <= 1005) return "Respiración del anillo: Fenilalanina (Proteínas)";
+        if (1650 <= wn && wn <= 1675) return "Estiramiento C=O: Amida I (Proteínas)";
+        if (1540 <= wn && wn <= 1560) return "Amida II (Proteínas)";
+        if (1440 <= wn && wn <= 1455) return "Deformación CH2: Lípidos";
+        if (1240 <= wn && wn <= 1265) return "Fosfodiéster (Ácidos Nucleicos)";
+        if (1735 <= wn && wn <= 1745) return "Estiramiento C=O (Ésteres Lípidos)";
         if (930 <= wn && wn <= 950)   return "Vibración C-C: Esqueleto proteico (α-hélice)";
-        if (1735 <= wn && wn <= 1745) return "Estiramiento C=O: Ésteres (Lípidos/FTIR)";
-        return "Señal vibracional en zona Fingerprint";
+        return "Señal vibracional identificada en zona Fingerprint";
     }
 
     function downloadCharTable() {

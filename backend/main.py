@@ -85,6 +85,10 @@ def clean_sample_name(name: str):
     clean = re.sub(r'(_|-)(raman|ftir|muestra|raw|proc|corr)\d*', '', clean, flags=re.IGNORECASE)
     # Reemplazar guiones bajos por espacios para un nombre limpio
     clean = clean.replace('_', ' ').strip()
+    
+    # Fallback si quedó vacío por limpieza agresiva
+    if not clean:
+        clean = os.path.splitext(os.path.basename(name))[0]
     return clean
 
 def format_scientific_name(name: str, use_latex: bool = False):
@@ -99,7 +103,7 @@ def format_scientific_name(name: str, use_latex: bool = False):
             return f"$\\mathit{{{tex_name}}}$"
         return clean
     else:
-        # Envoltorio HTML para renderizado en Plotly
+        # Envoltorio HTML OBLIGATORIO
         return f"<i>{clean}</i>"
 
 class SpectrumData(BaseModel):
