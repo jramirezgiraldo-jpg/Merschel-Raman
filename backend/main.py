@@ -52,15 +52,9 @@ def parse_spectroscopy_file(decoded_content: str):
 app = FastAPI(title="Hershell-Raman V8.2 API")
 
 # Configuración de CORS para despliegue en Render
-origins = [
-    "https://jramirezgiraldo-jpg.github.io",
-    "http://localhost:8501", # Streamlit local
-    "http://localhost:8000", # FastAPI local / Docs
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["https://jramirezgiraldo-jpg.github.io", "*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -182,39 +176,41 @@ async def process_spectra(request: ProcessRequest):
         smoothing_algo = request.config.smoothing
         
         Y_matrix, x_ref = build_symmetric_matrix(request.spectra)
-        df_vals = Y_matrix
         
-        baseline_fitter = Baseline()
-        
-        def process_one(idx):
-            y = df_vals[idx].copy()
-            # Corrección de Línea Base
-            if baseline_algo == "als":
-                y_base, _ = baseline_fitter.asls(y, lam=1e5, p=0.01)
-                y -= y_base
-            elif baseline_algo == "rollingball":
-                half_window = max(5, len(y) // 20)
-                y_base, _ = baseline_fitter.rolling_ball(y, half_window=half_window)
-                y -= y_base
-                
-            # Suavizado
-            if smoothing_algo == "savgol":
-                window_size = 11 if len(y) >= 11 else (len(y) // 2 * 2 + 1)
-                if window_size >= 3:
-                    y = signal.savgol_filter(y, window_length=window_size, polyorder=2)
-            elif smoothing_algo == "movingavg":
-                kernel = np.ones(5) / 5.0
-                y = np.convolve(y, kernel, mode='same')
-                
-            return {
-                # CRÍTICO: Devolver nombre limpio SIN tags HTML.
-                "name": clean_sample_name(request.spectra[idx].name),
-                "x": x_ref.tolist(),
-                "y": y.tolist()
-            }
+        # 1. OPTIMIZACIÓN EXTREMA VECTORIZADA (Suavizado Matricial)
+        if smoothing_algo == "savgol":
+            window_size = 11 if Y_matrix.shape[1] >= 11 else (Y_matrix.shape[1] // 2 * 2 + 1)
+            if window_size >= 3:
+                Y_matrix = signal.savgol_filter(Y_matrix, window_length=window_size, polyorder=2, axis=1)
+        elif smoothing_algo == "movingavg":
+            # Convolución 2D Vectorizada a toda la matriz
+            kernel = np.ones((1, 5)) / 5.0
+            Y_matrix = signal.convolve2d(Y_matrix, kernel, mode='same')
             
-        # Ejecución en Paralelo (Vectorización de pipeline)
-        processed_results = Parallel(n_jobs=-1)(delayed(process_one)(i) for i in range(len(df_vals)))
+        # 2. OPTIMIZACIÓN EXTREMA (Corrección de Línea Base en Paralelo con max_iter)
+        baseline_fitter = Baseline()
+        if baseline_algo == "als":
+            def _base_als(y):
+                base, _ = baseline_fitter.asls(y, lam=1e5, p=0.01, max_iter=10) # max_iter limitado para evitar timeouts
+                return y - base
+            Y_matrix = np.array(Parallel(n_jobs=-1)(delayed(_base_als)(y) for y in Y_matrix))
+        elif baseline_algo == "rollingball":
+            half_window = max(5, Y_matrix.shape[1] // 20)
+            def _base_rb(y):
+                base, _ = baseline_fitter.rolling_ball(y, half_window=half_window)
+                return y - base
+            Y_matrix = np.array(Parallel(n_jobs=-1)(delayed(_base_rb)(y) for y in Y_matrix))
+
+        # 3. Empaquetar
+        from functools import lru_cache
+        processed_results = []
+        for i in range(len(Y_matrix)):
+            processed_results.append({
+                # CRÍTICO: Devolver nombre limpio SIN tags HTML.
+                "name": clean_sample_name(request.spectra[i].name),
+                "x": x_ref.tolist(),
+                "y": Y_matrix[i].tolist()
+            })
         
         res = {"spectra": processed_results}
         _process_cache[cache_key] = res

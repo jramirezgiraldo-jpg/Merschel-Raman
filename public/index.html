@@ -1108,6 +1108,12 @@
 
     async function applyProcessing() {
         if(!spectraList.length) return alert("Carga espectros primero.");
+        
+        const applyBtn = document.getElementById('apply-btn');
+        if (applyBtn) {
+            applyBtn.disabled = true;
+            applyBtn.innerText = "Procesando cálculos vectorizados...";
+        }
         document.getElementById('status-text').innerText = "Cargando... Delegando a Python...";
         
         try {
@@ -1151,6 +1157,12 @@
         } catch(e) {
             console.error(e);
             document.getElementById('status-text').innerText = "❌ " + e.message;
+        } finally {
+            const applyBtn = document.getElementById('apply-btn');
+            if (applyBtn) {
+                applyBtn.disabled = false;
+                applyBtn.innerText = "⚡ Aplicar Procesos";
+            }
         }
     }
 
