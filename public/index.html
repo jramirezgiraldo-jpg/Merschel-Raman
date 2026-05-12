@@ -282,7 +282,7 @@
                 <div class="toolbar-group" id="grp-act">
                     <span class="toolbar-label">ACCIONES</span>
                     <div class="toolbar-buttons">
-                        <button class="primary" id="apply-btn" style="width:100%" data-title="Cadena de Procesamiento" data-desc="Ejecuta secuencialmente todos los filtros, correcciones y normalizaciones seleccionados en el panel superior." data-math="Pipeline: Base \rightarrow Filtro \rightarrow Deriv \rightarrow Norm">⚡ Aplicar Procesos</button>
+                        <button class="primary" id="apply-btn" style="width:100%; display:none;" data-title="Cadena de Procesamiento" data-desc="Ejecuta secuencialmente todos los filtros, correcciones y normalizaciones seleccionados en el panel superior." data-math="Pipeline: Base \rightarrow Filtro \rightarrow Deriv \rightarrow Norm">⚡ Aplicar Procesos</button>
                         <button id="consolidate-btn" class="btn-avg" style="flex:1;" onclick="generateConsolidatedView()" data-title="Análisis Estadístico Básico" data-desc="Calcula y grafica el espectro promedio y sombrea la desviación estándar (\pm 1\sigma) para observar la varianza de la muestra." data-math="\bar{y}, \pm \sigma">📉 Media</button>
                         <button id="reset-btn" style="flex:1;" onclick="resetData()" data-title="Restaurar Original" data-desc="Purga todos los vectores de memoria y recarga la matriz de datos crudos (Raw Data)." data-math="Data = Data_{raw}">↺ Reset</button>
                     </div>
@@ -860,6 +860,11 @@
                     b.classList.remove('primary'); b.classList.add('secondary');
                 });
                 e.currentTarget.classList.add('primary'); e.currentTarget.classList.remove('secondary');
+                
+                // AUTO-APPLY REACTIVO
+                if (spectraList && spectraList.length > 0) {
+                    applyProcessing();
+                }
             });
         });
 
@@ -1109,6 +1114,10 @@
     async function applyProcessing() {
         if(!spectraList.length) return alert("Carga espectros primero.");
         
+        // 1. Bloqueo Global de UI Reactiva
+        showLoader();
+        document.querySelectorAll('.toolbar-buttons button').forEach(b => b.disabled = true);
+        
         const applyBtn = document.getElementById('apply-btn');
         if (applyBtn) {
             applyBtn.disabled = true;
@@ -1158,6 +1167,10 @@
             console.error(e);
             document.getElementById('status-text').innerText = "❌ " + e.message;
         } finally {
+            // Liberación de UI Reactiva
+            hideLoader();
+            document.querySelectorAll('.toolbar-buttons button').forEach(b => b.disabled = false);
+            
             const applyBtn = document.getElementById('apply-btn');
             if (applyBtn) {
                 applyBtn.disabled = false;
