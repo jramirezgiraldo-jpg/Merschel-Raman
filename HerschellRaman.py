@@ -233,8 +233,11 @@ else:
                     title="Análisis Bioespectroscópico (Procesado en Render)",
                     xaxis_title="Wavenumber", 
                     yaxis_title="Intensidad",
-                    margin=dict(l=60, r=250, t=50, b=50) # MANTENER LEYENDA VISIBLE
+                    margin=dict(l=60, r=250, t=50, b=50), # MANTENER LEYENDA VISIBLE
+                    dragmode='zoom',       # RESTAURA drag-to-zoom híbrido
+                    clickmode='event',     # EVENTOS DE CLIC PUROS
+                    hovermode='closest'    # ANCLA AL PICO
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': True, 'scrollZoom': True})
     else:
         st.error("❌ Error de alineación. Verifica los rangos de tus archivos.")

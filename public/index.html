@@ -1091,11 +1091,11 @@
             paper_bgcolor: 'transparent',
             plot_bgcolor: 'transparent',
             annotations: annotationsArray,
-            dragmode: false,       // DESACTIVA drag-to-zoom
+            dragmode: 'zoom',      // RESTAURA drag-to-zoom híbrido
             clickmode: 'event',    // EVENTOS DE CLIC PUROS
             hovermode: 'closest',  // ANCLA AL PICO
             hoverdistance: 20      // AUMENTA RADIO DE CAPTURA
-        }, { responsive: true, displayModeBar: 'hover' });
+        }, { responsive: true, displayModeBar: true, scrollZoom: true });
     }
 
     function rollingBallBaseline(y) { const w = 50; return y.map((v, i) => { let start = Math.max(0, i - w), end = Math.min(y.length, i + w); let localMin = Math.min(...y.slice(start, end)); return v - localMin; }); }
@@ -1705,13 +1705,13 @@
             plot_bgcolor: 'transparent',
             showlegend: true,
             legend: LEGEND_LAYOUT,
-            dragmode: false,       // DESACTIVA drag-to-zoom
+            dragmode: 'zoom',      // RESTAURA drag-to-zoom híbrido
             clickmode: 'event',    // EVENTOS DE CLIC PUROS
             hovermode: 'closest',  // ANCLA AL PICO
             hoverdistance: 20      // AUMENTA RADIO DE CAPTURA
         };
 
-        Plotly.react('char-graph', traces, layout, { responsive: true, displayModeBar: 'hover' });
+        Plotly.react('char-graph', traces, layout, { responsive: true, displayModeBar: true, scrollZoom: true });
     }
 
     function renderCharTableUI() {
