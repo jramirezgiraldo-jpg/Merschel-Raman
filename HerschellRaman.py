@@ -40,6 +40,15 @@ st.markdown("""
 
 import re
 
+def to_unicode_italic(text):
+    # Mapeo a Mathematical Sans-Serif Italic
+    italic_map = {}
+    for i, c in enumerate(range(ord('A'), ord('Z') + 1)):
+        italic_map[c] = chr(0x1D608 + i)
+    for i, c in enumerate(range(ord('a'), ord('z') + 1)):
+        italic_map[c] = chr(0x1D622 + i)
+    return text.translate(italic_map)
+
 def parse_spectroscopy_file(decoded_content):
     """
     Extractor Universal: Ignora metadatos y extrae solo valores numéricos.
@@ -208,13 +217,13 @@ else:
                     if not clean_name or clean_name.strip() == "":
                         clean_name = "Espectro Recuperado"
                         
-                    # BYPASS DE HTML: Formato LaTeX para cursiva matemática
-                    nombre_cursiva_latex = r"$\mathit{" + clean_name.strip() + r"}$"
+                    # BYPASS DEFINITIVO: Conversión a Unicode Italic
+                    italic_unicode_name = to_unicode_italic(clean_name.strip())
                         
                     fig.add_trace(go.Scatter(
                         x=spec["x"], 
                         y=spec["y"], 
-                        name=nombre_cursiva_latex,  # INYECCIÓN LATEX (CERO HTML)
+                        name=italic_unicode_name,  # TEXTO PLANO UNICODE
                         mode='lines',
                         showlegend=True,
                         line=dict(width=1.5)

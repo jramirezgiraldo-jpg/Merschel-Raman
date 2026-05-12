@@ -763,13 +763,34 @@
     }
 
     /**
+     * toUnicodeItalic(text)
+     * Convierte texto plano a Mathematical Sans-Serif Italic en Unicode.
+     */
+    function toUnicodeItalic(text) {
+        const A = 0x1D608; // 𝘈
+        const a = 0x1D622; // 𝘢
+        let result = '';
+        for (let i = 0; i < text.length; i++) {
+            let code = text.charCodeAt(i);
+            if (code >= 65 && code <= 90) { // A-Z
+                result += String.fromCodePoint(A + (code - 65));
+            } else if (code >= 97 && code <= 122) { // a-z
+                result += String.fromCodePoint(a + (code - 97));
+            } else {
+                result += text.charAt(i);
+            }
+        }
+        return result;
+    }
+
+    /**
      * getTraceName(nameStr)
      * — Versión pura para leyendas de Plotly sin HTML.
-     * — BYPASS DE HTML: Formato LaTeX para cursiva matemática
+     * — BYPASS DEFINITIVO: Conversión a Unicode Italic
      */
     function getTraceName(nameStr) {
         const clean = extractCleanName(nameStr);
-        return `$\\mathit{${clean}}$`;
+        return toUnicodeItalic(clean);
     }
 
     // Alias para compatibilidad
@@ -1019,13 +1040,13 @@
             }
             nombre = nombre.trim();
             
-            // BYPASS DE HTML: Formato LaTeX para cursiva matemática
-            const nombre_cursiva_latex = `$\\mathit{${nombre}}$`;
+            // BYPASS DEFINITIVO: Conversión a Unicode Italic
+            const italic_unicode_name = toUnicodeItalic(nombre);
             
             return { 
                 x: s.x, 
                 y: s.y, 
-                name: nombre_cursiva_latex, // INYECCIÓN LATEX (CERO HTML)
+                name: italic_unicode_name, // TEXTO PLANO UNICODE
                 type: 'scatter', 
                 mode: 'lines', 
                 line: { width: 1.5, color: palette[idx % palette.length] },
