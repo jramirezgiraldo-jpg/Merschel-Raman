@@ -702,15 +702,7 @@ def get_treatment_metadata(data: ChemoRequest):
     metadata = f"Tratamiento: Escalado {scale} | Rango: {r_min:.1f} - {r_max:.1f} cm⁻¹"
     return metadata
 
-def save_plot_to_base64():
-    import io
-    import base64
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png', bbox_inches='tight', dpi=150)
-    buf.seek(0)
-    img_str = base64.b64encode(buf.read()).decode('utf-8')
-    plt.close()
-    return img_str
+
 
 @app.post("/api/pca")
 async def calculate_pca(data: ChemoRequest):
@@ -736,24 +728,10 @@ async def calculate_pca(data: ChemoRequest):
                 "pc2": pc2
             })
             
-        # Generar Imagen Matplotlib para Estándar Científico
-        import matplotlib.pyplot as plt
-        import seaborn as sns
-        plt.figure(figsize=(9, 6))
-        plot_labels = [format_scientific_name(n, use_latex=True) for n in names]
-        sns.scatterplot(x=scores[:, 0], y=scores[:, 1] if n_comps > 1 else np.zeros_like(scores[:, 0]), 
-                        hue=plot_labels, palette='viridis', s=100, alpha=0.8)
-        plt.title(f'Análisis de Componentes Principales (PCA)\n{get_treatment_metadata(data)}')
-        plt.xlabel(f'PC1 ({evr[0]:.1f}%)')
-        plt.ylabel(f'PC2 ({evr[1]:.1f}%)' if n_comps > 1 else 'PC2')
-        plt.grid(True, linestyle='--', alpha=0.6)
-        img_b64 = save_plot_to_base64()
-
         return {
             "type": "pca",
             "scores": scores_out,
             "explained_variance": [float(evr[0]), float(evr[1]) if n_comps > 1 else 0.0],
-            "plot_image": img_b64,
             "metadata": get_treatment_metadata(data)
         }
     except Exception as e:
@@ -771,15 +749,6 @@ async def calculate_hca(data: ChemoRequest):
         
         Z = linkage(Y, method=data.linkage_method, metric='euclidean')
         
-        # Generar Imagen Matplotlib para Estándar Científico
-        import matplotlib.pyplot as plt
-        plt.figure(figsize=(10, 7))
-        plot_labels = [format_scientific_name(n, use_latex=True) for n in names]
-        dendrogram(Z, labels=plot_labels, orientation='top', color_threshold=data.color_threshold)
-        plt.title(f"Dendrograma de Agrupamiento Jerárquico (HCA)\n{get_treatment_metadata(data)}")
-        plt.ylabel("Distancia Euclidiana")
-        img_b64 = save_plot_to_base64()
-
         # Re-generar para JSON coords (Plotly)
         ddata = dendrogram(
             Z, 
@@ -797,7 +766,6 @@ async def calculate_hca(data: ChemoRequest):
             "icoord": ddata['icoord'],
             "dcoord": ddata['dcoord'],
             "ivl": scientific_ivl,
-            "plot_image": img_b64,
             "metadata": get_treatment_metadata(data)
         }
     except Exception as e:
