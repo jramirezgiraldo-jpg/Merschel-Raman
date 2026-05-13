@@ -742,10 +742,12 @@ async def calculate_pca(data: ChemoRequest):
 @app.post("/api/hca")
 async def calculate_hca(data: ChemoRequest):
     try:
-        import plotly.figure_factory as ff
-        from scipy.cluster.hierarchy import linkage
         import pandas as pd
         import numpy as np
+        from scipy.cluster import hierarchy
+        from scipy.spatial.distance import pdist
+        import plotly.graph_objects as go
+        import json
         
         if len(data.spectra) < 2: return {"error": "Se requieren al menos 2 espectros."}
         
@@ -754,42 +756,49 @@ async def calculate_hca(data: ChemoRequest):
         
         df = pd.DataFrame(Y.T, columns=[clean_sample_name(s.name) for s in data.spectra])
         
-        # 1. Blindaje numérico: cero nulos, cero eliminación de columnas
-        df_num = df.select_dtypes(include=[np.number]).fillna(0)
-        X = df_num.T.values
+        # 1. SALVAR TODAS LAS MUESTRAS: Convertir comas a puntos y forzar a float
+        # select_dtypes() está PROHIBIDO: elimina columnas silenciosamente
+        df_clean = df.replace(',', '.', regex=True)  # Arregla formato latino (1,5 -> 1.5)
+        df_clean = df_clean.apply(pd.to_numeric, errors='coerce').fillna(0)  # Todo texto -> 0
+        
+        X = df_clean.T.values
+        etiquetas = [str(col) for col in df_clean.columns]  # Garantiza las 6 etiquetas
+        
+        # 2. Matemática Ward
+        dist_matrix = pdist(X, metric='euclidean')
+        Z = hierarchy.linkage(dist_matrix, method='ward')
 
-        # 2. Limpieza estricta de etiquetas (Garantizar que sean strings puros)
-        etiquetas_seguras = [str(col).replace('.csv', '').replace('.txt', '').strip() for col in df_num.columns]
+        # 3. Extraer coordenadas
+        dendro_data = hierarchy.dendrogram(Z, labels=etiquetas, no_plot=True)
 
-        # 3. Creación del árbol forzando el método Ward
-        fig = ff.create_dendrogram(
-            X,
-            labels=etiquetas_seguras,
-            orientation='bottom',
-            linkagefun=lambda x: linkage(x, method='ward', metric='euclidean')
-        )
+        # 4. Dibujar trazos manualmente (infalible — no usa figure_factory)
+        fig = go.Figure()
+        for i, d in zip(dendro_data['icoord'], dendro_data['dcoord']):
+            fig.add_trace(go.Scatter(
+                x=i, y=d, mode='lines',
+                line=dict(color='#2c3e50', width=2),
+                showlegend=False,
+                hoverinfo='none'
+            ))
 
-        # 4. EL TRUCO DEFINITIVO: Forzar color, opacidad y grosor en TODAS las ramas
-        # Esto anula el bug de Plotly que vuelve las líneas transparentes
-        fig.update_traces(
-            line=dict(color='#1f77b4', width=2), # Azul sólido profesional
-            opacity=1.0
-        )
-
-        # 5. Expansión radical de márgenes para evitar corte de etiquetas
+        # 5. Forzar ubicación de las etiquetas para que aparezcan TODAS
+        tick_vals = [5 + 10 * i for i in range(len(dendro_data['ivl']))]
+        
         fig.update_layout(
-            title=f"Dendrograma HCA (Ward - Distancia Euclidiana)<br><sup>{get_treatment_metadata(data)}</sup>",
-            xaxis_title="",
-            yaxis_title="Distancia de Enlace",
+            title=f"Dendrograma HCA (Método Ward)<br><sup>{get_treatment_metadata(data)}</sup>",
+            xaxis=dict(
+                tickvals=tick_vals,
+                ticktext=dendro_data['ivl'],
+                showgrid=False,
+                tickangle=45
+            ),
+            yaxis=dict(title="Distancia Euclidiana (Ward)"),
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
-            margin=dict(b=250, l=60, r=40, t=60), # 'b=250' garantiza que las 6 etiquetas quepan
-            showlegend=False,
-            xaxis=dict(tickangle=45), # Inclinar las etiquetas para mayor legibilidad
+            margin=dict(b=200, l=60, r=40, t=80),
             font=dict(family='Open Sans', size=12, color='#334155')
         )
         
-        import json
         fig_json = json.loads(fig.to_json())
         
         return {
@@ -801,7 +810,6 @@ async def calculate_hca(data: ChemoRequest):
         import traceback
         print(traceback.format_exc())
         return JSONResponse(status_code=400, content={"detail": f"Error matemático HCA: {str(e)}"})
-
 @app.post("/api/correlation")
 async def calculate_correlation(data: ChemoRequest):
     try:
