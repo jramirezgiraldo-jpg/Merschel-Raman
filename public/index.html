@@ -1608,22 +1608,9 @@
             layout.xaxis = { title: `PC1 (${data.explained_variance[0].toFixed(1)}%)` };
             layout.yaxis = { title: `PC2 (${data.explained_variance[1].toFixed(1)}%)` };
             Plotly.react('chemo-graph', traces, layout);
-        } else if (data.type === "hca") {
-            const traces = data.icoord.map((x, i) => ({
-                x: x, y: data.dcoord[i],
-                type: 'scatter', mode: 'lines',
-                line: { color: '#475569', width: 1.5 },
-                showlegend: false
-            }));
-            layout.title = 'Dendrograma HCA' + subtitle;
-            // ivl ya viene como texto plano del backend; getTraceName asegura texto limpio
-            layout.xaxis = {
-                tickvals: data.icoord.map(x => (x[1] + x[2]) / 2),
-                ticktext: data.ivl.map(n => getTraceName(n)),
-                tickangle: 45
-            };
-            layout.yaxis = { title: 'Distancia Euclidiana' };
-            Plotly.react('chemo-graph', traces, layout);
+        } else if (data.type === "hca_plotly") {
+            // Renderizar directamente la figura construida por Plotly Figure Factory en el backend
+            Plotly.newPlot('chemo-graph', data.figure.data, data.figure.layout);
         } else if (data.type === "correlation") {
             const traces = [{
                 z: data.matrix,

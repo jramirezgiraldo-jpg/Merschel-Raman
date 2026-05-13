@@ -742,47 +742,49 @@ async def calculate_pca(data: ChemoRequest):
 @app.post("/api/hca")
 async def calculate_hca(data: ChemoRequest):
     try:
+        import plotly.figure_factory as ff
         from scipy.cluster import hierarchy
-        from scipy.spatial.distance import pdist
+        import pandas as pd
         
         if len(data.spectra) < 2: return {"error": "Se requieren al menos 2 espectros."}
         
         # Generar matriz quimiométrica Y (n_spectra x n_wavenumbers)
         Y, x_ref = prepare_chemometric_matrix(data)
         
-        # Recrear el DataFrame como pide el usuario: Muestras en columnas, features en filas
-        import pandas as pd
         df = pd.DataFrame(Y.T, columns=[clean_sample_name(s.name) for s in data.spectra])
         
-        # Asegurar que no falte ninguna muestra
-        etiquetas_limpias = [str(col) for col in df.columns]
+        # Limpieza segura sin perder muestras enteras
+        df_clean = df.fillna(0) 
         
-        # Transponer correctamente: Las muestras (espectros) van en las filas
-        X = df.T.values
+        # Transponer para que las muestras sean FILAS (obligatorio para HCA)
+        X = df_clean.T.values
+        nombres_etiquetas = list(df_clean.columns) # Deben ser exactamente las mismas (ej. 6)
         
-        # Calcular matriz de distancias y enlace usando los parámetros del Request
-        metodo_enlace = data.linkage_method if data.linkage_method else 'ward'
-        
-        dist_matrix = pdist(X, metric='euclidean')
-        Z = hierarchy.linkage(dist_matrix, method=metodo_enlace)
-        
-        # Re-generar para JSON coords (Plotly)
-        ddata = hierarchy.dendrogram(
-            Z, 
-            labels=etiquetas_limpias, 
-            no_plot=True,
-            truncate_mode=None, 
+        # Usar la función de fábrica que empareja automáticamente las etiquetas sin perder ninguna
+        # Se ignora temporalmente linkage_method y se fuerza 'ward' como se indicó
+        fig = ff.create_dendrogram(
+            X, 
+            labels=nombres_etiquetas, 
+            linkagefun=lambda x: hierarchy.linkage(x, method='ward', metric='euclidean'),
             color_threshold=data.color_threshold
         )
         
-        # Nombres de hojas del dendrograma: texto plano sin HTML
-        scientific_ivl = [clean_sample_name(n) for n in ddata['ivl']]
+        fig.update_layout(
+            title=f"Dendrograma HCA (Forzado a Método Ward)<br><sup>{get_treatment_metadata(data)}</sup>",
+            xaxis_title="Muestras",
+            yaxis_title="Distancia Euclidiana (Ward)",
+            margin=dict(b=150), # Dar espacio para que las etiquetas no se corten
+            paper_bgcolor='transparent', 
+            plot_bgcolor='#f8fafc',
+            font=dict(family='Open Sans', size=12, color='#334155')
+        )
+        
+        import json
+        fig_json = json.loads(fig.to_json())
         
         return {
-            "type": "hca",
-            "icoord": ddata['icoord'],
-            "dcoord": ddata['dcoord'],
-            "ivl": scientific_ivl,
+            "type": "hca_plotly",
+            "figure": fig_json,
             "metadata": get_treatment_metadata(data)
         }
     except Exception as e:
