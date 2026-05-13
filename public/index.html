@@ -1357,7 +1357,18 @@
                 body: JSON.stringify(payload)
             });
 
-            if(!response.ok) throw new Error("HTTP " + response.status);
+            if (!response.ok) {
+                // Extraer el error real enviado por Python
+                const errorData = await response.json().catch(() => ({})); 
+                const errorMessage = errorData.detail || `Error del servidor: HTTP ${response.status}`;
+                
+                // Ocultar la pantalla de carga para no bloquear la UI
+                hideLoader();
+                
+                // Mostrar el error EXACTO al usuario
+                alert(`Fallo en Quimiometría: \n${JSON.stringify(errorMessage)}`);
+                return;
+            }
             const data = await response.json();
             renderChemometrics(data);
             hideLoader();

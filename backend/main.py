@@ -51,6 +51,13 @@ def parse_spectroscopy_file(decoded_content: str):
 
 app = FastAPI(title="Hershell-Raman V8.2 API")
 
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    return JSONResponse(status_code=400, content={"detail": str(exc.errors())})
+
 # El middleware DEBE ir inmediatamente después de la instanciación de app
 app.add_middleware(
     CORSMiddleware,
