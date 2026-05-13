@@ -768,15 +768,17 @@ async def calculate_hca(data: ChemoRequest):
         dist_matrix = pdist(X, metric='euclidean')
         Z = hierarchy.linkage(dist_matrix, method='ward')
 
-        # 3. Extraer coordenadas
-        dendro_data = hierarchy.dendrogram(Z, labels=etiquetas, no_plot=True)
+        # 3. Extraer coordenadas y COLORES del árbol
+        # Definir un umbral de color (70% de la distancia máxima) para crear los clústeres visuales
+        umbral_color = 0.7 * max(Z[:, 2]) if len(Z) > 0 else 0
+        dendro_data = hierarchy.dendrogram(Z, labels=etiquetas, no_plot=True, color_threshold=umbral_color)
 
-        # 4. Dibujar trazos manualmente (infalible — no usa figure_factory)
+        # 4. Dibujar trazos manualmente CON COLORES DINÁMICOS de SciPy
         fig = go.Figure()
-        for i, d in zip(dendro_data['icoord'], dendro_data['dcoord']):
+        for i, d, c in zip(dendro_data['icoord'], dendro_data['dcoord'], dendro_data['color_list']):
             fig.add_trace(go.Scatter(
                 x=i, y=d, mode='lines',
-                line=dict(color='#2c3e50', width=2),
+                line=dict(color=c, width=2),  # Color nativo de SciPy para este clúster
                 showlegend=False,
                 hoverinfo='none'
             ))
