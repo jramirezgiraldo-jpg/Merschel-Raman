@@ -774,8 +774,8 @@ async def calculate_hca(data: ChemoRequest):
             xaxis_title="Muestras",
             yaxis_title="Distancia Euclidiana (Ward)",
             margin=dict(b=150), # Dar espacio para que las etiquetas no se corten
-            paper_bgcolor='transparent', 
-            plot_bgcolor='#f8fafc',
+            paper_bgcolor='rgba(0,0,0,0)', 
+            plot_bgcolor='rgba(0,0,0,0)',
             font=dict(family='Open Sans', size=12, color='#334155')
         )
         
