@@ -742,9 +742,11 @@ async def calculate_pca(data: ChemoRequest):
 @app.post("/api/hca")
 async def calculate_hca(data: ChemoRequest):
     try:
-        import plotly.figure_factory as ff
         from scipy.cluster import hierarchy
+        from scipy.spatial.distance import pdist
+        import plotly.graph_objects as go
         import pandas as pd
+        import numpy as np
         
         if len(data.spectra) < 2: return {"error": "Se requieren al menos 2 espectros."}
         
@@ -753,29 +755,45 @@ async def calculate_hca(data: ChemoRequest):
         
         df = pd.DataFrame(Y.T, columns=[clean_sample_name(s.name) for s in data.spectra])
         
-        # Limpieza segura sin perder muestras enteras
-        df_clean = df.fillna(0) 
+        # 1. Blindaje de datos (rellenar nulos, NO usar dropna)
+        df_num = df.select_dtypes(include=[np.number]).fillna(0)
+        X = df_num.T.values
+        etiquetas = list(df_num.columns)
         
-        # Transponer para que las muestras sean FILAS (obligatorio para HCA)
-        X = df_clean.T.values
-        nombres_etiquetas = list(df_clean.columns) # Deben ser exactamente las mismas (ej. 6)
+        # 2. Matemática estricta
+        dist_matrix = pdist(X, metric='euclidean')
+        Z = hierarchy.linkage(dist_matrix, method='ward')
         
-        # Usar la función de fábrica que empareja automáticamente las etiquetas sin perder ninguna
-        # Se ignora temporalmente linkage_method y se fuerza 'ward' como se indicó
-        fig = ff.create_dendrogram(
-            X, 
-            labels=nombres_etiquetas, 
-            linkagefun=lambda x: hierarchy.linkage(x, method='ward', metric='euclidean'),
-            color_threshold=data.color_threshold
-        )
+        # 3. Extraer coordenadas del árbol
+        dendro_data = hierarchy.dendrogram(Z, labels=etiquetas, no_plot=True)
+        
+        # 4. Construcción manual de trazos en Plotly
+        fig = go.Figure()
+        for i, d in zip(dendro_data['icoord'], dendro_data['dcoord']):
+            fig.add_trace(go.Scatter(
+                x=i, 
+                y=d,
+                mode='lines',
+                line=dict(color='#2c3e50', width=2), # Azul oscuro
+                showlegend=False,
+                hoverinfo='none'
+            ))
+            
+        # 5. Alineación matemática de etiquetas X
+        tick_vals = [5 + 10 * i for i in range(len(dendro_data['ivl']))]
         
         fig.update_layout(
-            title=f"Dendrograma HCA (Forzado a Método Ward)<br><sup>{get_treatment_metadata(data)}</sup>",
-            xaxis_title="Muestras",
-            yaxis_title="Distancia Euclidiana (Ward)",
-            margin=dict(b=150), # Dar espacio para que las etiquetas no se corten
-            paper_bgcolor='rgba(0,0,0,0)', 
+            title=f"Dendrograma HCA (Método Ward)<br><sup>{get_treatment_metadata(data)}</sup>",
+            xaxis=dict(
+                tickvals=tick_vals,
+                ticktext=dendro_data['ivl'],
+                title="Muestras",
+                showgrid=False
+            ),
+            yaxis=dict(title="Distancia Euclidiana (Ward)"),
+            paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(b=150),
             font=dict(family='Open Sans', size=12, color='#334155')
         )
         
