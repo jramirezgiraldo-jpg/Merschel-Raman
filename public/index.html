@@ -364,7 +364,7 @@
                     
                     <div style="margin-bottom:10px;">
                         <label style="font-size:0.7rem; font-weight:bold;">Enlace (HCA):</label>
-                        <select id="hca-linkage" style="width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px;">
+                        <select id="hca-linkage" onchange="runChemometrics(currentChemoType)" style="width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px;">
                             <option value="ward">Ward</option>
                             <option value="average">Average</option>
                             <option value="complete">Complete</option>
@@ -382,7 +382,7 @@
 
                     <div style="margin-bottom:10px;">
                         <label style="font-size:0.7rem; font-weight:bold;">Paleta (Heatmap):</label>
-                        <select id="heatmap-palette" style="width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px;">
+                        <select id="heatmap-palette" onchange="runChemometrics(currentChemoType)" style="width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px;">
                             <option value="coolwarm">Coolwarm</option>
                             <option value="Viridis">Viridis</option>
                             <option value="Magma">Magma</option>
@@ -402,7 +402,7 @@
 
                     <div style="margin-bottom:10px;">
                         <label style="font-size:0.7rem; font-weight:bold;">Escalado (Pre-Análisis):</label>
-                        <select id="chemo-scaling" style="width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px;">
+                        <select id="chemo-scaling" onchange="runChemometrics(currentChemoType)" style="width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px;">
                             <option value="none">Ninguno</option>
                             <option value="minmax">Min-Max (0-1)</option>
                             <option value="snv">SNV (Z-Score)</option>

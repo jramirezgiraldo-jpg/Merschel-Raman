@@ -742,17 +742,34 @@ async def calculate_pca(data: ChemoRequest):
 @app.post("/api/hca")
 async def calculate_hca(data: ChemoRequest):
     try:
+        from scipy.cluster import hierarchy
+        from scipy.spatial.distance import pdist
+        
         if len(data.spectra) < 2: return {"error": "Se requieren al menos 2 espectros."}
-        names = [clean_sample_name(s.name) for s in data.spectra]
         
-        Y, _ = prepare_chemometric_matrix(data)
+        # Generar matriz quimiométrica Y (n_spectra x n_wavenumbers)
+        Y, x_ref = prepare_chemometric_matrix(data)
         
-        Z = linkage(Y, method=data.linkage_method, metric='euclidean')
+        # Recrear el DataFrame como pide el usuario: Muestras en columnas, features en filas
+        import pandas as pd
+        df = pd.DataFrame(Y.T, columns=[clean_sample_name(s.name) for s in data.spectra])
+        
+        # Asegurar que no falte ninguna muestra
+        etiquetas_limpias = [str(col) for col in df.columns]
+        
+        # Transponer correctamente: Las muestras (espectros) van en las filas
+        X = df.T.values
+        
+        # Calcular matriz de distancias y enlace usando los parámetros del Request
+        metodo_enlace = data.linkage_method if data.linkage_method else 'ward'
+        
+        dist_matrix = pdist(X, metric='euclidean')
+        Z = hierarchy.linkage(dist_matrix, method=metodo_enlace)
         
         # Re-generar para JSON coords (Plotly)
-        ddata = dendrogram(
+        ddata = hierarchy.dendrogram(
             Z, 
-            labels=names, 
+            labels=etiquetas_limpias, 
             no_plot=True,
             truncate_mode=None, 
             color_threshold=data.color_threshold
@@ -769,8 +786,9 @@ async def calculate_hca(data: ChemoRequest):
             "metadata": get_treatment_metadata(data)
         }
     except Exception as e:
+        import traceback
         print(traceback.format_exc())
-        return JSONResponse(status_code=500, content={"detail": f"Error matemático HCA: {str(e)}"})
+        return JSONResponse(status_code=400, content={"detail": f"Error matemático HCA: {str(e)}"})
 
 @app.post("/api/correlation")
 async def calculate_correlation(data: ChemoRequest):
