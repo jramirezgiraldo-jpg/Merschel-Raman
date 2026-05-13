@@ -51,10 +51,14 @@ def parse_spectroscopy_file(decoded_content: str):
 
 app = FastAPI(title="Hershell-Raman V8.2 API")
 
-# Configuración de CORS para despliegue en Render
+# El middleware DEBE ir inmediatamente después de la instanciación de app
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://jramirezgiraldo-jpg.github.io", "*"],
+    allow_origins=[
+        "https://jramirezgiraldo-jpg.github.io", 
+        "http://localhost:3000", 
+        "http://localhost:8000"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -746,8 +750,9 @@ async def calculate_pca(data: ChemoRequest):
             "metadata": get_treatment_metadata(data)
         }
     except Exception as e:
+        import traceback
         print(traceback.format_exc())
-        return JSONResponse(status_code=500, content={"detail": f"Error matemático PCA: {str(e)}"})
+        return JSONResponse(status_code=400, content={"detail": f"Error matemático PCA: {str(e)}"})
 
 @app.post("/api/hca")
 async def calculate_hca(data: ChemoRequest):
