@@ -773,12 +773,21 @@ async def calculate_hca(data: ChemoRequest):
         umbral_color = 0.7 * max(Z[:, 2]) if len(Z) > 0 else 0
         dendro_data = hierarchy.dendrogram(Z, labels=etiquetas, no_plot=True, color_threshold=umbral_color)
 
-        # 4. Dibujar trazos manualmente CON COLORES DINÁMICOS de SciPy
+        # 4. Dibujar trazos manualmente CON COLORES DINÁMICOS traducidos a Hex (Plotly no acepta formato Matplotlib)
+        color_map = {
+            'C0': '#1f77b4', 'C1': '#ff7f0e', 'C2': '#2ca02c', 'C3': '#d62728',
+            'C4': '#9467bd', 'C5': '#8c564b', 'C6': '#e377c2', 'C7': '#7f7f7f',
+            'C8': '#bcbd22', 'C9': '#17becf', 'b': '#1f77b4', 'g': '#2ca02c',
+            'r': '#d62728', 'c': '#17becf', 'm': '#e377c2', 'y': '#bcbd22',
+            'k': '#2c3e50'
+        }
         fig = go.Figure()
         for i, d, c in zip(dendro_data['icoord'], dendro_data['dcoord'], dendro_data['color_list']):
+            # Traducir el color. Si es un formato no mapeado, usar gris por defecto
+            plotly_color = color_map.get(c, '#555555')
             fig.add_trace(go.Scatter(
                 x=i, y=d, mode='lines',
-                line=dict(color=c, width=2),  # Color nativo de SciPy para este clúster
+                line=dict(color=plotly_color, width=2),
                 showlegend=False,
                 hoverinfo='none'
             ))
