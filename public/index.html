@@ -152,6 +152,11 @@
     #status-text { display: none; } /* Ocultar aviso estándar */
 
     .graph-container::after { content: 'Hershell-Raman V8.2'; position: absolute; bottom: 10px; right: 10px; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); opacity: 0.2; pointer-events: none; }
+    /* AYUDA QUIMIOMETRICA */
+    .btn-help { background: var(--purple); color: white; border: none; padding: 6px 12px; border-radius: 20px; font-family: 'Open Sans', Arial, sans-serif; cursor: pointer; font-size: 0.8rem; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 100; transition: all 0.2s; }
+    .btn-help:hover { background: #6d28d9; transform: translateY(-1px); }
+    .help-modal { display: none; background: #fff; border-left: 4px solid var(--purple); padding: 12px; margin: 10px 0; font-size: 0.85rem; color: #333; font-family: 'Times New Roman', serif; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); line-height: 1.4; }
+    #pls-scores, #pls-vip { min-height: 350px; }
   </style>
 </head>
 <body>
@@ -481,8 +486,15 @@
                 
                 <!-- Panel: Gráficas PLS-DA -->
                 <div style="flex:1; display:flex; flex-direction:column; padding:10px; gap:10px; overflow-y:auto; background:white;">
-                    <div id="pls-scores" style="flex:1; min-height:400px; border:1px solid #e2e8f0; border-radius:6px; box-sizing:border-box;"></div>
-                    <div id="pls-vip" style="flex:1; min-height:300px; border:1px solid #e2e8f0; border-radius:6px; box-sizing:border-box;"></div>
+                    <div style="display:flex; justify-content: flex-end; align-items: center;">
+                        <button id="btn-ayuda-quimiometria" class="btn-help" onclick="document.getElementById('pls-help-modal').style.display = document.getElementById('pls-help-modal').style.display === 'block' ? 'none' : 'block'">💡 Entender Gráficos</button>
+                    </div>
+                    <div id="pls-help-modal" class="help-modal">
+                        <b>■ Gráfico de Scores (LV1 vs LV2):</b> Proyección espacial multidimensional de las muestras espectrales en las primeras Variables Latentes. Permite visualizar la separación fenotípica real y el agrupamiento clonal de las especies hídricas.<br><br>
+                        <b>■ Carga de Biomarcadores Latentes (VIP Score):</b> Gráfico de Importancia de la Variable en la Proyección. Los picos que superan el umbral crítico de > 1.0 identifican formalmente los números de onda de los biomarcadores macromoleculares (Amidas, lípidos o carbohidratos constitutivos de las cubiertas de los parásitos) responsables de la discriminación estadística del modelo.
+                    </div>
+                    <div id="pls-scores" style="flex:1; min-height:350px; border:1px solid #e2e8f0; border-radius:6px; box-sizing:border-box;"></div>
+                    <div id="pls-vip" style="flex:1; min-height:350px; border:1px solid #e2e8f0; border-radius:6px; box-sizing:border-box;"></div>
                 </div>
 
                 <!-- Panel: Muestra Ciega -->
@@ -1577,21 +1589,28 @@
             Plotly.react('pls-scores', tracesScores, {
                 ...layout,
                 title: 'Espacio de Clasificación (Scores PLS)',
-                margin: SPECTRUM_MARGIN,
+                margin: { l: 60, r: 30, t: 45, b: 60 },
                 showlegend: true,
                 legend: LEGEND_LAYOUT,
-                xaxis: {title: 'LV1'}, yaxis: {title: 'LV2'}
+                xaxis: {title: 'LV1', automargin: true}, 
+                yaxis: {title: 'LV2', automargin: true}
             });
             
             const traceVip = { x: data.vip.x, y: data.vip.y, mode: 'lines', line: { color: '#dc2626', width: 1.5 }, fill: 'tozeroy', fillcolor: 'rgba(220, 38, 38, 0.1)', name: 'VIP Score', showlegend: true };
             Plotly.react('pls-vip', [traceVip], {
                 ...layout,
                 title: 'Carga de Biomarcadores Latentes (VIP)',
-                margin: SPECTRUM_MARGIN,
+                margin: { l: 60, r: 30, t: 45, b: 60 },
                 showlegend: true,
                 legend: LEGEND_LAYOUT,
-                xaxis: {title: 'cm⁻¹', autorange: 'reversed'}, yaxis: {title: 'VIP Score'}
+                xaxis: {title: 'cm⁻¹', autorange: 'reversed', automargin: true, tickangle: -45}, 
+                yaxis: {title: 'VIP Score', automargin: true}
             });
+            
+            setTimeout(() => {
+                Plotly.Plots.resize('pls-scores');
+                Plotly.Plots.resize('pls-vip');
+            }, 50);
             hideLoader();
         } catch(e) {
             hideLoader();
