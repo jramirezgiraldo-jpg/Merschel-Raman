@@ -1573,6 +1573,14 @@
             if(!response.ok) throw new Error("HTTP " + response.status);
             const data = await response.json();
             
+            if (!data || data.error || !data.scores) {
+                hideLoader();
+                const errMsg = data?.error ? data.error : "Estructura de datos inválida enviada por el servidor.";
+                const traceMsg = data?.trace ? `\nTrace:\n${data.trace}` : "";
+                alert("Error Analítico Backend:\n" + errMsg + traceMsg);
+                console.error("Fallo algorítmico capturado:", data);
+                return;
+            }
             const layout = { paper_bgcolor: 'transparent', plot_bgcolor: '#f8fafc', font: { family: 'Open Sans', size: 12 } };
             const colores = ['#2563eb', '#ef4444', '#10b981', '#f59e0b', '#7c3aed'];
             const tracesScores = Object.keys(data.scores).map((grupo, idx) => ({
