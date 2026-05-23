@@ -924,8 +924,12 @@ async def predict_plsda(data: PredictRequest):
             predictions = le.classes_[pred_indices]
         else:
             predictions = [le.classes_[0]] * len(Y_pred)
+        if hasattr(predictions, 'tolist'):
+            res = predictions.tolist()
+        else:
+            res = list(predictions)
             
-        return {"predictions": predictions.tolist()}
+        return {"predictions": res}
     except Exception as e:
         import traceback
         return {"error": str(e), "trace": traceback.format_exc()}
