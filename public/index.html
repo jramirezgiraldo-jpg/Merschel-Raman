@@ -1524,6 +1524,7 @@
             
             const data = await response.json();
             if(data.error) {
+                console.error("TRACE DEL BACKEND:\n" + (data.trace || "No trace disponible"));
                 throw new Error(data.error);
             }
             if(data.predictions) {
@@ -1533,8 +1534,8 @@
             hideLoader();
         } catch(e) {
             hideLoader();
-            console.error("Detalle del error:", e);
-            alert("Error en predicción: " + e.message);
+            console.error("Detalle del error en JS:", e);
+            alert("Error del Servidor: " + e.message);
         }
     }
 

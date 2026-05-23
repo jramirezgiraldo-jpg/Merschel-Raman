@@ -928,5 +928,4 @@ async def predict_plsda(data: PredictRequest):
         return {"predictions": predictions.tolist()}
     except Exception as e:
         import traceback
-        print(traceback.format_exc())
-        return JSONResponse(status_code=500, content={"detail": f"Error predictivo: {str(e)}"})
+        return {"error": str(e), "trace": traceback.format_exc()}
