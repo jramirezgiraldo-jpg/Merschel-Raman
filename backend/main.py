@@ -886,7 +886,11 @@ async def calculate_plsda(data: PlsdaRequest):
         }
     except Exception as e:
         import traceback
-        return {"error": str(e), "trace": traceback.format_exc()}
+        return JSONResponse(
+            status_code=400,
+            content={"error": str(e), "trace": traceback.format_exc()},
+            headers={"Access-Control-Allow-Origin": "https://jramirezgiraldo-jpg.github.io"}
+        )
 
 @app.post("/api/predict")
 async def predict_plsda(data: PredictRequest):
