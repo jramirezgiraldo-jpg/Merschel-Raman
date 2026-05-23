@@ -452,12 +452,8 @@
                     <div style="margin-bottom: 12px; padding: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px;">
                         <label style="font-size:0.7rem; font-weight:bold; display:block; margin-bottom:4px;">Especie / Etiqueta:</label>
                         <select id="train-class-select" style="width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px; margin-bottom:6px;"  onchange="if(this.value==='CUSTOM_INPUT'){document.getElementById('etiqueta-manual').style.display='block'; document.getElementById('etiqueta-manual').focus();}else{document.getElementById('etiqueta-manual').style.display='none'; document.getElementById('etiqueta-manual').value='';}">
-                            <option value="Toxoplasma">Toxoplasma (Ooquistes)</option>
-                            <option value="Cryptosporidium">Cryptosporidium (Ooqu.)</option>
-                            <option value="Giardia">Giardia (Quistes)</option>
-                            <option value="Blanco">Blanco / Medio de susp.</option>
-                            
-                                                    <option value="CUSTOM_INPUT">+ Nueva Clase...</option>
+                            <option value="" disabled selected>-- Seleccione etiqueta --</option>
+                            <option value="CUSTOM_INPUT">+ Nueva Clase...</option>
                         </select>
 <input type="text" id="etiqueta-manual" placeholder="Escriba el taxón (ej. Candida)" style="display: none; margin-top: 8px;">
 
