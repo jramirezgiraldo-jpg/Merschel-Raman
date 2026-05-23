@@ -61,11 +61,7 @@ async def validation_exception_handler(request, exc):
 # El middleware DEBE ir inmediatamente después de la instanciación de app
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://jramirezgiraldo-jpg.github.io", 
-        "http://localhost:3000", 
-        "http://localhost:8000"
-    ],
+    allow_origins=["https://jramirezgiraldo-jpg.github.io"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -889,8 +885,8 @@ async def calculate_plsda(data: PlsdaRequest):
             "vip": {"x": x_ref.tolist(), "y": loadings.tolist()}
         }
     except Exception as e:
-        print(traceback.format_exc())
-        return JSONResponse(status_code=500, content={"detail": f"Error matemático PLS-DA: {str(e)}"})
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
 
 @app.post("/api/predict")
 async def predict_plsda(data: PredictRequest):
@@ -924,12 +920,9 @@ async def predict_plsda(data: PredictRequest):
             predictions = le.classes_[pred_indices]
         else:
             predictions = [le.classes_[0]] * len(Y_pred)
-        if hasattr(predictions, 'tolist'):
-            res = predictions.tolist()
-        else:
-            res = list(predictions)
-            
-        return {"predictions": res}
+        # Parche autonómico aplicado para prevenir AttributeError: 'list' object has no attribute 'tolist'
+        res_data = predictions.tolist() if hasattr(predictions, 'tolist') else list(predictions)
+        return {"predictions": res_data}
     except Exception as e:
         import traceback
         return {"error": str(e), "trace": traceback.format_exc()}
