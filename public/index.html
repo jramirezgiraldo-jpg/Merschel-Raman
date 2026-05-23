@@ -451,14 +451,17 @@
                     <span class="toolbar-label" style="display:block; margin-bottom:10px; color:var(--primary);">CONSTRUCTOR DE BD</span>
                     <div style="margin-bottom: 12px; padding: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px;">
                         <label style="font-size:0.7rem; font-weight:bold; display:block; margin-bottom:4px;">Especie / Etiqueta:</label>
-                        <select id="train-class-select" style="width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px; margin-bottom:6px;" onchange="if(this.value==='_new'){document.getElementById('train-custom-class').style.display='block';}else{document.getElementById('train-custom-class').style.display='none';}">
+                        <select id="train-class-select" style="width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px; margin-bottom:6px;"  onchange="if(this.value==='CUSTOM_INPUT'){document.getElementById('etiqueta-manual').style.display='block'; document.getElementById('etiqueta-manual').focus();}else{document.getElementById('etiqueta-manual').style.display='none'; document.getElementById('etiqueta-manual').value='';}">
                             <option value="Toxoplasma">Toxoplasma (Ooquistes)</option>
                             <option value="Cryptosporidium">Cryptosporidium (Ooqu.)</option>
                             <option value="Giardia">Giardia (Quistes)</option>
                             <option value="Blanco">Blanco / Medio de susp.</option>
-                            <option value="_new">+ Nueva Clase...</option>
+                            
+                                                    <option value="CUSTOM_INPUT">+ Nueva Clase...</option>
                         </select>
-                        <input type="text" id="train-custom-class" placeholder="Nombre de clase..." style="display:none; width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px; margin-bottom:6px; box-sizing:border-box;">
+<input type="text" id="etiqueta-manual" placeholder="Escriba el taxón (ej. Candida)" style="display: none; margin-top: 8px;">
+
+                        
                         
                         <div style="display:flex; align-items:center; gap:5px; margin-top:8px;">
                             <input type="file" id="train-file-input" multiple accept=".csv,.txt" style="display:none;" onchange="handleTrainingUpload(event)" />
@@ -1423,7 +1426,7 @@
 // --- NUEVAS FUNCIONES DE ENTRENAMIENTO Y PREDICCIÓN ---
     function handleTrainingUpload(e) {
         const files = Array.from(e.target.files); if(!files.length) return;
-        const selValue = document.getElementById('train-class-select').value;
+        const selValue = (document.getElementById('train-class-select').value === 'CUSTOM_INPUT' ? document.getElementById('etiqueta-manual').value : document.getElementById('train-class-select').value);
         const label = selValue === '_new' ? document.getElementById('train-custom-class').value || 'Desconocido' : selValue;
         
         Promise.all(files.map(f => new Promise(resolve => {
@@ -1898,5 +1901,33 @@
         }
     }
   </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const fileInput = document.getElementById('train-file-input');
+        if(fileInput){
+            fileInput.addEventListener('change', function(e) {
+                if(this.files && this.files.length > 0){
+                    const name = this.files[0].name.toLowerCase();
+                    const sel = document.getElementById('train-class-select');
+                    let match = false;
+                    if(/toxoplasma/i.test(name)){ sel.value = 'Toxoplasma'; match=true; }
+                    else if(/cryptosporidium/i.test(name)){ sel.value = 'Cryptosporidium'; match=true; }
+                    else if(/giardia/i.test(name)){ sel.value = 'Giardia'; match=true; }
+                    else if(/candida/i.test(name)){ 
+                        sel.value = 'CUSTOM_INPUT'; 
+                        document.getElementById('etiqueta-manual').value = 'Candida';
+                        document.getElementById('etiqueta-manual').style.display = 'block';
+                        match=true;
+                    }
+                    if(match){
+                        sel.dispatchEvent(new Event('change'));
+                    }
+                }
+            });
+        }
+    });
+</script>
+
 </body>
 </html>
