@@ -1549,9 +1549,10 @@
                 // getTraceName devuelve el texto limpio devuelto por el backend
                 name: getTraceName(grupo),
                 x: data.scores[grupo].map(d => d.lv1), y: data.scores[grupo].map(d => d.lv2),
-                // text = etiquetas visibles sobre los puntos, también con cursivas
+                // text = etiquetas visibles sobre los puntos
                 text: data.scores[grupo].map(d => getTraceName(d.scientific_name || d.name)),
-                mode: 'markers+text', textposition: 'top center',
+                mode: 'markers', 
+                hovertemplate: '<b>%{text}</b><br>LV1: %{x:.4f}<br>LV2: %{y:.4f}<extra></extra>',
                 showlegend: true,
                 marker: { size: 10, color: colores[idx % colores.length], line: {width: 1, color: 'white'} }
             }));
