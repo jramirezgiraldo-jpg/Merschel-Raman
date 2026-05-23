@@ -1535,7 +1535,7 @@
                 })),
                 n_components: parseInt(document.getElementById('pls-comps').value) || 2
             };
-            const response = await fetch(`${API_BASE_URL}/api/train_model`, {
+            const response = await fetch(`${API_BASE_URL}/api/pls_da`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
