@@ -846,7 +846,7 @@
                 spec.group = batchVal;
                 spec.label = batchVal;
             });
-            renderLabelsTable(); 
+            renderDatabaseSummary(); 
         });
 
         document.querySelectorAll('.toolbar-buttons button[data-group]').forEach(btn => {
@@ -896,7 +896,7 @@
         if(idx>=0) document.querySelectorAll('.nav-item')[idx].classList.add('active');
         
         // Disparador de redibujado de la tabla PLS-DA al entrar a la viñeta
-        if(id === 'supervisada') renderLabelsTable();
+        if(id === 'supervisada') renderDatabaseSummary();
         
         window.dispatchEvent(new Event('resize'));
     }
