@@ -142,6 +142,11 @@ class PlsdaRequest(BaseModel):
     spectra: list[LabeledSpectrumInput]
     n_components: int = 2
 
+class PredictRequest(BaseModel):
+    train_spectra: list[LabeledSpectrumInput]
+    test_spectra: list[SpectrumInput]
+    n_components: int = 2
+
 class ProcessConfig(BaseModel):
     baseline: str = "none"
     smoothing: str = "none"
@@ -886,3 +891,42 @@ async def calculate_plsda(data: PlsdaRequest):
     except Exception as e:
         print(traceback.format_exc())
         return JSONResponse(status_code=500, content={"detail": f"Error matemático PLS-DA: {str(e)}"})
+
+@app.post("/api/predict")
+async def predict_plsda(data: PredictRequest):
+    try:
+        import traceback
+        if len(data.train_spectra) < 3: return {"error": "Se requieren al menos 3 espectros de entrenamiento."}
+        if len(data.test_spectra) < 1: return {"error": "No hay espectros para predecir."}
+        
+        labels_raw = [s.label for s in data.train_spectra]
+        le = LabelBinarizer()
+        Y_target = le.fit_transform(labels_raw)
+        
+        all_spectra = data.train_spectra + data.test_spectra
+        Y_all, _ = build_symmetric_matrix(all_spectra)
+        
+        n_train = len(data.train_spectra)
+        Y_features_train = Y_all[:n_train]
+        Y_features_test = Y_all[n_train:]
+        
+        n_comps = max(1, min(data.n_components, Y_features_train.shape[0]-1))
+        pls = PLSRegression(n_components=n_comps)
+        pls.fit(Y_features_train, Y_target)
+        
+        Y_pred = pls.predict(Y_features_test)
+        
+        if len(le.classes_) > 2:
+            pred_indices = np.argmax(Y_pred, axis=1)
+            predictions = le.classes_[pred_indices]
+        elif len(le.classes_) == 2:
+            pred_indices = (Y_pred > 0.5).astype(int).flatten()
+            predictions = le.classes_[pred_indices]
+        else:
+            predictions = [le.classes_[0]] * len(Y_pred)
+            
+        return {"predictions": predictions.tolist()}
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return JSONResponse(status_code=500, content={"detail": f"Error predictivo: {str(e)}"})

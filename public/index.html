@@ -1500,7 +1500,12 @@
         showLoader();
         try {
             const payload = {
-                spectra: predictSet.map(s => ({ name: s.name, x: s.x.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v), y: s.y.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v) }))
+                train_spectra: trainingSet.map(s => ({
+                    name: s.rawName || s.name, label: s.label || 'Desconocido',
+                    x: s.x.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v), y: s.y.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v)
+                })),
+                test_spectra: predictSet.map(s => ({ name: s.name, x: s.x.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v), y: s.y.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v) })),
+                n_components: parseInt(document.getElementById('pls-comps').value) || 2
             };
             const response = await fetch(`${API_BASE_URL}/api/predict`, {
                 method: 'POST',
