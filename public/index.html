@@ -156,7 +156,8 @@
     .btn-help { background: var(--purple); color: white; border: none; padding: 6px 12px; border-radius: 20px; font-family: 'Open Sans', Arial, sans-serif; cursor: pointer; font-size: 0.8rem; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 100; transition: all 0.2s; }
     .btn-help:hover { background: #6d28d9; transform: translateY(-1px); }
     .help-modal { display: none; background: #fff; border-left: 4px solid var(--purple); padding: 12px; margin: 10px 0; font-size: 0.85rem; color: #333; font-family: 'Times New Roman', serif; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); line-height: 1.4; }
-    #pls-scores, #pls-vip { min-height: 350px; }
+    .btn-delete-batch { background: transparent; color: #ef4444; border: none; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; transition: background 0.2s; }
+    .btn-delete-batch:hover { background: #fee2e2; }
   </style>
 </head>
 <body>
@@ -1464,7 +1465,7 @@
     function renderDatabaseSummary() {
         const tbody = document.getElementById('db-summary-body');
         if(!trainingSet.length) {
-            tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:10px; font-size:0.7rem; color:#94a3b8;">Sin datos de entrenamiento.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:10px; font-size:0.7rem; color:#94a3b8;">Sin datos de entrenamiento.</td></tr>';
             return;
         }
         // Agrupar por label y contar
@@ -1475,9 +1476,16 @@
             <tr style="border-bottom:1px solid #f1f5f9;">
                 <td style="padding:4px 0; font-size:0.75rem;">${extractCleanName(label)}</td>
                 <td style="padding:4px 0; text-align:center; font-weight:bold; font-size:0.75rem; color:var(--primary);">${counts[label]}</td>
+                <td style="padding:4px 0; text-align:right;"><button class="btn-delete-batch" onclick="deleteBatch('${label.replace(/'/g, "\\'")}')" title="Borrar lote">❌</button></td>
             </tr>
         `).join('');
     }
+
+    window.deleteBatch = function(label) {
+        if(!confirm(`¿Estás seguro de eliminar el lote '${label}'?`)) return;
+        trainingSet = trainingSet.filter(s => s.label !== label);
+        renderDatabaseSummary();
+    };
 
     function handlePredictUpload(e) {
         const files = Array.from(e.target.files); if(!files.length) return;
