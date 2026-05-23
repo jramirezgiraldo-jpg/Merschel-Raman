@@ -1512,8 +1512,20 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            if(!response.ok) throw new Error("HTTP " + response.status);
+            
+            if(!response.ok) {
+                try {
+                    const errData = await response.json();
+                    throw new Error(errData.detail || `HTTP ${response.status}`);
+                } catch(parseErr) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            }
+            
             const data = await response.json();
+            if(data.error) {
+                throw new Error(data.error);
+            }
             if(data.predictions) {
                 data.predictions.forEach((pred, i) => { if(predictSet[i]) predictSet[i].prediction = pred; });
                 renderPredictResults();
@@ -1521,8 +1533,8 @@
             hideLoader();
         } catch(e) {
             hideLoader();
-            console.error(e);
-            alert("Error en predicción.");
+            console.error("Detalle del error:", e);
+            alert("Error en predicción: " + e.message);
         }
     }
 
