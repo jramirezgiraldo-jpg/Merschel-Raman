@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, File, Form, UploadFile
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional
@@ -9,6 +9,8 @@ from sklearn.decomposition import PCA
 from scipy.cluster.hierarchy import linkage, dendrogram
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.preprocessing import LabelBinarizer
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 from fastapi.middleware.cors import CORSMiddleware
 import re
 import pandas as pd
@@ -16,38 +18,115 @@ from scipy.interpolate import interp1d
 from joblib import Parallel, delayed
 import hashlib
 import os
+import io
+import struct
 
-def parse_spectroscopy_file(decoded_content: str):
+def parse_raw_spectroscopy_file(file_content: bytes, filename: str):
     """
-    Extractor Universal: Ignora metadatos, encabezados sucios y delimitadores inconsistentes,
-    extrayendo únicamente los valores numéricos de los espectros.
+    Extractor Universal Nativo: Parsea archivos binarios .sp (PerkinElmer PEPE2D) 
+    y .csv estructurados, extrayendo las mallas vectoriales.
     """
-    lines = decoded_content.splitlines()
-    cleaned_data = []
-    
-    for line in lines:
-        # Dividir por comas, tabulaciones o múltiples espacios
-        parts = re.split(r'[,\t;]+|\s{2,}', line.strip())
-        # Filtrar strings vacíos generados por comas finales
-        parts = [p.strip() for p in parts if p.strip()]
+    if filename.lower().endswith('.sp'):
+        try:
+            if b'PEPE2D' in file_content[:20]:
+                if len(file_content) >= 12408:
+                    floats = struct.unpack('<1551d', file_content[-12408:])
+                    wavenumbers = np.linspace(4000, 900, 1551)
+                    return wavenumbers, np.array(floats)
+        except Exception as e:
+            raise ValueError(f"Error parseando .sp binario: {e}")
+            
+    try:
+        text = file_content.decode('utf-8', errors='ignore')
+        lines = text.splitlines()
         
-        # Si hay al menos dos valores, intentar convertirlos a flotantes
+        # Buscar la fila que contiene 'wavenumber' y 'absorbance'
+        header_idx = 0
+        for i, line in enumerate(lines):
+            line_lower = line.lower()
+            if 'wavenumber' in line_lower or 'absorbance' in line_lower:
+                header_idx = i
+                break
+                
+        # Parsear ignorando las filas previas al header detectado
+        df = pd.read_csv(io.StringIO(text), skiprows=header_idx)
+        
+        # Normalizar cabeceras a minúsculas y buscar las columnas relevantes
+        df.columns = [str(c).strip().lower() for c in df.columns]
+        
+        col_wav = next((c for c in df.columns if 'wavenumber' in c or 'cm-1' in c or 'x' in c), None)
+        col_abs = next((c for c in df.columns if 'absorbance' in c or 'y' in c or 'intensit' in c), None)
+        
+        if col_wav and col_abs:
+            df['wavenumber'] = pd.to_numeric(df[col_wav], errors='coerce')
+            df['absorbance'] = pd.to_numeric(df[col_abs], errors='coerce')
+            df = df.dropna(subset=['wavenumber', 'absorbance'])
+            if len(df) > 10:
+                df = df.sort_values(by='wavenumber', ascending=True).reset_index(drop=True)
+                return df['wavenumber'].values, df['absorbance'].values
+    except Exception:
+        pass
+        
+    text = file_content.decode('utf-8', errors='ignore')
+    lines = text.splitlines()
+    cleaned_data = []
+    for line in lines:
+        parts = re.split(r'[,\t;]+|\s{2,}', line.strip())
+        parts = [p.strip() for p in parts if p.strip()]
         if len(parts) >= 2:
             try:
-                x = float(parts[0])
-                y = float(parts[1])
-                cleaned_data.append([x, y])
+                cleaned_data.append([float(parts[0]), float(parts[1])])
             except ValueError:
-                # Si no son números (ej. 'Time', 'Wavenumber'), se ignora la línea
-                continue
+                pass
                 
     if not cleaned_data:
         raise ValueError("No se encontraron datos numéricos válidos en el archivo.")
         
     df = pd.DataFrame(cleaned_data, columns=['Wavenumber', 'Absorbance'])
-    # Ordenamiento Monotónico para evitar errores en interpolación
     df = df.sort_values(by='Wavenumber', ascending=True).reset_index(drop=True)
-    return df
+    return df['Wavenumber'].values, df['Absorbance'].values
+
+def procesar_mallas_y_aplicar_snv(espectros_json):
+    """
+    Normaliza cabeceras, reordena ejes invertidos para evitar NaNs en Scipy,
+    interpola vectorialmente y aplica Standard Normal Variate (SNV).
+    """
+    X_limpio = []
+    y_limpio = []
+    
+    # Grilla universal de referencia estrictamente creciente (Requisito de Scipy)
+    malla_referencia = np.linspace(900.0, 4000.0, 1550)
+    
+    for espectro in espectros_json:
+        # Conversión forzada a vectores de punto flotante de alta precisión
+        x_raw = np.array(espectro["wavenumbers"], dtype=float)
+        y_raw = np.array(espectro["absorbances"], dtype=float)
+        
+        # 1. Corrección geométrica: Ordenar de menor a mayor para romper el bloqueo de interp1d
+        indices_ordenados = np.argsort(x_raw)
+        x_sorted = x_raw[indices_ordenados]
+        y_sorted = y_raw[indices_ordenados]
+        
+        # 2. Erradicación de duplicados en la malla del equipo de medición
+        x_unique, indices_unicos = np.unique(x_sorted, return_index=True)
+        y_unique = y_sorted[indices_unicos]
+        
+        # 3. Interpolación matemática libre de NaNs
+        interpolador = interp1d(x_unique, y_unique, kind='linear', bounds_error=False, fill_value=(y_unique[0], y_unique[-1]))
+        abs_interp = interpolador(malla_referencia)
+        abs_interp = np.nan_to_num(abs_interp, nan=0.0)
+        
+        X_limpio.append(abs_interp)
+        # Limpieza estricta de espacios en la etiqueta biológica de la interfaz
+        y_limpio.append(str(espectro["label"]).strip())
+        
+    X_matrix = np.array(X_limpio)
+    
+    # 4. Transformación Quimiométrica SNV: Elimina el esparcimiento físico y desfases de línea base
+    # Crucial para que el clasificador separe T. gondii de G. lamblia por espectrodinamia real
+    X_snv = (X_matrix - np.mean(X_matrix, axis=1, keepdims=True)) / (np.std(X_matrix, axis=1, keepdims=True) + 1e-8)
+    
+    return X_snv, np.array(y_limpio)
 
 app = FastAPI(title="Hershell-Raman V8.2 API")
 
@@ -842,32 +921,74 @@ async def calculate_correlation(data: ChemoRequest):
         print(traceback.format_exc())
         return JSONResponse(status_code=500, content={"detail": f"Error matemático Correlación: {str(e)}"})
 
-@app.post("/api/pls_da")
-async def calculate_plsda(data: PlsdaRequest):
+class SpectrumPayload(BaseModel):
+    wavenumbers: List[float]
+    absorbances: List[float]
+    label: str
+
+class TrainPayload(BaseModel):
+    spectra: List[SpectrumPayload]
+    n_components: int = 2
+    algorithm: str = "pls_da"
+
+@app.post("/api/train")
+async def calculate_train(payload: TrainPayload):
     try:
-        if len(data.spectra) < 3: return {"error": "Se requieren al menos 3 espectros para entrenar PLS-DA."}
+        if len(payload.spectra) < 3: return {"error": "Se requieren al menos 3 espectros para entrenar."}
         
-        names = [s.name for s in data.spectra]
-        labels_raw = [s.label for s in data.spectra]
-        
-        Y_features, x_ref = build_symmetric_matrix(data.spectra)
+        # Transformar el payload de Pydantic a lista de diccionarios que espera la nueva función
+        espectros_payload = []
+        names = []
+        for i, spec in enumerate(payload.spectra):
+            espectros_payload.append({
+                "wavenumbers": spec.wavenumbers,
+                "absorbances": spec.absorbances,
+                "label": spec.label
+            })
+            names.append(f"Sample_{i}") # El código de alineación ya no extrae names, los guardamos aquí
+            
+        Y_features, labels_raw = procesar_mallas_y_aplicar_snv(espectros_payload)
+        x_ref = np.linspace(900.0, 4000.0, 1550)
         
         # Binarización One-Hot de etiquetas de texto
         le = LabelBinarizer()
         Y_target = le.fit_transform(labels_raw)
         
-        # Ajuste dinámico de tensores PLS
-        n_comps = max(1, min(data.n_components, Y_features.shape[0]-1))
+        # Ajuste dinámico de tensores PLS o PCA
+        n_comps = max(1, min(n_components, Y_features.shape[0]-1))
         
-        pls = PLSRegression(n_components=n_comps)
-        pls.fit(Y_features, Y_target)
-        scores = pls.x_scores_
-        
-        # Pesos espectrales (Biomarcadores predictivos) usando matriz coef_ paramétrica abstracta
-        if pls.coef_.ndim > 1:
-            loadings = np.mean(np.abs(pls.coef_), axis=1)
+        if algorithm.lower() in ["pls_da", "pls-da"]:
+            pls = PLSRegression(n_components=n_comps)
+            pls.fit(Y_features, Y_target)
+            scores = pls.x_scores_
+            
+            if pls.coef_.ndim > 1:
+                weights = np.mean(np.abs(pls.coef_), axis=1)
+            else:
+                weights = np.abs(pls.coef_).flatten()
+                
+        elif algorithm.lower() == "svm":
+            clf = SVC(kernel='linear')
+            Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
+            clf.fit(Y_features, Y_target_1d)
+            pca = PCA(n_components=2)
+            scores = pca.fit_transform(Y_features)
+            
+            if clf.coef_.ndim > 1:
+                weights = np.mean(np.abs(clf.coef_), axis=0)
+            else:
+                weights = np.abs(clf.coef_).flatten()
+                
+        elif algorithm.lower() in ["random_forest", "rf", "random forest"]:
+            clf = RandomForestClassifier(n_estimators=100)
+            Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
+            clf.fit(Y_features, Y_target_1d)
+            pca = PCA(n_components=2)
+            scores = pca.fit_transform(Y_features)
+            weights = clf.feature_importances_
+            
         else:
-            loadings = np.abs(pls.coef_).flatten()
+            return {"error": f"Algoritmo no soportado: {algorithm}"}
             
         scores_grouped = {}
         for i, grp in enumerate(labels_raw):
@@ -876,13 +997,13 @@ async def calculate_plsda(data: PlsdaRequest):
             scores_grouped[grp].append({
                 "name": clean_sample_name(names[i]),
                 "scientific_name": clean_sample_name(names[i]),  # Sin HTML; frontend formatea
-                "lv1": float(scores[i, 0]) if n_comps > 0 else 0.0,
-                "lv2": float(scores[i, 1]) if n_comps > 1 else 0.0
+                "lv1": float(scores[i, 0]) if scores.shape[1] > 0 else 0.0,
+                "lv2": float(scores[i, 1]) if scores.shape[1] > 1 else 0.0
             })
             
         return {
             "scores": scores_grouped,
-            "vip": {"x": x_ref.tolist(), "y": loadings.tolist()}
+            "weights": {"x": x_ref.tolist(), "y": weights.tolist()}
         }
     except Exception as e:
         import traceback
@@ -893,24 +1014,41 @@ async def calculate_plsda(data: PlsdaRequest):
         )
 
 @app.post("/api/predict")
-async def predict_plsda(data: PredictRequest):
+async def predict_plsda(
+    train_files: List[UploadFile] = File(...),
+    train_labels: List[str] = Form(...),
+    test_files: List[UploadFile] = File(...),
+    n_components: int = Form(...)
+):
     try:
         import traceback
-        if len(data.train_spectra) < 3: return {"error": "Se requieren al menos 3 espectros de entrenamiento."}
-        if len(data.test_spectra) < 1: return {"error": "No hay espectros para predecir."}
+        if len(train_files) < 3: return {"error": "Se requieren al menos 3 espectros de entrenamiento."}
+        if len(test_files) < 1: return {"error": "No hay espectros para predecir."}
         
-        labels_raw = [s.label for s in data.train_spectra]
+        raw_train = []
+        for file, label in zip(train_files, train_labels):
+            content = await file.read()
+            x, y = parse_raw_spectroscopy_file(content, file.filename)
+            raw_train.append({"x": x, "y": y, "name": file.filename, "label": label})
+            
+        raw_test = []
+        for file in test_files:
+            content = await file.read()
+            x, y = parse_raw_spectroscopy_file(content, file.filename)
+            raw_test.append({"x": x, "y": y, "name": file.filename, "label": ""})
+            
+        all_spectra = raw_train + raw_test
+        Y_all, _, _, labels_all = align_spectra(all_spectra)
+        
+        labels_raw = [s['label'] for s in raw_train]
         le = LabelBinarizer()
         Y_target = le.fit_transform(labels_raw)
         
-        all_spectra = data.train_spectra + data.test_spectra
-        Y_all, _ = build_symmetric_matrix(all_spectra)
-        
-        n_train = len(data.train_spectra)
+        n_train = len(raw_train)
         Y_features_train = Y_all[:n_train]
         Y_features_test = Y_all[n_train:]
         
-        n_comps = max(1, min(data.n_components, Y_features_train.shape[0]-1))
+        n_comps = max(1, min(n_components, Y_features_train.shape[0]-1))
         pls = PLSRegression(n_components=n_comps)
         pls.fit(Y_features_train, Y_target)
         
@@ -924,7 +1062,7 @@ async def predict_plsda(data: PredictRequest):
             predictions = le.classes_[pred_indices]
         else:
             predictions = [le.classes_[0]] * len(Y_pred)
-        # Parche autonómico aplicado para prevenir AttributeError: 'list' object has no attribute 'tolist'
+            
         res_data = predictions.tolist() if hasattr(predictions, 'tolist') else list(predictions)
         return {"predictions": res_data}
     except Exception as e:
