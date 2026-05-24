@@ -996,39 +996,28 @@ async def calculate_pls_da(payload: PLSDAPayload):
             headers={"Access-Control-Allow-Origin": "*"}
         )
 
+class PredictPayload(BaseModel):
+    train_spectra: List[SpectrumItem]
+    test_spectra: List[SpectrumItem]
+    n_components: int = 2
+    algorithm: str = "pls_da"
+
 @app.post("/api/predict")
-async def predict_plsda(
-    train_files: List[UploadFile] = File(...),
-    train_labels: List[str] = Form(...),
-    test_files: List[UploadFile] = File(...),
-    n_components: int = Form(...)
-):
+async def predict_plsda(payload: PredictPayload):
     try:
         import traceback
-        if len(train_files) < 3: return {"error": "Se requieren al menos 3 espectros de entrenamiento."}
-        if len(test_files) < 1: return {"error": "No hay espectros para predecir."}
+        if len(payload.train_spectra) < 3: return JSONResponse(status_code=400, content={"detail": "Se requieren al menos 3 espectros de entrenamiento."})
+        if len(payload.test_spectra) < 1: return JSONResponse(status_code=400, content={"detail": "No hay espectros para predecir."})
         
         raw_train = []
-        for file, label in zip(train_files, train_labels):
-            try:
-                content = await file.read()
-                x, y = parse_raw_spectroscopy_file(content, file.filename)
-                raw_train.append({"wavenumbers": x.tolist(), "absorbances": y.tolist(), "label": label})
-            except Exception as e:
-                print(f"Error parseando test {file.filename}: {e}")
-                continue
+        for s in payload.train_spectra:
+            raw_train.append({"wavenumbers": s.x, "absorbances": s.y, "label": s.label})
             
         raw_test = []
         test_names_valid = []
-        for file in test_files:
-            try:
-                content = await file.read()
-                x, y = parse_raw_spectroscopy_file(content, file.filename)
-                raw_test.append({"wavenumbers": x.tolist(), "absorbances": y.tolist(), "label": ""})
-                test_names_valid.append(file.filename)
-            except Exception as e:
-                print(f"Error parseando test {file.filename}: {e}")
-                continue
+        for s in payload.test_spectra:
+            raw_test.append({"wavenumbers": s.x, "absorbances": s.y, "label": ""})
+            test_names_valid.append(s.name)
             
         all_spectra = raw_train + raw_test
         Y_all, labels_all = procesar_lote_masivo(all_spectra)
@@ -1059,8 +1048,8 @@ async def predict_plsda(
         # Reconstruir la lista de predicciones considerando los archivos fallidos
         final_predictions = []
         pred_idx = 0
-        for file in test_files:
-            if file.filename in test_names_valid:
+        for s in payload.test_spectra:
+            if s.name in test_names_valid:
                 final_predictions.append(predictions[pred_idx])
                 pred_idx += 1
             else:

@@ -1579,29 +1579,71 @@
         if(!predictSet.length) return alert("Sube muestras ciegas para predecir.");
         showLoader();
         try {
-            const formData = new FormData();
-            // Sanitización estricta antes de empaquetar
-            trainingSet = trainingSet.filter(s => s && s.file && s.label);
-            trainingSet.forEach(s => {
-                formData.append('train_files', s.file);
-                formData.append('train_labels', s.label);
-            });
-            
-            predictSet = predictSet.filter(s => s && s.file);
-            predictSet.forEach(s => {
-                formData.append('test_files', s.file);
-            });
-            formData.append('n_components', document.getElementById('pls-comps').value || 2);
-            
+            const trainValid = trainingSet.filter(item => item !== undefined && item !== null && item.file);
+            let trainData = await Promise.all(trainValid.map(async item => {
+                let datosX = item.x || item.wavenumbers || (item.file && item.file.data ? (item.file.data.x || item.file.data.wavenumbers) : null);
+                let datosY = item.y || item.absorbances || (item.file && item.file.data ? (item.file.data.y || item.file.data.absorbances) : null);
+                if (!datosX || !datosY || datosX.length === 0) {
+                    try {
+                        const text = await item.file.text();
+                        const lineas = text.split('\n');
+                        let wv = [], abs = [];
+                        for (let i = 1; i < lineas.length; i++) {
+                            let cols = lineas[i].split(/[,;]/);
+                            if (cols.length >= 2) {
+                                let vx = parseFloat(cols[0]);
+                                let vy = parseFloat(cols[1]);
+                                if (!isNaN(vx) && !isNaN(vy)) { wv.push(vx); abs.push(vy); }
+                            }
+                        }
+                        datosX = wv; datosY = abs;
+                    } catch(e) { datosX = []; datosY = []; }
+                }
+                return { name: (item.file ? item.file.name : null) || item.name || "desconocido.csv", label: item.label || item.clase || "sin_etiqueta", x: datosX || [], y: datosY || [] };
+            }));
+            const payloadTrain = trainData.filter(m => m.x && m.x.length > 0);
+
+            const testValid = predictSet.filter(item => item !== undefined && item !== null && item.file);
+            let testData = await Promise.all(testValid.map(async item => {
+                let datosX = item.x || item.wavenumbers || (item.file && item.file.data ? (item.file.data.x || item.file.data.wavenumbers) : null);
+                let datosY = item.y || item.absorbances || (item.file && item.file.data ? (item.file.data.y || item.file.data.absorbances) : null);
+                if (!datosX || !datosY || datosX.length === 0) {
+                    try {
+                        const text = await item.file.text();
+                        const lineas = text.split('\n');
+                        let wv = [], abs = [];
+                        for (let i = 1; i < lineas.length; i++) {
+                            let cols = lineas[i].split(/[,;]/);
+                            if (cols.length >= 2) {
+                                let vx = parseFloat(cols[0]);
+                                let vy = parseFloat(cols[1]);
+                                if (!isNaN(vx) && !isNaN(vy)) { wv.push(vx); abs.push(vy); }
+                            }
+                        }
+                        datosX = wv; datosY = abs;
+                    } catch(e) { datosX = []; datosY = []; }
+                }
+                return { name: (item.file ? item.file.name : null) || item.name || "desconocido.csv", label: item.label || item.clase || "sin_etiqueta", x: datosX || [], y: datosY || [] };
+            }));
+            const payloadTest = testData.filter(m => m.x && m.x.length > 0);
+
+            const payload = {
+                train_spectra: payloadTrain,
+                test_spectra: payloadTest,
+                n_components: parseInt(document.getElementById('pls-comps').value) || 2,
+                algorithm: "pls_da"
+            };
+
             const response = await fetch(`${API_BASE_URL}/api/predict`, {
                 method: 'POST',
-                body: formData
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
             
             if(!response.ok) {
                 try {
                     const errData = await response.json();
-                    throw new Error(errData.detail || `HTTP ${response.status}`);
+                    throw new Error(errData.detail || errData.error || `HTTP ${response.status}`);
                 } catch(parseErr) {
                     throw new Error(`HTTP ${response.status}`);
                 }
@@ -1616,11 +1658,11 @@
                 data.predictions.forEach((pred, i) => { if(predictSet[i]) predictSet[i].prediction = pred; });
                 renderPredictResults();
             }
-            hideLoader();
         } catch(e) {
-            hideLoader();
             console.error("Detalle del error en JS:", e);
             alert("Error del Servidor: " + e.message);
+        } finally {
+            hideLoader();
         }
     }
 
