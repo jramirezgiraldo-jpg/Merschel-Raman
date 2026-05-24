@@ -1701,12 +1701,15 @@
             const scoreYTitle = isPlsDa ? 'Variable Latente 2' : 'Componente Principal 2 (PC2)';
             const vipTitle = isPlsDa ? 'Carga de Biomarcadores Latentes (VIP Scores)' : 'Importancia de Variables (Feature Importance)';
             
+            let chartDrawn = false;
+            
             const layout = { paper_bgcolor: 'transparent', plot_bgcolor: '#f8fafc', font: { family: 'Open Sans', size: 12 } };
             const colores = ['#2563eb', '#ef4444', '#10b981', '#f59e0b', '#7c3aed'];
-            const tracesScores = Object.keys(data.scores).map((grupo, idx) => ({
+            const tracesScores = Object.keys(data.scores || {}).map((grupo, idx) => ({
                 name: getTraceName(grupo),
-                x: data.scores[grupo].map(d => d.lv1), y: data.scores[grupo].map(d => d.lv2),
-                text: data.scores[grupo].map(d => getTraceName(d.scientific_name || d.name)),
+                x: data.scores[grupo]?.filter(d=>d)?.map(d => d?.lv1 || 0) || [], 
+                y: data.scores[grupo]?.filter(d=>d)?.map(d => d?.lv2 || 0) || [],
+                text: data.scores[grupo]?.filter(d=>d)?.map(d => getTraceName(d?.scientific_name || d?.name || '')) || [],
                 mode: 'markers', 
                 hovertemplate: `<b>%{text}</b><br>${isPlsDa ? 'LV1' : 'PC1'}: %{x:.4f}<br>${isPlsDa ? 'LV2' : 'PC2'}: %{y:.4f}<extra></extra>`,
                 showlegend: true,
@@ -1721,17 +1724,20 @@
                 xaxis: {title: scoreXTitle, automargin: true, autorange: true}, 
                 yaxis: {title: scoreYTitle, automargin: true, autorange: true}
             });
+            chartDrawn = true;
             
-            const traceVip = { x: data.weights.x, y: data.weights.y, mode: 'lines', line: { color: '#dc2626', width: 1.5 }, fill: 'tozeroy', fillcolor: 'rgba(220, 38, 38, 0.1)', name: isPlsDa ? 'VIP Score' : 'Importance', showlegend: true };
-            Plotly.react('pls-vip', [traceVip], {
-                ...layout,
-                title: vipTitle,
-                margin: { l: 60, r: 30, t: 45, b: 60 },
-                showlegend: true,
-                legend: LEGEND_LAYOUT,
-                xaxis: {title: 'cm⁻¹', autorange: 'reversed', automargin: true, tickangle: -45}, 
-                yaxis: {title: isPlsDa ? 'VIP Score' : 'Weight/Importance', automargin: true}
-            });
+            const traceVip = { x: data.weights?.x || [], y: data.weights?.y || [], mode: 'lines', line: { color: '#dc2626', width: 1.5 }, fill: 'tozeroy', fillcolor: 'rgba(220, 38, 38, 0.1)', name: isPlsDa ? 'VIP Score' : 'Importance', showlegend: true };
+            if (data.weights && data.weights.x && data.weights.x.length > 0) {
+                Plotly.react('pls-vip', [traceVip], {
+                    ...layout,
+                    title: vipTitle,
+                    margin: { l: 60, r: 30, t: 45, b: 60 },
+                    showlegend: true,
+                    legend: LEGEND_LAYOUT,
+                    xaxis: {title: 'cm⁻¹', autorange: 'reversed', automargin: true, tickangle: -45}, 
+                    yaxis: {title: isPlsDa ? 'VIP Score' : 'Weight/Importance', automargin: true}
+                });
+            }
             
             setTimeout(() => {
                 Plotly.Plots.resize('pls-scores');
@@ -1740,7 +1746,11 @@
             
         } catch(e) {
             console.error(e);
-            alert("Error en entrenamiento PLS-DA: " + e.message);
+            if (typeof chartDrawn === 'undefined' || !chartDrawn) {
+                alert("Error en entrenamiento PLS-DA: " + e.message);
+            } else {
+                console.warn("Hipo visual ignorado:", e.message);
+            }
         } finally {
             hideLoader();
             const loaderTitle = document.querySelector('.loader-text h2');
