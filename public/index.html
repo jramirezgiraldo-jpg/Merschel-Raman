@@ -494,8 +494,17 @@
                         <b>■ Gráfico de Scores (LV1 vs LV2):</b> Proyección espacial multidimensional de las muestras espectrales en las primeras Variables Latentes. Permite visualizar la separación fenotípica real y el agrupamiento clonal de las especies hídricas.<br><br>
                         <b>■ Carga de Biomarcadores Latentes (VIP Score):</b> Gráfico de Importancia de la Variable en la Proyección. Los picos que superan el umbral crítico de > 1.0 identifican formalmente los números de onda de los biomarcadores macromoleculares (Amidas, lípidos o carbohidratos constitutivos de las cubiertas de los parásitos) responsables de la discriminación estadística del modelo.
                     </div>
-                    <div id="pls-scores" style="flex:1; min-height:350px; border:1px solid #e2e8f0; border-radius:6px; box-sizing:border-box;"></div>
-                    <div id="pls-vip" style="flex:1; min-height:350px; border:1px solid #e2e8f0; border-radius:6px; box-sizing:border-box;"></div>
+                    
+                    <div id="plotContainer" style="display:flex; flex-direction:row; width:100%; gap:10px;">
+                        <div id="pls-scores" style="flex:1; min-height:350px; border:1px solid #e2e8f0; border-radius:6px; box-sizing:border-box;"></div>
+                        <div id="pls-vip" style="flex:1; min-height:350px; border:1px solid #e2e8f0; border-radius:6px; box-sizing:border-box;"></div>
+                    </div>
+                    
+                    <div id="infoContainer" style="display:none; flex:1; min-height:350px; border:1px solid #e2e8f0; border-radius:6px; padding:20px; box-sizing:border-box; background-color:#f8fafc; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+                        <svg style="width:48px;height:48px;color:#64748b;margin-bottom:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <h3 style="color:#1e293b; margin-bottom:12px; font-size:1.1rem;">Análisis Multivariante Directo</h3>
+                        <p id="infoText" style="color:#475569; font-size:0.9rem; max-width:600px; line-height:1.5;">El algoritmo está procesando los espectros en el espacio hiperdimensional original de 1550 variables espectrales (sin reducción a componentes principales). No existe una proyección bidimensional (2D) disponible para la visualización del límite de decisión en esta configuración hiperespacial.</p>
+                    </div>
                 </div>
 
                 <!-- Panel: Muestra Ciega -->
@@ -1812,6 +1821,15 @@
             }
             
             const isPlsDa = algorithm.toLowerCase() === 'pls-da' || algorithm.toLowerCase() === 'pls_da';
+            
+            if (isPlsDa) {
+                document.getElementById('plotContainer').style.display = 'flex';
+                document.getElementById('infoContainer').style.display = 'none';
+            } else {
+                document.getElementById('plotContainer').style.display = 'none';
+                document.getElementById('infoContainer').style.display = 'flex';
+            }
+            
             const scoreXTitle = isPlsDa ? 'Variable Latente 1' : 'Componente Principal 1 (PC1)';
             const scoreYTitle = isPlsDa ? 'Variable Latente 2' : 'Componente Principal 2 (PC2)';
             const vipTitle = isPlsDa ? 'Carga de Biomarcadores Latentes (VIP Scores)' : 'Importancia de Variables (Feature Importance)';
