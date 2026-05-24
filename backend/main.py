@@ -916,6 +916,9 @@ class PLSDAPayload(BaseModel):
 @app.post("/api/pls_da")
 async def calculate_pls_da(payload: PLSDAPayload):
     try:
+        n_components = int(payload.n_components)
+        algorithm = payload.algorithm
+        
         if len(payload.spectra) < 3: return JSONResponse(status_code=400, content={"detail": "Se requieren al menos 3 espectros para entrenar."})
         
         espectros_payload = []
@@ -934,9 +937,9 @@ async def calculate_pls_da(payload: PLSDAPayload):
         le = LabelBinarizer()
         Y_target = le.fit_transform(labels_raw)
         
-        n_comps = max(1, min(payload.n_components, Y_features.shape[0]-1))
+        n_comps = max(1, min(n_components, Y_features.shape[0]-1))
         
-        if payload.algorithm.lower() in ["pls_da", "pls-da"]:
+        if algorithm.lower() in ["pls_da", "pls-da"]:
             pls = PLSRegression(n_components=n_comps)
             pls.fit(Y_features, Y_target)
             scores = pls.x_scores_
@@ -946,11 +949,11 @@ async def calculate_pls_da(payload: PLSDAPayload):
             else:
                 weights = np.abs(pls.coef_).flatten()
                 
-        elif payload.algorithm.lower() == "svm":
+        elif algorithm.lower() == "svm":
             clf = SVC(kernel='linear')
             Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
             clf.fit(Y_features, Y_target_1d)
-            pca = PCA(n_components=payload.n_components)
+            pca = PCA(n_components=n_components)
             scores = pca.fit_transform(Y_features)
             
             if clf.coef_.ndim > 1:
@@ -958,7 +961,7 @@ async def calculate_pls_da(payload: PLSDAPayload):
             else:
                 weights = np.abs(clf.coef_).flatten()
                 
-        elif payload.algorithm.lower() in ["random_forest", "rf", "random forest"]:
+        elif algorithm.lower() in ["random_forest", "rf", "random forest"]:
             clf = RandomForestClassifier(n_estimators=100)
             Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
             clf.fit(Y_features, Y_target_1d)
@@ -967,7 +970,7 @@ async def calculate_pls_da(payload: PLSDAPayload):
             weights = clf.feature_importances_
             
         else:
-            return {"error": f"Algoritmo no soportado: {payload.algorithm}"}
+            return {"error": f"Algoritmo no soportado: {algorithm}"}
             
         # Normalización Z-Score de las Variables Latentes para evitar el solapamiento visual
         if scores.shape[0] > 1:
@@ -1005,6 +1008,7 @@ class PredictPayload(BaseModel):
 @app.post("/api/predict")
 async def predict_plsda(payload: PredictPayload):
     try:
+        n_components = int(payload.n_components)
         import traceback
         if len(payload.train_spectra) < 3: return JSONResponse(status_code=400, content={"detail": "Se requieren al menos 3 espectros de entrenamiento."})
         if len(payload.test_spectra) < 1: return JSONResponse(status_code=400, content={"detail": "No hay espectros para predecir."})
