@@ -915,6 +915,36 @@ class SpectrumItem(BaseModel):
     y: List[float]
     label: str = ""
 
+class PreprocessPayload(BaseModel):
+    spectra: List[SpectrumItem]
+
+@app.post("/api/preprocessed_data")
+async def get_preprocessed_data(payload: PreprocessPayload):
+    try:
+        espectros_payload = []
+        for s in payload.spectra:
+            espectros_payload.append({
+                "wavenumbers": s.x,
+                "absorbances": s.y,
+                "label": s.label or s.name
+            })
+        if not espectros_payload:
+            return {"error": "No data"}
+        X_deriv, labels = aplicar_quimiometria(espectros_payload)
+        x_ref = np.linspace(900.0, 4000.0, 1550)
+        
+        result = []
+        for i in range(X_deriv.shape[0]):
+            result.append({
+                "name": labels[i],
+                "x": x_ref.tolist(),
+                "y": X_deriv[i].tolist()
+            })
+        return {"processed": result}
+    except Exception as e:
+        import traceback
+        return JSONResponse(status_code=400, content={"detail": f"Error: {str(e)}", "trace": traceback.format_exc()})
+
 class PLSDAPayload(BaseModel):
     spectra: List[SpectrumItem]
     n_components: int = 5
