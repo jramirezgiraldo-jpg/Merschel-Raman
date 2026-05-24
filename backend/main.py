@@ -89,7 +89,7 @@ def parse_raw_spectroscopy_file(file_content: bytes, filename: str):
     df = df.sort_values(by='Wavenumber', ascending=True).reset_index(drop=True)
     return df['Wavenumber'].values, df['Absorbance'].values
 
-def procesar_lote_masivo(espectros_json):
+def aplicar_quimiometria(espectros_json):
     """
     Procesador altamente eficiente mediante operaciones vectorizadas.
     Usa pre-asignación de memoria para manejar miles de espectros.
@@ -938,7 +938,7 @@ async def calculate_pls_da(payload: PLSDAPayload):
             })
             names.append(s.name)
             
-        Y_features, labels_raw = procesar_lote_masivo(espectros_payload)
+        Y_features, labels_raw = aplicar_quimiometria(espectros_payload)
         x_ref = np.linspace(900.0, 4000.0, 1550)
         
         le = LabelBinarizer()
@@ -1031,7 +1031,7 @@ async def predict_plsda(payload: PredictPayload):
             test_names_valid.append(s.name)
             
         all_spectra = raw_train + raw_test
-        Y_all, labels_all = procesar_lote_masivo(all_spectra)
+        Y_all, labels_all = aplicar_quimiometria(all_spectra)
         
         labels_raw = [s['label'] for s in raw_train]
         le = LabelBinarizer()
@@ -1042,19 +1042,39 @@ async def predict_plsda(payload: PredictPayload):
         Y_features_test = Y_all[n_train:]
         
         n_comps = max(1, min(n_components, Y_features_train.shape[0]-1))
-        pls = PLSRegression(n_components=n_comps)
-        pls.fit(Y_features_train, Y_target)
         
-        Y_pred = pls.predict(Y_features_test)
-        
-        if len(le.classes_) > 2:
-            pred_indices = np.argmax(Y_pred, axis=1)
+        if payload.algorithm.lower() in ["pls_da", "pls-da"]:
+            pls = PLSRegression(n_components=n_comps)
+            pls.fit(Y_features_train, Y_target)
+            Y_pred = pls.predict(Y_features_test)
+            
+            if len(le.classes_) > 2:
+                pred_indices = np.argmax(Y_pred, axis=1)
+                predictions = le.classes_[pred_indices]
+            elif len(le.classes_) == 2:
+                pred_indices = (Y_pred > 0.5).astype(int).flatten()
+                predictions = le.classes_[pred_indices]
+            else:
+                predictions = [le.classes_[0]] * len(Y_pred)
+                
+        elif payload.algorithm.lower() == "svm":
+            model = SVC(kernel='linear')
+            Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
+            model.fit(Y_features_train, Y_target_1d)
+            Y_pred = model.predict(Y_features_test)
+            pred_indices = Y_pred.astype(int).flatten()
             predictions = le.classes_[pred_indices]
-        elif len(le.classes_) == 2:
-            pred_indices = (Y_pred > 0.5).astype(int).flatten()
+            
+        elif payload.algorithm.lower() in ["random_forest", "rf", "random forest"]:
+            model = RandomForestClassifier(n_estimators=100)
+            Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
+            model.fit(Y_features_train, Y_target_1d)
+            Y_pred = model.predict(Y_features_test)
+            pred_indices = Y_pred.astype(int).flatten()
             predictions = le.classes_[pred_indices]
+            
         else:
-            predictions = [le.classes_[0]] * len(Y_pred)
+            return JSONResponse(status_code=400, content={"detail": f"Algoritmo no soportado: {payload.algorithm}"})
             
         # Reconstruir la lista de predicciones considerando los archivos fallidos
         final_predictions = []
