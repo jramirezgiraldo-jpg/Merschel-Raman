@@ -902,31 +902,31 @@ async def calculate_correlation(data: ChemoRequest):
         print(traceback.format_exc())
         return JSONResponse(status_code=500, content={"detail": f"Error matemático Correlación: {str(e)}"})
 
+class SpectrumItem(BaseModel):
+    name: str = ""
+    wavenumbers: List[float]
+    absorbances: List[float]
+    label: str = ""
+
+class PLSDAPayload(BaseModel):
+    spectra: List[SpectrumItem]
+    n_components: int = 2
+    algorithm: str = "pls_da"
+
 @app.post("/api/pls_da")
-async def calculate_pls_da(
-    files: List[UploadFile] = File(...),
-    labels: List[str] = Form(...),
-    n_components: int = Form(2),
-    algorithm: str = Form("pls_da")
-):
+async def calculate_pls_da(payload: PLSDAPayload):
     try:
-        if len(files) < 3: return {"error": "Se requieren al menos 3 espectros para entrenar."}
+        if len(payload.spectra) < 3: return JSONResponse(status_code=400, content={"detail": "Se requieren al menos 3 espectros para entrenar."})
         
         espectros_payload = []
         names = []
-        for file, label in zip(files, labels):
-            try:
-                content = await file.read()
-                x, y = parse_raw_spectroscopy_file(content, file.filename)
-                espectros_payload.append({
-                    "wavenumbers": x.tolist(),
-                    "absorbances": y.tolist(),
-                    "label": label
-                })
-                names.append(file.filename)
-            except Exception as e:
-                print(f"Error parseando {file.filename}: {e}")
-                continue
+        for s in payload.spectra:
+            espectros_payload.append({
+                "wavenumbers": s.wavenumbers,
+                "absorbances": s.absorbances,
+                "label": s.label
+            })
+            names.append(s.name)
             
         Y_features, labels_raw = procesar_lote_masivo(espectros_payload)
         x_ref = np.linspace(900.0, 4000.0, 1550)
@@ -992,8 +992,8 @@ async def calculate_pls_da(
         import traceback
         return JSONResponse(
             status_code=400,
-            content={"error": str(e), "trace": traceback.format_exc()},
-            headers={"Access-Control-Allow-Origin": "https://jramirezgiraldo-jpg.github.io"}
+            content={"detail": f"Error interno PLS-DA: {str(e)}", "trace": traceback.format_exc()},
+            headers={"Access-Control-Allow-Origin": "*"}
         )
 
 @app.post("/api/predict")

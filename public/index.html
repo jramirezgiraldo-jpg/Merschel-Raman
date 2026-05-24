@@ -1631,25 +1631,49 @@
             const selAlgo = document.getElementById('algo-selector');
             const algorithm = selAlgo ? selAlgo.value : 'PLS-DA';
             
-            const formData = new FormData();
             // Sanitización estricta para garantizar simetría X-y
             trainingSet = trainingSet.filter(s => s && s.file && s.label);
-            trainingSet.forEach(s => {
-                formData.append("files", s.file);
-                formData.append("labels", s.label);
-            });
-            formData.append("n_components", document.getElementById('pls-comps').value || 2);
-            formData.append("algorithm", algorithm);
+            
+            // Construir JSON payload
+            const spectraData = await Promise.all(trainingSet.map(async s => {
+                const text = await s.file.text();
+                const lineas = text.split('\n');
+                let wv = [], abs = [];
+                for (let i = 1; i < lineas.length; i++) {
+                    let cols = lineas[i].split(/[,;]/);
+                    if (cols.length >= 2) {
+                        let x = parseFloat(cols[0]);
+                        let y = parseFloat(cols[1]);
+                        if (!isNaN(x) && !isNaN(y)) { wv.push(x); abs.push(y); }
+                    }
+                }
+                return {
+                    name: s.file.name,
+                    wavenumbers: wv,
+                    absorbances: abs,
+                    label: s.label
+                };
+            }));
+
+            const payload = {
+                spectra: spectraData,
+                n_components: parseInt(document.getElementById('pls-comps').value) || 2,
+                algorithm: algorithm
+            };
             
             const response = await fetch(`${API_BASE_URL}/api/pls_da`, {
                 method: 'POST',
-                body: formData
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
-            if(!response.ok) throw new Error("HTTP " + response.status);
+            
+            if(!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.detail || errData.error || "HTTP " + response.status);
+            }
             const data = await response.json();
             
             if (!data || data.error || !data.scores) {
-                hideLoader();
                 const errMsg = data?.error ? data.error : "Estructura de datos inválida enviada por el servidor.";
                 const traceMsg = data?.trace ? `\nTrace:\n${data.trace}` : "";
                 alert("Error Analítico Backend:\n" + errMsg + traceMsg);
@@ -1665,10 +1689,8 @@
             const layout = { paper_bgcolor: 'transparent', plot_bgcolor: '#f8fafc', font: { family: 'Open Sans', size: 12 } };
             const colores = ['#2563eb', '#ef4444', '#10b981', '#f59e0b', '#7c3aed'];
             const tracesScores = Object.keys(data.scores).map((grupo, idx) => ({
-                // getTraceName devuelve el texto limpio devuelto por el backend
                 name: getTraceName(grupo),
                 x: data.scores[grupo].map(d => d.lv1), y: data.scores[grupo].map(d => d.lv2),
-                // text = etiquetas visibles sobre los puntos
                 text: data.scores[grupo].map(d => getTraceName(d.scientific_name || d.name)),
                 mode: 'markers', 
                 hovertemplate: `<b>%{text}</b><br>${isPlsDa ? 'LV1' : 'PC1'}: %{x:.4f}<br>${isPlsDa ? 'LV2' : 'PC2'}: %{y:.4f}<extra></extra>`,
@@ -1700,11 +1722,14 @@
                 Plotly.Plots.resize('pls-scores');
                 Plotly.Plots.resize('pls-vip');
             }, 50);
-            hideLoader();
+            
         } catch(e) {
-            hideLoader();
             console.error(e);
-            alert("Error en entrenamiento PLS-DA.");
+            alert("Error en entrenamiento PLS-DA: " + e.message);
+        } finally {
+            hideLoader();
+            const loaderTitle = document.querySelector('.loader-text h2');
+            if(loaderTitle) loaderTitle.innerText = "Procesando Espectros...";
         }
     }
 
