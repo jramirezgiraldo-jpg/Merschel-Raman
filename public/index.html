@@ -1433,59 +1433,60 @@
     }
 
 // --- NUEVAS FUNCIONES DE ENTRENAMIENTO Y PREDICCIÓN ---
-    function handleTrainingUpload(e) {
+    async function procesarEspectroFrontend(file) {
+        const text = await file.text();
+        const lineas = text.split('\n');
+        let xy = [];
+        for (let i = 0; i < lineas.length; i++) {
+            let cols = lineas[i].split(/[,;]/);
+            if (cols.length >= 2) {
+                let x = parseFloat(cols[0]);
+                let y = parseFloat(cols[1]);
+                if (!isNaN(x) && !isNaN(y)) xy.push({x, y});
+            }
+        }
+        if (xy.length === 0) return file;
+        xy.sort((a,b) => a.x - b.x);
+        let xyU = [xy[0]];
+        for(let i=1; i<xy.length; i++) if(xy[i].x !== xy[i-1].x) xyU.push(xy[i]);
+        
+        let y_interp = [];
+        let malla = [];
+        for(let i=0; i<1550; i++) malla.push(900.0 + i*(3100.0/1549.0));
+        
+        malla.forEach(mx => {
+            if(mx <= xyU[0].x) { y_interp.push(xyU[0].y); return; }
+            if(mx >= xyU[xyU.length-1].x) { y_interp.push(xyU[xyU.length-1].y); return; }
+            let idx = xyU.findIndex(p => p.x > mx);
+            if (idx === -1) idx = xyU.length - 1;
+            let p1 = xyU[idx-1], p2 = xyU[idx];
+            let slope = (p2.y - p1.y)/(p2.x - p1.x);
+            y_interp.push(p1.y + slope*(mx - p1.x));
+        });
+        
+        let mean = y_interp.reduce((a,b)=>a+b,0)/1550;
+        let std = Math.sqrt(y_interp.map(y=>Math.pow(y-mean,2)).reduce((a,b)=>a+b,0)/1550) + 1e-8;
+        let y_snv = y_interp.map(y => (y-mean)/std);
+        
+        let csvStr = "Wavenumber,Absorbance\n";
+        for(let i=0; i<1550; i++) csvStr += `${malla[i]},${y_snv[i]}\n`;
+        
+        return new File([csvStr], file.name, {type: "text/csv"});
+    }
+
+    async function handleTrainingUpload(e) {
         const files = Array.from(e.target.files); if(!files.length) return;
         
-        Promise.all(files.map(f => new Promise(resolve => {
-            const r = new FileReader();
-            r.onload = ev => {
-                let text = ev.target.result;
-                let lineas = text.split('\n');
-                
-                // Localiza tu bucle de lectura de líneas del CSV
-                let ondas = [];
-                let absorbancias = [];
-
-                // Escáner dinámico para saltar las filas de metadatos de texto
-                let inicioDatos = 0;
-                for (let i = 0; i < lineas.length; i++) {
-                    if (!isNaN(parseFloat(lineas[i].split(',')[0]))) {
-                        inicioDatos = i;
-                        break;
-                    }
-                }
-
-                for (let i = inicioDatos; i < lineas.length; i++) {
-                    let cols = lineas[i].split(',');
-                    if (cols.length >= 2) {
-                        ondas.push(parseFloat(cols[0]));
-                        absorbancias.push(parseFloat(cols[1]));
-                    }
-                }
-
-                // CAPTURA ESTRICTA DE LA CLASE
-                let claseSeleccionada = document.getElementById("train-class-select").value; 
-                if (claseSeleccionada === 'CUSTOM_INPUT') claseSeleccionada = document.getElementById('etiqueta-manual').value;
-
-                if (!claseSeleccionada || claseSeleccionada.trim() === '') {
-                    resolve();
-                    return;
-                }
-
-                // El objeto final para este espectro que se enviará a FastAPI DEBE ser:
-                trainingSet.push({
-                    wavenumbers: ondas,
-                    absorbances: absorbancias,
-                    label: claseSeleccionada // PROHIBIDO USAR file.name AQUÍ
-                });
-                
-                resolve();
-            };
-            r.readAsText(f);
-        }))).then(() => {
-            renderDatabaseSummary();
-            e.target.value = '';
-        });
+        for (let f of files) {
+            let claseSeleccionada = document.getElementById("train-class-select").value; 
+            if (claseSeleccionada === 'CUSTOM_INPUT') claseSeleccionada = document.getElementById('etiqueta-manual').value;
+            if (!claseSeleccionada || claseSeleccionada.trim() === '') continue;
+            
+            const processedFile = await procesarEspectroFrontend(f);
+            trainingSet.push({ file: processedFile, label: claseSeleccionada });
+        }
+        renderDatabaseSummary();
+        e.target.value = '';
     }
 
     function renderDatabaseSummary() {
@@ -1513,11 +1514,12 @@
         renderDatabaseSummary();
     };
 
-    function handlePredictUpload(e) {
+    async function handlePredictUpload(e) {
         const files = Array.from(e.target.files); if(!files.length) return;
-        files.forEach(f => {
-            predictSet.push({ file: f, name: f.name, prediction: '\u23F3 Esperando...' });
-        });
+        for (let f of files) {
+            const processedFile = await procesarEspectroFrontend(f);
+            predictSet.push({ file: processedFile, name: processedFile.name, prediction: '\u23F3 Esperando...' });
+        }
         renderPredictResults();
         e.target.value = '';
     }
@@ -1600,7 +1602,7 @@
             formData.append("n_components", document.getElementById('pls-comps').value || 2);
             formData.append("algorithm", algorithm);
             
-            const response = await fetch(`${API_BASE_URL}/api/train`, {
+            const response = await fetch(`${API_BASE_URL}/api/pls_da`, {
                 method: 'POST',
                 body: formData
             });
@@ -1989,32 +1991,5 @@
         }
     }
   </script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const fileInput = document.getElementById('train-file-input');
-        if(fileInput){
-            fileInput.addEventListener('change', function(e) {
-                if(this.files && this.files.length > 0){
-                    const name = this.files[0].name.toLowerCase();
-                    const sel = document.getElementById('train-class-select');
-                    const nameParts = name.replace('.txt','').replace('.csv','').split(/[_.\-\s]/);
-                    let rawLabel = nameParts[0];
-                    if(rawLabel === 'espectro' && nameParts.length > 1) {
-                        rawLabel = nameParts[1];
-                    }
-                    if(rawLabel) {
-                        const guessedLabel = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1);
-                        sel.value = 'CUSTOM_INPUT'; 
-                        document.getElementById('etiqueta-manual').value = guessedLabel;
-                        document.getElementById('etiqueta-manual').style.display = 'block';
-                        sel.dispatchEvent(new Event('change'));
-                    }
-                }
-            });
-        }
-    });
-</script>
-
 </body>
 </html>

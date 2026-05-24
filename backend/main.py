@@ -86,47 +86,36 @@ def parse_raw_spectroscopy_file(file_content: bytes, filename: str):
     df = df.sort_values(by='Wavenumber', ascending=True).reset_index(drop=True)
     return df['Wavenumber'].values, df['Absorbance'].values
 
-def procesar_mallas_y_aplicar_snv(espectros_json):
-    """
-    Normaliza cabeceras, reordena ejes invertidos para evitar NaNs en Scipy,
-    interpola vectorialmente y aplica Standard Normal Variate (SNV).
-    """
-    X_limpio = []
-    y_limpio = []
+def procesar_espectros_produccion(payload):
+    X_list = []
+    y_list = []
+    # Malla fija estrictamente creciente (evita el error de Scipy con ejes descendentes)
+    malla_fija = np.linspace(900.0, 4000.0, 1550)
     
-    # Grilla universal de referencia estrictamente creciente (Requisito de Scipy)
-    malla_referencia = np.linspace(900.0, 4000.0, 1550)
-    
-    for espectro in espectros_json:
-        # Conversión forzada a vectores de punto flotante de alta precisión
-        x_raw = np.array(espectro["wavenumbers"], dtype=float)
-        y_raw = np.array(espectro["absorbances"], dtype=float)
+    for item in payload:
+        # Extraer vectores
+        x_raw = np.array(item["wavenumbers"], dtype=float)
+        y_raw = np.array(item["absorbances"], dtype=float)
         
-        # 1. Corrección geométrica: Ordenar de menor a mayor para romper el bloqueo de interp1d
-        indices_ordenados = np.argsort(x_raw)
-        x_sorted = x_raw[indices_ordenados]
-        y_sorted = y_raw[indices_ordenados]
+        # 1. ORDENAR: Scipy interp1d requiere eje X estrictamente creciente
+        idx_sort = np.argsort(x_raw)
+        x_s, y_s = x_raw[idx_sort], y_raw[idx_sort]
         
-        # 2. Erradicación de duplicados en la malla del equipo de medición
-        x_unique, indices_unicos = np.unique(x_sorted, return_index=True)
-        y_unique = y_sorted[indices_unicos]
+        # 2. ELIMINAR DUPLICADOS: Evita singularidad matemática
+        _, idx_unique = np.unique(x_s, return_index=True)
+        x_u, y_u = x_s[idx_unique], y_s[idx_unique]
         
-        # 3. Interpolación matemática libre de NaNs
-        interpolador = interp1d(x_unique, y_unique, kind='linear', bounds_error=False, fill_value=(y_unique[0], y_unique[-1]))
-        abs_interp = interpolador(malla_referencia)
-        abs_interp = np.nan_to_num(abs_interp, nan=0.0)
+        # 3. INTERPOLACIÓN LINEAL: Mapea a la malla fija (1550 puntos)
+        f = interp1d(x_u, y_u, kind='linear', bounds_error=False, fill_value=(y_u[0], y_u[-1]))
+        y_interp = np.nan_to_num(f(malla_fija), nan=0.0)
         
-        X_limpio.append(abs_interp)
-        # Limpieza estricta de espacios en la etiqueta biológica de la interfaz
-        y_limpio.append(str(espectro["label"]).strip())
+        X_list.append(y_interp)
+        y_list.append(str(item["label"]).strip())
         
-    X_matrix = np.array(X_limpio)
-    
-    # 4. Transformación Quimiométrica SNV: Elimina el esparcimiento físico y desfases de línea base
-    # Crucial para que el clasificador separe T. gondii de G. lamblia por espectrodinamia real
-    X_snv = (X_matrix - np.mean(X_matrix, axis=1, keepdims=True)) / (np.std(X_matrix, axis=1, keepdims=True) + 1e-8)
-    
-    return X_snv, np.array(y_limpio)
+    X = np.array(X_list)
+    # 4. SNV: Corrección de línea base vital para separar T. gondii de G. lamblia
+    X_snv = (X - np.mean(X, axis=1, keepdims=True)) / (np.std(X, axis=1, keepdims=True) + 1e-8)
+    return X_snv, np.array(y_list)
 
 app = FastAPI(title="Hershell-Raman V8.2 API")
 
@@ -921,40 +910,34 @@ async def calculate_correlation(data: ChemoRequest):
         print(traceback.format_exc())
         return JSONResponse(status_code=500, content={"detail": f"Error matemático Correlación: {str(e)}"})
 
-class SpectrumPayload(BaseModel):
-    wavenumbers: List[float]
-    absorbances: List[float]
-    label: str
-
-class TrainPayload(BaseModel):
-    spectra: List[SpectrumPayload]
-    n_components: int = 2
-    algorithm: str = "pls_da"
-
-@app.post("/api/train")
-async def calculate_train(payload: TrainPayload):
+@app.post("/api/pls_da")
+async def calculate_pls_da(
+    files: List[UploadFile] = File(...),
+    labels: List[str] = Form(...),
+    n_components: int = Form(2),
+    algorithm: str = Form("pls_da")
+):
     try:
-        if len(payload.spectra) < 3: return {"error": "Se requieren al menos 3 espectros para entrenar."}
+        if len(files) < 3: return {"error": "Se requieren al menos 3 espectros para entrenar."}
         
-        # Transformar el payload de Pydantic a lista de diccionarios que espera la nueva función
         espectros_payload = []
         names = []
-        for i, spec in enumerate(payload.spectra):
+        for file, label in zip(files, labels):
+            content = await file.read()
+            x, y = parse_raw_spectroscopy_file(content, file.filename)
             espectros_payload.append({
-                "wavenumbers": spec.wavenumbers,
-                "absorbances": spec.absorbances,
-                "label": spec.label
+                "wavenumbers": x.tolist(),
+                "absorbances": y.tolist(),
+                "label": label
             })
-            names.append(f"Sample_{i}") # El código de alineación ya no extrae names, los guardamos aquí
+            names.append(file.filename)
             
-        Y_features, labels_raw = procesar_mallas_y_aplicar_snv(espectros_payload)
+        Y_features, labels_raw = procesar_espectros_produccion(espectros_payload)
         x_ref = np.linspace(900.0, 4000.0, 1550)
         
-        # Binarización One-Hot de etiquetas de texto
         le = LabelBinarizer()
         Y_target = le.fit_transform(labels_raw)
         
-        # Ajuste dinámico de tensores PLS o PCA
         n_comps = max(1, min(n_components, Y_features.shape[0]-1))
         
         if algorithm.lower() in ["pls_da", "pls-da"]:
@@ -996,7 +979,7 @@ async def calculate_train(payload: TrainPayload):
                 scores_grouped[grp] = []
             scores_grouped[grp].append({
                 "name": clean_sample_name(names[i]),
-                "scientific_name": clean_sample_name(names[i]),  # Sin HTML; frontend formatea
+                "scientific_name": clean_sample_name(names[i]),
                 "lv1": float(scores[i, 0]) if scores.shape[1] > 0 else 0.0,
                 "lv2": float(scores[i, 1]) if scores.shape[1] > 1 else 0.0
             })
@@ -1029,16 +1012,16 @@ async def predict_plsda(
         for file, label in zip(train_files, train_labels):
             content = await file.read()
             x, y = parse_raw_spectroscopy_file(content, file.filename)
-            raw_train.append({"x": x, "y": y, "name": file.filename, "label": label})
+            raw_train.append({"wavenumbers": x.tolist(), "absorbances": y.tolist(), "label": label})
             
         raw_test = []
         for file in test_files:
             content = await file.read()
             x, y = parse_raw_spectroscopy_file(content, file.filename)
-            raw_test.append({"x": x, "y": y, "name": file.filename, "label": ""})
+            raw_test.append({"wavenumbers": x.tolist(), "absorbances": y.tolist(), "label": ""})
             
         all_spectra = raw_train + raw_test
-        Y_all, _, _, labels_all = align_spectra(all_spectra)
+        Y_all, labels_all = procesar_espectros_produccion(all_spectra)
         
         labels_raw = [s['label'] for s in raw_train]
         le = LabelBinarizer()
