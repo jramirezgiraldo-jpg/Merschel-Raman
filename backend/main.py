@@ -904,8 +904,8 @@ async def calculate_correlation(data: ChemoRequest):
 
 class SpectrumItem(BaseModel):
     name: str = ""
-    wavenumbers: List[float]
-    absorbances: List[float]
+    x: List[float]
+    y: List[float]
     label: str = ""
 
 class PLSDAPayload(BaseModel):
@@ -922,8 +922,8 @@ async def calculate_pls_da(payload: PLSDAPayload):
         names = []
         for s in payload.spectra:
             espectros_payload.append({
-                "wavenumbers": s.wavenumbers,
-                "absorbances": s.absorbances,
+                "wavenumbers": s.x,
+                "absorbances": s.y,
                 "label": s.label
             })
             names.append(s.name)
