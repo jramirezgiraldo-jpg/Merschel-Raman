@@ -86,36 +86,28 @@ def parse_raw_spectroscopy_file(file_content: bytes, filename: str):
     df = df.sort_values(by='Wavenumber', ascending=True).reset_index(drop=True)
     return df['Wavenumber'].values, df['Absorbance'].values
 
-def procesar_espectros_produccion(payload):
-    X_list = []
-    y_list = []
-    # Malla fija estrictamente creciente (evita el error de Scipy con ejes descendentes)
+def procesar_lote_masivo(espectros_json):
+    """
+    Procesador altamente eficiente mediante operaciones vectorizadas.
+    Usa pre-asignación de memoria para manejar miles de espectros.
+    """
+    n_espectros = len(espectros_json)
     malla_fija = np.linspace(900.0, 4000.0, 1550)
+    X_mat = np.zeros((n_espectros, 1550))
+    y_list = []
     
-    for item in payload:
-        # Extraer vectores
-        x_raw = np.array(item["wavenumbers"], dtype=float)
-        y_raw = np.array(item["absorbances"], dtype=float)
+    for i, item in enumerate(espectros_json):
+        x_raw, y_raw = np.array(item["wavenumbers"], dtype=float), np.array(item["absorbances"], dtype=float)
         
-        # 1. ORDENAR: Scipy interp1d requiere eje X estrictamente creciente
-        idx_sort = np.argsort(x_raw)
-        x_s, y_s = x_raw[idx_sort], y_raw[idx_sort]
-        
-        # 2. ELIMINAR DUPLICADOS: Evita singularidad matemática
-        _, idx_unique = np.unique(x_s, return_index=True)
-        x_u, y_u = x_s[idx_unique], y_s[idx_unique]
-        
-        # 3. INTERPOLACIÓN LINEAL: Mapea a la malla fija (1550 puntos)
-        f = interp1d(x_u, y_u, kind='linear', bounds_error=False, fill_value=(y_u[0], y_u[-1]))
-        y_interp = np.nan_to_num(f(malla_fija), nan=0.0)
-        
-        X_list.append(y_interp)
+        # Alineación matemática (evitando copias innecesarias)
+        idx = np.argsort(x_raw)
+        f = interp1d(x_raw[idx], y_raw[idx], kind='linear', bounds_error=False, fill_value="extrapolate")
+        X_mat[i, :] = np.nan_to_num(f(malla_fija), nan=0.0)
         y_list.append(str(item["label"]).strip())
         
-    X = np.array(X_list)
-    # 4. SNV: Corrección de línea base vital para separar T. gondii de G. lamblia
-    X_snv = (X - np.mean(X, axis=1, keepdims=True)) / (np.std(X, axis=1, keepdims=True) + 1e-8)
-    return X_snv, np.array(y_list)
+    # Normalización SNV vectorizada para todo el conjunto
+    X_mat = (X_mat - X_mat.mean(axis=1, keepdims=True)) / (X_mat.std(axis=1, keepdims=True) + 1e-8)
+    return X_mat, np.array(y_list)
 
 app = FastAPI(title="Hershell-Raman V8.2 API")
 
@@ -932,7 +924,7 @@ async def calculate_pls_da(
             })
             names.append(file.filename)
             
-        Y_features, labels_raw = procesar_espectros_produccion(espectros_payload)
+        Y_features, labels_raw = procesar_lote_masivo(espectros_payload)
         x_ref = np.linspace(900.0, 4000.0, 1550)
         
         le = LabelBinarizer()
@@ -1021,7 +1013,7 @@ async def predict_plsda(
             raw_test.append({"wavenumbers": x.tolist(), "absorbances": y.tolist(), "label": ""})
             
         all_spectra = raw_train + raw_test
-        Y_all, labels_all = procesar_espectros_produccion(all_spectra)
+        Y_all, labels_all = procesar_lote_masivo(all_spectra)
         
         labels_raw = [s['label'] for s in raw_train]
         le = LabelBinarizer()
