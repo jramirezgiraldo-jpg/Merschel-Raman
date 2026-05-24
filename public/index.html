@@ -1427,13 +1427,37 @@
         
         showLoader();
         try {
+            const itemsToProcess = [...trainItems, { ...blindItem, label: "BLIND" }];
+            const payloadSpectra = await Promise.all(itemsToProcess.map(async item => {
+                let datosX = item.x || item.wavenumbers || (item.file && item.file.data ? (item.file.data.x || item.file.data.wavenumbers) : null);
+                let datosY = item.y || item.absorbances || (item.file && item.file.data ? (item.file.data.y || item.file.data.absorbances) : null);
+                
+                if (!datosX || !datosY || datosX.length === 0) {
+                    try {
+                        const text = await item.file.text();
+                        const lineas = text.split('\n');
+                        let wv = [], abs = [];
+                        for (let i = 1; i < lineas.length; i++) {
+                            let cols = lineas[i].split(/[,;]/);
+                            if (cols.length >= 2) {
+                                let vx = parseFloat(cols[0]);
+                                let vy = parseFloat(cols[1]);
+                                if (!isNaN(vx) && !isNaN(vy)) { wv.push(vx); abs.push(vy); }
+                            }
+                        }
+                        datosX = wv; datosY = abs;
+                    } catch(e) { datosX = []; datosY = []; }
+                }
+                return {
+                    name: (item.file ? item.file.name : null) || item.name || "desconocido.csv",
+                    label: item.label || item.clase || "sin_etiqueta",
+                    x: datosX || [],
+                    y: datosY || []
+                };
+            }));
+            
             const payload = {
-                spectra: [...trainItems, { ...blindItem, label: "BLIND" }].map(s => ({
-                    name: s.name,
-                    label: s.label || "BLIND",
-                    x: s.x || s.wavenumbers || (s.file && s.file.data ? s.file.data.x || s.file.data.wavenumbers : []),
-                    y: s.y || s.absorbances || (s.file && s.file.data ? s.file.data.y || s.file.data.absorbances : [])
-                }))
+                spectra: payloadSpectra.filter(s => s.x && s.x.length > 0)
             };
             
             const response = await fetch(`${API_BASE_URL}/api/preprocessed_data`, {
