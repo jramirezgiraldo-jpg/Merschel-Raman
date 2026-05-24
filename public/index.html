@@ -1650,6 +1650,8 @@
             }
             
             const data = await response.json();
+            console.log("Resultados:", data);
+            
             if(data.error) {
                 console.error("TRACE DEL BACKEND:\n" + (data.trace || "No trace disponible"));
                 throw new Error(data.error);
@@ -1660,7 +1662,6 @@
             }
         } catch(e) {
             console.error("Detalle del error en JS:", e);
-            alert("Error del Servidor: " + e.message);
         } finally {
             hideLoader();
         }
