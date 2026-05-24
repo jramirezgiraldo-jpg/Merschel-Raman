@@ -15,6 +15,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import re
 import pandas as pd
 from scipy.interpolate import interp1d
+from scipy.signal import find_peaks, savgol_filter
+from scipy.sparse import csc_matrix, eye, diags
+from scipy.sparse.linalg import spsolve
 from joblib import Parallel, delayed
 import hashlib
 import os
@@ -107,7 +110,11 @@ def procesar_lote_masivo(espectros_json):
         
     # Normalización SNV vectorizada para todo el conjunto
     X_mat = (X_mat - X_mat.mean(axis=1, keepdims=True)) / (X_mat.std(axis=1, keepdims=True) + 1e-8)
-    return X_mat, np.array(y_list)
+    
+    # Derivada de Savitzky-Golay
+    X_deriv = savgol_filter(X_mat, window_length=15, polyorder=2, deriv=1, axis=1)
+    
+    return X_deriv, np.array(y_list)
 
 app = FastAPI(title="Hershell-Raman V8.2 API")
 
@@ -910,7 +917,7 @@ class SpectrumItem(BaseModel):
 
 class PLSDAPayload(BaseModel):
     spectra: List[SpectrumItem]
-    n_components: int = 2
+    n_components: int = 5
     algorithm: str = "pls_da"
 
 @app.post("/api/pls_da")
@@ -1002,7 +1009,7 @@ async def calculate_pls_da(payload: PLSDAPayload):
 class PredictPayload(BaseModel):
     train_spectra: List[SpectrumItem]
     test_spectra: List[SpectrumItem]
-    n_components: int = 2
+    n_components: int = 5
     algorithm: str = "pls_da"
 
 @app.post("/api/predict")
