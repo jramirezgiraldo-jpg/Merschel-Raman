@@ -1477,14 +1477,35 @@
     async function handleTrainingUpload(e) {
         const files = Array.from(e.target.files); if(!files.length) return;
         
-        for (let f of files) {
-            let claseSeleccionada = document.getElementById("train-class-select").value; 
-            if (claseSeleccionada === 'CUSTOM_INPUT') claseSeleccionada = document.getElementById('etiqueta-manual').value;
-            if (!claseSeleccionada || claseSeleccionada.trim() === '') continue;
-            
-            const processedFile = await procesarEspectroFrontend(f);
-            trainingSet.push({ file: processedFile, label: claseSeleccionada });
+        let claseSeleccionada = document.getElementById("train-class-select").value; 
+        if (claseSeleccionada === 'CUSTOM_INPUT') claseSeleccionada = document.getElementById('etiqueta-manual').value;
+        if (!claseSeleccionada || claseSeleccionada.trim() === '') {
+            e.target.value = '';
+            return;
         }
+
+        showLoader();
+        const loaderTitle = document.querySelector('.loader-text h2');
+        const BATCH_SIZE = 10;
+        
+        for (let i = 0; i < files.length; i += BATCH_SIZE) {
+            if (loaderTitle) loaderTitle.innerText = `Procesando lote ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(files.length/BATCH_SIZE)}...`;
+            const batch = files.slice(i, i + BATCH_SIZE);
+            
+            for (let f of batch) {
+                try {
+                    const processedFile = await procesarEspectroFrontend(f);
+                    trainingSet.push({ file: processedFile, label: claseSeleccionada });
+                } catch(err) {
+                    console.error("Error", f.name);
+                }
+            }
+            // Yield UI thread
+            await new Promise(r => setTimeout(r, 20));
+        }
+        
+        if (loaderTitle) loaderTitle.innerText = "Procesando Espectros...";
+        hideLoader();
         renderDatabaseSummary();
         e.target.value = '';
     }
@@ -1516,10 +1537,28 @@
 
     async function handlePredictUpload(e) {
         const files = Array.from(e.target.files); if(!files.length) return;
-        for (let f of files) {
-            const processedFile = await procesarEspectroFrontend(f);
-            predictSet.push({ file: processedFile, name: processedFile.name, prediction: '\u23F3 Esperando...' });
+        
+        showLoader();
+        const loaderTitle = document.querySelector('.loader-text h2');
+        const BATCH_SIZE = 10;
+        
+        for (let i = 0; i < files.length; i += BATCH_SIZE) {
+            if (loaderTitle) loaderTitle.innerText = `Procesando lote ciego ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(files.length/BATCH_SIZE)}...`;
+            const batch = files.slice(i, i + BATCH_SIZE);
+            
+            for (let f of batch) {
+                try {
+                    const processedFile = await procesarEspectroFrontend(f);
+                    predictSet.push({ file: processedFile, name: processedFile.name, prediction: '\u23F3 Esperando...' });
+                } catch(err) {
+                    console.error("Error", f.name);
+                }
+            }
+            await new Promise(r => setTimeout(r, 20));
         }
+        
+        if (loaderTitle) loaderTitle.innerText = "Procesando Espectros...";
+        hideLoader();
         renderPredictResults();
         e.target.value = '';
     }
@@ -1642,8 +1681,8 @@
                 margin: { l: 60, r: 30, t: 45, b: 60 },
                 showlegend: true,
                 legend: LEGEND_LAYOUT,
-                xaxis: {title: scoreXTitle, automargin: true}, 
-                yaxis: {title: scoreYTitle, automargin: true}
+                xaxis: {title: scoreXTitle, automargin: true, autorange: true}, 
+                yaxis: {title: scoreYTitle, automargin: true, autorange: true}
             });
             
             const traceVip = { x: data.weights.x, y: data.weights.y, mode: 'lines', line: { color: '#dc2626', width: 1.5 }, fill: 'tozeroy', fillcolor: 'rgba(220, 38, 38, 0.1)', name: isPlsDa ? 'VIP Score' : 'Importance', showlegend: true };

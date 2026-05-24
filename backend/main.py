@@ -915,14 +915,18 @@ async def calculate_pls_da(
         espectros_payload = []
         names = []
         for file, label in zip(files, labels):
-            content = await file.read()
-            x, y = parse_raw_spectroscopy_file(content, file.filename)
-            espectros_payload.append({
-                "wavenumbers": x.tolist(),
-                "absorbances": y.tolist(),
-                "label": label
-            })
-            names.append(file.filename)
+            try:
+                content = await file.read()
+                x, y = parse_raw_spectroscopy_file(content, file.filename)
+                espectros_payload.append({
+                    "wavenumbers": x.tolist(),
+                    "absorbances": y.tolist(),
+                    "label": label
+                })
+                names.append(file.filename)
+            except Exception as e:
+                print(f"Error parseando {file.filename}: {e}")
+                continue
             
         Y_features, labels_raw = procesar_lote_masivo(espectros_payload)
         x_ref = np.linspace(900.0, 4000.0, 1550)
@@ -965,6 +969,10 @@ async def calculate_pls_da(
         else:
             return {"error": f"Algoritmo no soportado: {algorithm}"}
             
+        # Normalización Z-Score de las Variables Latentes para evitar el solapamiento visual
+        if scores.shape[0] > 1:
+            scores = (scores - np.mean(scores, axis=0)) / (np.std(scores, axis=0) + 1e-8)
+            
         scores_grouped = {}
         for i, grp in enumerate(labels_raw):
             if grp not in scores_grouped:
@@ -1002,15 +1010,25 @@ async def predict_plsda(
         
         raw_train = []
         for file, label in zip(train_files, train_labels):
-            content = await file.read()
-            x, y = parse_raw_spectroscopy_file(content, file.filename)
-            raw_train.append({"wavenumbers": x.tolist(), "absorbances": y.tolist(), "label": label})
+            try:
+                content = await file.read()
+                x, y = parse_raw_spectroscopy_file(content, file.filename)
+                raw_train.append({"wavenumbers": x.tolist(), "absorbances": y.tolist(), "label": label})
+            except Exception as e:
+                print(f"Error parseando test {file.filename}: {e}")
+                continue
             
         raw_test = []
+        test_names_valid = []
         for file in test_files:
-            content = await file.read()
-            x, y = parse_raw_spectroscopy_file(content, file.filename)
-            raw_test.append({"wavenumbers": x.tolist(), "absorbances": y.tolist(), "label": ""})
+            try:
+                content = await file.read()
+                x, y = parse_raw_spectroscopy_file(content, file.filename)
+                raw_test.append({"wavenumbers": x.tolist(), "absorbances": y.tolist(), "label": ""})
+                test_names_valid.append(file.filename)
+            except Exception as e:
+                print(f"Error parseando test {file.filename}: {e}")
+                continue
             
         all_spectra = raw_train + raw_test
         Y_all, labels_all = procesar_lote_masivo(all_spectra)
@@ -1038,7 +1056,17 @@ async def predict_plsda(
         else:
             predictions = [le.classes_[0]] * len(Y_pred)
             
-        res_data = predictions.tolist() if hasattr(predictions, 'tolist') else list(predictions)
+        # Reconstruir la lista de predicciones considerando los archivos fallidos
+        final_predictions = []
+        pred_idx = 0
+        for file in test_files:
+            if file.filename in test_names_valid:
+                final_predictions.append(predictions[pred_idx])
+                pred_idx += 1
+            else:
+                final_predictions.append("Error_Lectura")
+                
+        res_data = final_predictions
         return {"predictions": res_data}
     except Exception as e:
         import traceback
