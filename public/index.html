@@ -13,10 +13,11 @@
   
   <style>
     :root{
-      --bg: #f8fafc;
+      --bg: #f5f5f5;
       --surface: #ffffff;
-      --primary: #2563eb; 
-      --primary-dark: #1e40af;
+      --primary: #4a148c; 
+      --primary-dark: #6a1b9a;
+      --secondary: #00e5ff;
       --text-main: #0f172a;
       --text-muted: #64748b;
       --border: #e2e8f0;
@@ -178,7 +179,7 @@
   <div id="science-tooltip"></div>
 
   <header class="app-header">
-    <div class="brand">Hershell-Raman V8.2</div>
+    <a href="#" class="brand"><img src="assets/logo.png" alt="Hershell-Raman" style="max-height: 50px;" /></a>
     <div class="header-right">
         <div>
             <label style="font-size:0.75rem; margin-right:5px; font-weight:600; color:var(--text-muted);">Archivo:</label>
@@ -1493,8 +1494,8 @@
                 y_avg[j] /= nTrain;
             }
             
-            const traceA = { x: x_ref, y: y_avg, mode: 'lines', name: `Promedio ${className}`, line: { color: '#4f46e5', width: 2 } };
-            const traceB = { x: blindProcessed.x, y: blindProcessed.y, mode: 'lines', name: blindItem.name, line: { color: '#ef4444', width: 2, dash: 'dot' } };
+            const traceA = { x: x_ref, y: y_avg, mode: 'lines', name: `Promedio ${className}`, line: { color: 'var(--primary)', width: 2 } };
+            const traceB = { x: blindProcessed.x, y: blindProcessed.y, mode: 'lines', name: blindItem.name, line: { color: 'var(--secondary)', width: 2, dash: 'dot' } };
             
             const layout = {
                 title: 'Comparación Espectral (SNV + Savitzky-Golay)',
@@ -1867,7 +1868,7 @@
             });
             chartDrawn = true;
             
-            const traceVip = { x: data.weights?.x || [], y: data.weights?.y || [], mode: 'lines', line: { color: '#dc2626', width: 1.5 }, fill: 'tozeroy', fillcolor: 'rgba(220, 38, 38, 0.1)', name: isPlsDa ? 'VIP Score' : 'Importance', showlegend: true };
+            const traceVip = { x: data.weights?.x || [], y: data.weights?.y || [], mode: 'lines', line: { color: 'var(--secondary)', width: 1.5 }, fill: 'tozeroy', fillcolor: 'rgba(0, 229, 255, 0.1)', name: isPlsDa ? 'VIP Score' : 'Importance', showlegend: true };
             if (data.weights && data.weights.x && data.weights.x.length > 0) {
                 Plotly.react('pls-vip', [traceVip], {
                     ...layout,
