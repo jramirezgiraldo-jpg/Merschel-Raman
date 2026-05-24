@@ -980,6 +980,7 @@ async def calculate_pls_da(payload: PLSDAPayload):
             pls = PLSRegression(n_components=n_comps)
             pls.fit(Y_features, Y_target)
             scores = pls.x_scores_
+            plot_type = "Proyección PLS"
             
             if pls.coef_.ndim > 1:
                 weights = np.mean(np.abs(pls.coef_), axis=1)
@@ -992,6 +993,7 @@ async def calculate_pls_da(payload: PLSDAPayload):
             clf.fit(Y_features, Y_target_1d)
             pca = PCA(n_components=n_components)
             scores = pca.fit_transform(Y_features)
+            plot_type = "Proyección PCA"
             
             if clf.coef_.ndim > 1:
                 weights = np.mean(np.abs(clf.coef_), axis=0)
@@ -1005,6 +1007,7 @@ async def calculate_pls_da(payload: PLSDAPayload):
             pca = PCA(n_components=2)
             scores = pca.fit_transform(Y_features)
             weights = clf.feature_importances_
+            plot_type = "Proyección PCA"
             
         else:
             return {"error": f"Algoritmo no soportado: {algorithm}"}
@@ -1026,7 +1029,8 @@ async def calculate_pls_da(payload: PLSDAPayload):
             
         return {
             "scores": scores_grouped,
-            "weights": {"x": x_ref.tolist(), "y": weights.tolist()}
+            "weights": {"x": x_ref.tolist(), "y": weights.tolist()},
+            "plot_type": plot_type
         }
     except Exception as e:
         import traceback

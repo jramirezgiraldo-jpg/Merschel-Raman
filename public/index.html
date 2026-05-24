@@ -1808,12 +1808,20 @@
             }));
             Plotly.react('pls-scores', tracesScores, {
                 ...layout,
-                title: `Espacio de Clasificación (${algorithm})`,
-                margin: { l: 60, r: 30, t: 45, b: 60 },
+                title: `Espacio Base: ${data.plot_type || "Proyección PLS"} | Clasificador Activo: ${algorithm}`,
+                margin: { l: 60, r: 30, t: 45, b: (algorithm !== 'PLS-DA' && algorithm !== 'pls-da' && algorithm !== 'pls_da') ? 80 : 60 },
                 showlegend: true,
                 legend: LEGEND_LAYOUT,
                 xaxis: {title: scoreXTitle, automargin: true, autorange: true}, 
-                yaxis: {title: scoreYTitle, automargin: true, autorange: true}
+                yaxis: {title: scoreYTitle, automargin: true, autorange: true},
+                annotations: (algorithm !== 'PLS-DA' && algorithm !== 'pls-da' && algorithm !== 'pls_da') ? [{
+                    xref: 'paper', yref: 'paper',
+                    x: 0.5, y: -0.25,
+                    xanchor: 'center', yanchor: 'top',
+                    text: 'Nota: El gráfico muestra la distribución multivariante base; el modelo clasifica usando el espectro completo.',
+                    showarrow: false,
+                    font: { size: 10, color: '#64748b' }
+                }] : []
             });
             chartDrawn = true;
             
