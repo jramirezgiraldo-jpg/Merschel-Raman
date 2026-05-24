@@ -934,9 +934,9 @@ async def calculate_pls_da(payload: PLSDAPayload):
         le = LabelBinarizer()
         Y_target = le.fit_transform(labels_raw)
         
-        n_comps = max(1, min(n_components, Y_features.shape[0]-1))
+        n_comps = max(1, min(payload.n_components, Y_features.shape[0]-1))
         
-        if algorithm.lower() in ["pls_da", "pls-da"]:
+        if payload.algorithm.lower() in ["pls_da", "pls-da"]:
             pls = PLSRegression(n_components=n_comps)
             pls.fit(Y_features, Y_target)
             scores = pls.x_scores_
@@ -946,11 +946,11 @@ async def calculate_pls_da(payload: PLSDAPayload):
             else:
                 weights = np.abs(pls.coef_).flatten()
                 
-        elif algorithm.lower() == "svm":
+        elif payload.algorithm.lower() == "svm":
             clf = SVC(kernel='linear')
             Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
             clf.fit(Y_features, Y_target_1d)
-            pca = PCA(n_components=2)
+            pca = PCA(n_components=payload.n_components)
             scores = pca.fit_transform(Y_features)
             
             if clf.coef_.ndim > 1:
@@ -958,7 +958,7 @@ async def calculate_pls_da(payload: PLSDAPayload):
             else:
                 weights = np.abs(clf.coef_).flatten()
                 
-        elif algorithm.lower() in ["random_forest", "rf", "random forest"]:
+        elif payload.algorithm.lower() in ["random_forest", "rf", "random forest"]:
             clf = RandomForestClassifier(n_estimators=100)
             Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
             clf.fit(Y_features, Y_target_1d)
@@ -967,7 +967,7 @@ async def calculate_pls_da(payload: PLSDAPayload):
             weights = clf.feature_importances_
             
         else:
-            return {"error": f"Algoritmo no soportado: {algorithm}"}
+            return {"error": f"Algoritmo no soportado: {payload.algorithm}"}
             
         # Normalización Z-Score de las Variables Latentes para evitar el solapamiento visual
         if scores.shape[0] > 1:
