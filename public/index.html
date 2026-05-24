@@ -1631,32 +1631,47 @@
             const selAlgo = document.getElementById('algo-selector');
             const algorithm = selAlgo ? selAlgo.value : 'PLS-DA';
             
-            // Sanitización estricta para garantizar simetría X-y
-            trainingSet = trainingSet.filter(s => s && s.file && s.label);
+            // Programación defensiva profunda (Lógica segura requerida)
+            const validSet = trainingSet.filter(item => item !== undefined && item !== null && item.file);
             
-            // Construir JSON payload
-            const spectraData = await Promise.all(trainingSet.map(async s => {
-                const text = await s.file.text();
-                const lineas = text.split('\n');
-                let wv = [], abs = [];
-                for (let i = 1; i < lineas.length; i++) {
-                    let cols = lineas[i].split(/[,;]/);
-                    if (cols.length >= 2) {
-                        let x = parseFloat(cols[0]);
-                        let y = parseFloat(cols[1]);
-                        if (!isNaN(x) && !isNaN(y)) { wv.push(x); abs.push(y); }
+            let spectraData = await Promise.all(validSet.map(async item => {
+                let datosX = item.x || item.wavenumbers || (item.file && item.file.data ? (item.file.data.x || item.file.data.wavenumbers) : null);
+                let datosY = item.y || item.absorbances || (item.file && item.file.data ? (item.file.data.y || item.file.data.absorbances) : null);
+                
+                if (!datosX || !datosY || datosX.length === 0) {
+                    try {
+                        const text = await item.file.text();
+                        const lineas = text.split('\n');
+                        let wv = [], abs = [];
+                        for (let i = 1; i < lineas.length; i++) {
+                            let cols = lineas[i].split(/[,;]/);
+                            if (cols.length >= 2) {
+                                let xVal = parseFloat(cols[0]);
+                                let yVal = parseFloat(cols[1]);
+                                if (!isNaN(xVal) && !isNaN(yVal)) { wv.push(xVal); abs.push(yVal); }
+                            }
+                        }
+                        datosX = wv;
+                        datosY = abs;
+                    } catch(e) {
+                        datosX = [];
+                        datosY = [];
                     }
                 }
+                
                 return {
-                    name: s.file.name,
-                    x: wv,
-                    y: abs,
-                    label: s.label
+                    name: (item.file ? item.file.name : null) || item.name || "desconocido.csv",
+                    label: item.label || item.clase || "sin_etiqueta",
+                    x: datosX || [],
+                    y: datosY || []
                 };
             }));
 
+            // Segunda barrera de seguridad
+            const payloadSpectra = spectraData.filter(item => item && item.x && item.x.length > 0);
+
             const payload = {
-                spectra: spectraData,
+                spectra: payloadSpectra,
                 n_components: parseInt(document.getElementById('pls-comps').value) || 2,
                 algorithm: algorithm
             };
