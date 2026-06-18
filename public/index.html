@@ -159,6 +159,21 @@
     .help-modal { display: none; background: #fff; border-left: 4px solid var(--purple); padding: 12px; margin: 10px 0; font-size: 0.85rem; color: #333; font-family: 'Times New Roman', serif; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); line-height: 1.4; }
     .btn-delete-batch { background: transparent; color: #ef4444; border: none; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; transition: background 0.2s; }
     .btn-delete-batch:hover { background: #fee2e2; }
+    /* TEMA: TABLA ESPECTRO ÚNICO (Azul Marino) */
+    .table-single-spectrum { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 0.9rem; }
+    .table-single-spectrum th { background-color: #1A365D; color: white; padding: 12px; text-align: left; text-transform: uppercase; font-weight: 600; }
+    .table-single-spectrum td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; color: #334155; }
+    .table-single-spectrum tr:nth-child(even) { background-color: #f8fafc; }
+    .badge-nuevo { background-color: #8b5cf6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin-left: 8px; }
+    .badge-completado { background-color: #6366f1; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin-left: 8px; }
+
+    /* TEMA: TABLA COMPARATIVA MULTIPLE (Verde Semántico) */
+    .table-multi-spectrum { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 0.9rem; border: 1px solid #e2e8f0; }
+    .table-multi-spectrum th { background-color: #059669; color: white; padding: 12px; text-align: left; text-transform: uppercase; font-weight: 600; border-right: 1px solid #047857; }
+    .table-multi-spectrum td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; color: #334155; }
+    .row-exacta, .row-aproximada { background-color: #f0fdf4; color: #166534; } 
+    .row-compartido { background-color: #eff6ff; color: #1e3a8a; } 
+    .row-unico { background-color: #fffbeb; color: #b45309; } 
   </style>
 </head>
 <body>
@@ -597,7 +612,7 @@
                     <div class="graph-container" id="char-graph" style="flex: 1.2; min-height: 300px; border: 1px solid var(--border); border-radius: 8px;"></div>
                     <div class="table-view-container" style="flex: 1; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
                         <div class="table-scroll">
-                            <table id="char-table" style="width:100%; border-collapse:collapse;">
+                            <table id="char-table" class="table-single-spectrum" style="width:100%; border-collapse:collapse;">
                                 <thead id="char-table-head">
                                     <tr style="background:#f1f5f9;">
                                         <th style="padding:10px; border-bottom:2px solid var(--border);">Wavenumber (cm⁻¹)</th>

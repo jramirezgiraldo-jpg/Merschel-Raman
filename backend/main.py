@@ -532,14 +532,14 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
             
             if count == n_samples:
                 common_rows.append(f"""
-                <tr class="row-common">
+                <tr class="row-exacta">
                     <td class="char-text-common"><b>COINCIDENCIA COMÚN (100%)</b></td>
                     <td>{assignment}</td>
                     {sample_cols}
                 </tr>""")
             elif count > 1:
                 shared_rows.append(f"""
-                <tr class="row-shared">
+                <tr class="row-compartido">
                     <td class="char-text-shared"><b>Compartido ({' y '.join(present_in)})</b></td>
                     <td>{assignment}</td>
                     {sample_cols}
@@ -547,7 +547,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
             else:
                 unique_owner = present_in[0]
                 unique_by_sample[unique_owner].append(f"""
-                <tr class="row-unique">
+                <tr class="row-unico">
                     <td class="char-text-unique"><b>Diferenciador Único ({unique_owner})</b></td>
                     <td>{assignment}</td>
                     {sample_cols}
@@ -626,6 +626,21 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                 .char-text-shared {{ color: #1e40af; }}
                 .char-text-unique {{ color: #92400e; }}
                 .footer {{ margin-top: 50px; text-align: center; font-size: 0.7rem; color: #bbb; }}
+                /* TEMA: TABLA ESPECTRO ÚNICO (Azul Marino) */
+                .table-single-spectrum { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 0.9rem; }
+                .table-single-spectrum th { background-color: #1A365D; color: white; padding: 12px; text-align: left; text-transform: uppercase; font-weight: 600; }
+                .table-single-spectrum td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; color: #334155; }
+                .table-single-spectrum tr:nth-child(even) { background-color: #f8fafc; }
+                .badge-nuevo { background-color: #8b5cf6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin-left: 8px; }
+                .badge-completado { background-color: #6366f1; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin-left: 8px; }
+
+                /* TEMA: TABLA COMPARATIVA MULTIPLE (Verde Semántico) */
+                .table-multi-spectrum { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 0.9rem; border: 1px solid #e2e8f0; }
+                .table-multi-spectrum th { background-color: #059669; color: white; padding: 12px; text-align: left; text-transform: uppercase; font-weight: 600; border-right: 1px solid #047857; }
+                .table-multi-spectrum td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; color: #334155; }
+                .row-exacta, .row-aproximada { background-color: #f0fdf4; color: #166534; } 
+                .row-compartido { background-color: #eff6ff; color: #1e3a8a; } 
+                .row-unico { background-color: #fffbeb; color: #b45309; } 
             </style>
             <script>
                 function filterRows(type, btn) {{
@@ -672,7 +687,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
                     <h1>REPORTE TAXONÓMICO {method}</h1>
                     <div class="subtitle">Análisis de Marcadores Bioquímicos en la Región Fingerprint (800 - 1800 cm⁻¹)</div>
                     
-                    <table>
+                    <table class="table-multi-spectrum">
                         <thead>
                             <tr>
                                 <th>CARACTERÍSTICAS</th>
