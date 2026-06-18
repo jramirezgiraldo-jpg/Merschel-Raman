@@ -2008,7 +2008,7 @@
 
     function drawCharGraph(data) {
         const traces = [];
-        const peakAnnotations = [];
+        let anotacionesPicos = [];
         
         data.names.forEach((name, i) => {
             const color = palette[i % palette.length];
@@ -2028,9 +2028,12 @@
             
             // Trazo de los puntos (picos) identificados para este espectro
             if (data.peaks && data.peaks[i]) {
+                const picosX = data.peaks[i].map(p => p.x);
+                const picosY = data.peaks[i].map(p => p.y);
+                
                 traces.push({
-                    x: data.peaks[i].map(p => p.x),
-                    y: data.peaks[i].map(p => p.y),
+                    x: picosX,
+                    y: picosY,
                     name: `Picos ${getTraceName(name)}`,
                     legendgroup: name,
                     type: 'scatter',
@@ -2044,21 +2047,23 @@
                     showlegend: false
                 });
 
-                data.peaks[i].forEach(p => {
-                    peakAnnotations.push({
-                        x: p.x,
-                        y: p.y,
-                        text: String(Math.round(p.x)),
+                // INYECCIÓN VISUAL: Construcción de flechas naranjas y texto de número de onda
+                const anotacionesEspectro = picosX.map((valorX, index) => {
+                    return {
+                        x: valorX,
+                        y: picosY[index],
+                        text: Math.round(valorX).toString(),
                         showarrow: true,
                         arrowhead: 2,
                         arrowsize: 1,
                         arrowwidth: 1.5,
                         arrowcolor: '#FF8C00',
+                        font: { family: 'Arial', size: 11, color: '#FF8C00' },
                         ax: 0,
-                        ay: -30,
-                        font: { family: 'Arial', size: 11, color: '#FF8C00' }
-                    });
+                        ay: -30
+                    };
                 });
+                anotacionesPicos = anotacionesPicos.concat(anotacionesEspectro);
             }
         });
 
@@ -2074,9 +2079,11 @@
             dragmode: 'zoom',      // RESTAURA drag-to-zoom híbrido
             clickmode: 'event',    // EVENTOS DE CLIC PUROS
             hovermode: 'closest',  // ANCLA AL PICO
-            hoverdistance: 20,     // AUMENTA RADIO DE CAPTURA
-            annotations: peakAnnotations
+            hoverdistance: 20      // AUMENTA RADIO DE CAPTURA
         };
+
+        // Asignar al layout de Plotly
+        layout.annotations = anotacionesPicos;
 
         Plotly.react('char-graph', traces, layout, { responsive: true, displayModeBar: true, scrollZoom: true });
     }
