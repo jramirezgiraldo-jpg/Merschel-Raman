@@ -185,28 +185,31 @@
 <body>
 
 <div id="welcomeModal" class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.9); display: flex; justify-content: center; align-items: center; z-index: 9999; opacity: 1; transition: opacity 0.3s ease;">
-    <div class="modal-box" style="background-color: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 550px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); text-align: left; position: relative;">
+    <div class="modal-box" style="background-color: white; border-radius: 12px; width: 90%; max-width: 850px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3); display: flex; flex-wrap: wrap; overflow: hidden; position: relative;">
         
-        <!-- LOGOTIPO CENTRAL -->
-        <img src="logo.png" alt="Hershell-Raman Logo" style="width: 100%; max-width: 260px; display: block; margin: 0 auto 20px auto;">
-        
-        <h2 style="color: #1A365D; margin-bottom: 15px; text-align: center; font-family: sans-serif;">Bienvenido a Hershell-Raman</h2>
-        
-        <p style="color: #334155; font-size: 0.95rem; line-height: 1.5; margin-bottom: 15px; text-align: justify; font-family: sans-serif;">
-            Plataforma avanzada para el análisis espectroscópico y quimiometría automatizada. Esta herramienta ha sido <b>desarrollada íntegramente bajo el modelo de Ingeniería de Prompts (Prompt Engineering)</b>, garantizando una arquitectura científica guiada por el experto humano.
-        </p>
-        
-        <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 12px; margin-bottom: 20px; border-radius: 0 4px 4px 0;">
-            <p style="color: #166534; font-size: 0.9rem; margin: 0; line-height: 1.5; font-family: sans-serif; text-align: justify;">
-                <b>🔒 Privacidad y Control Absoluto:</b> Usted tiene completo control sobre sus datos. La plataforma procesa la información de forma segura en su sesión local. Hershell-Raman <b>no retiene, no almacena y no aprende</b> de los datos analizados a través de nuestra plataforma. Sus firmas espectrales y hallazgos son estrictamente confidenciales y efímeros.
-            </p>
+        <div style="flex: 1 1 300px; background-color: #f8fafc; display: flex; justify-content: center; align-items: center; padding: 40px; border-right: 1px solid #e2e8f0;">
+            <img src="./logo.png" alt="Hershell-Raman Logo" style="width: 100%; max-width: 280px; filter: drop-shadow(0 10px 8px rgba(0,0,0,0.04));">
         </div>
-
-        <p style="color: #334155; font-size: 0.85rem; background-color: #f8fafc; padding: 10px; border-left: 3px solid #1A365D; margin-bottom: 20px; font-family: sans-serif;">
-            <b>💡 Recomendación:</b> Inicie cargando su matriz de datos en formato CSV en la sección "Originales".
-        </p>
         
-        <button onclick="closeWelcomeModal()" style="background-color: #059669; color: white; border: none; padding: 12px 20px; font-weight: 600; border-radius: 5px; cursor: pointer; width: 100%; font-size: 1rem; transition: background-color 0.2s;">Comenzar Análisis</button>
+        <div style="flex: 2 1 400px; padding: 40px; text-align: left;">
+            <h2 style="color: #1A365D; margin-top: 0; margin-bottom: 15px; font-family: sans-serif; font-size: 1.8rem;">Bienvenido a Hershell-Raman</h2>
+            
+            <p style="color: #334155; font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px; text-align: justify; font-family: sans-serif;">
+                Plataforma avanzada para el análisis espectroscópico y quimiometría automatizada. Esta herramienta ha sido <b>desarrollada íntegramente bajo el modelo de Ingeniería de Prompts (Prompt Engineering)</b>, garantizando una arquitectura científica guiada por el experto humano.
+            </p>
+            
+            <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 15px; margin-bottom: 20px; border-radius: 0 6px 6px 0;">
+                <p style="color: #166534; font-size: 0.9rem; margin: 0; line-height: 1.5; font-family: sans-serif; text-align: justify;">
+                    <b>🔒 Privacidad y Control Absoluto:</b> Usted tiene completo control sobre sus datos. La plataforma procesa la información de forma segura en su sesión local. Hershell-Raman <b>no retiene, no almacena y no aprende</b> de los datos analizados a través de nuestra plataforma. Sus firmas espectrales son estrictamente confidenciales y efímeros.
+                </p>
+            </div>
+
+            <p style="color: #334155; font-size: 0.85rem; background-color: #f1f5f9; padding: 12px; border-left: 3px solid #1A365D; margin-bottom: 25px; font-family: sans-serif; border-radius: 0 4px 4px 0;">
+                <b>💡 Recomendación:</b> Inicie cargando su matriz de datos en formato CSV en la sección "Originales".
+            </p>
+            
+            <button onclick="closeWelcomeModal()" style="background-color: #059669; color: white; border: none; padding: 14px 20px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 1.05rem; transition: background-color 0.2s; box-shadow: 0 4px 6px rgba(5, 150, 105, 0.2);">Comenzar Análisis</button>
+        </div>
     </div>
 </div>
 
@@ -227,7 +230,7 @@
 
   <header class="app-header">
     <div style="display: flex; align-items: center; justify-content: flex-start;">
-        <img src="logo.png" alt="Hershell-Raman Logo" style="height: 55px; margin-right: 15px;">
+        <img src="./logo.png" alt="Hershell-Raman Logo" style="height: 45px; margin-right: 12px;">
     </div>
     <div class="header-right">
         <div>
