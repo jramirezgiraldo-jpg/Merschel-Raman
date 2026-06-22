@@ -1696,7 +1696,12 @@
                         datosX = wv; datosY = abs;
                     } catch(e) { datosX = []; datosY = []; }
                 }
-                return { name: (item.file ? item.file.name : null) || item.name || "desconocido.csv", label: item.label || item.clase || "sin_etiqueta", x: datosX || [], y: datosY || [] };
+                return { 
+                    name: (item.file ? item.file.name : null) || item.name || "desconocido.csv", 
+                    label: item.label || item.clase || "sin_etiqueta", 
+                    x: (datosX || []).map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v), 
+                    y: (datosY || []).map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v) 
+                };
             }));
             const payloadTrain = trainData.filter(m => m.x && m.x.length > 0);
 
@@ -1720,15 +1725,23 @@
                         datosX = wv; datosY = abs;
                     } catch(e) { datosX = []; datosY = []; }
                 }
-                return { name: (item.file ? item.file.name : null) || item.name || "desconocido.csv", label: item.label || item.clase || "sin_etiqueta", x: datosX || [], y: datosY || [] };
+                return { 
+                    name: (item.file ? item.file.name : null) || item.name || "desconocido.csv", 
+                    label: item.label || item.clase || "sin_etiqueta", 
+                    x: (datosX || []).map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v), 
+                    y: (datosY || []).map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v) 
+                };
             }));
             const payloadTest = testData.filter(m => m.x && m.x.length > 0);
+
+            const selAlgo = document.getElementById('algo-selector');
+            const algorithm = selAlgo ? selAlgo.value : 'PLS-DA';
 
             const payload = {
                 train_spectra: payloadTrain,
                 test_spectra: payloadTest,
                 n_components: parseInt(document.getElementById('pls-comps').value) || 2,
-                algorithm: "pls_da"
+                algorithm: algorithm
             };
 
             const response = await fetch(`${API_BASE_URL}/api/predict`, {
@@ -1802,8 +1815,8 @@
                 return {
                     name: (item.file ? item.file.name : null) || item.name || "desconocido.csv",
                     label: item.label || item.clase || "sin_etiqueta",
-                    x: datosX || [],
-                    y: datosY || []
+                    x: (datosX || []).map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v),
+                    y: (datosY || []).map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v)
                 };
             }));
 
