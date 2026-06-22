@@ -185,17 +185,26 @@
 <body>
 
   <div id="welcomeModal" class="modal-overlay">
-      <div class="modal-box">
-          <h2 style="color: #1A365D; margin-bottom: 15px;" data-i18n="welcome_title">Bienvenido a Hershell-Raman</h2>
-          <p style="color: #334155; font-size: 0.95rem; line-height: 1.5; margin-bottom: 15px;" data-i18n="welcome_desc">
-              Plataforma avanzada de análisis espectroscópico y quimiometría automatizada. Esta herramienta le permite realizar preprocesamiento de señales, detección de picos biomarcadores y clasificación taxonómica mediante algoritmos de Machine Learning (PLS-DA, SVM, Random Forest).
-          </p>
-          <p style="color: #334155; font-size: 0.85rem; background-color: #f8fafc; padding: 10px; border-left: 3px solid #059669; margin-bottom: 20px;" data-i18n="welcome_rec">
-              <b>Recomendación:</b> Inicie cargando su matriz de datos en formato CSV en la sección "Originales".
-          </p>
-          <button onclick="closeWelcomeModal()" class="btn-start" data-i18n="btn_start">Comenzar Análisis</button>
-      </div>
-  </div>
+    <div class="modal-box">
+        <h2 style="color: #1A365D; margin-bottom: 15px;">Bienvenido a Hershell-Raman</h2>
+        
+        <p style="color: #334155; font-size: 0.95rem; line-height: 1.5; margin-bottom: 15px;">
+            Plataforma avanzada para el análisis espectroscópico y quimiometría automatizada. Esta herramienta facilita el preprocesamiento de señales, detección de picos biomarcadores y clasificación taxonómica de patógenos. <b>Desarrollada íntegramente bajo el modelo de Ingeniería de Prompts (Prompt Engineering)</b>, garantiza una arquitectura científica rigurosa guiada por el experto humano.
+        </p>
+        
+        <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 12px; margin-bottom: 20px; border-radius: 0 4px 4px 0;">
+            <p style="color: #166534; font-size: 0.85rem; margin: 0; line-height: 1.4;">
+                <b>🔒 Confidencialidad y Control Total:</b> El procesamiento se realiza de forma estrictamente local en su navegador y nuestro servidor seguro. Hershell-Raman <b>no retiene</b> sus archivos CSV, <b>no guarda</b> un historial de sus análisis y <b>no aprende</b> de la información suministrada. Usted mantiene el control absoluto, privado y efímero sobre sus datos experimentales.
+            </p>
+        </div>
+
+        <p style="color: #334155; font-size: 0.85rem; background-color: #f8fafc; padding: 10px; border-left: 3px solid #1A365D; margin-bottom: 20px;">
+            <b>💡 Recomendación:</b> Inicie cargando su matriz de datos en formato CSV en la sección "Originales".
+        </p>
+        
+        <button onclick="closeWelcomeModal()" class="btn-start">Comenzar Análisis</button>
+    </div>
+</div>
 
   <div id="loading-overlay">
     <div class="loader-wave">
