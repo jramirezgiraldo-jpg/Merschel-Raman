@@ -174,9 +174,28 @@
     .row-exacta, .row-aproximada { background-color: #f0fdf4; color: #166534; } 
     .row-compartido { background-color: #eff6ff; color: #1e3a8a; } 
     .row-unico { background-color: #fffbeb; color: #b45309; } 
+
+    /* --- MODAL DE BIENVENIDA --- */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.8); display: flex; justify-content: center; align-items: center; z-index: 9999; opacity: 1; transition: opacity 0.3s ease; }
+    .modal-box { background-color: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); text-align: left; position: relative; transform: translateY(0); transition: transform 0.3s ease; }
+    .btn-start { background-color: #059669; color: white; border: none; padding: 10px 20px; font-weight: 600; border-radius: 5px; cursor: pointer; width: 100%; font-size: 1rem; transition: background-color 0.2s; }
+    .btn-start:hover { background-color: #047857; }
   </style>
 </head>
 <body>
+
+  <div id="welcomeModal" class="modal-overlay">
+      <div class="modal-box">
+          <h2 style="color: #1A365D; margin-bottom: 15px;" data-i18n="welcome_title">Bienvenido a Hershell-Raman</h2>
+          <p style="color: #334155; font-size: 0.95rem; line-height: 1.5; margin-bottom: 15px;" data-i18n="welcome_desc">
+              Plataforma avanzada de análisis espectroscópico y quimiometría automatizada. Esta herramienta le permite realizar preprocesamiento de señales, detección de picos biomarcadores y clasificación taxonómica mediante algoritmos de Machine Learning (PLS-DA, SVM, Random Forest).
+          </p>
+          <p style="color: #334155; font-size: 0.85rem; background-color: #f8fafc; padding: 10px; border-left: 3px solid #059669; margin-bottom: 20px;" data-i18n="welcome_rec">
+              <b>Recomendación:</b> Inicie cargando su matriz de datos en formato CSV en la sección "Originales".
+          </p>
+          <button onclick="closeWelcomeModal()" class="btn-start" data-i18n="btn_start">Comenzar Análisis</button>
+      </div>
+  </div>
 
   <div id="loading-overlay">
     <div class="loader-wave">
@@ -2288,5 +2307,23 @@
         }
     }
   </script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    if (!sessionStorage.getItem('hershellWelcomeShown')) {
+        document.getElementById('welcomeModal').style.display = 'flex';
+    } else {
+        document.getElementById('welcomeModal').style.display = 'none';
+    }
+});
+
+function closeWelcomeModal() {
+    const modal = document.getElementById('welcomeModal');
+    modal.style.opacity = '0';
+    setTimeout(() => {
+        modal.style.display = 'none';
+        sessionStorage.setItem('hershellWelcomeShown', 'true');
+    }, 300);
+}
+</script>
 </body>
 </html>
