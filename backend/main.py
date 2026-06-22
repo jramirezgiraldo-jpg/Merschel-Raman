@@ -237,6 +237,7 @@ class CharacterizeRequest(BaseModel):
     spectra: list[SpectrumInput]
     prominence: float = 0.05
     method: str = "Raman"
+    tolerance: float = 5.0
 
 # Ruta para servir nuestra UI Front-end
 @app.get("/", response_class=HTMLResponse)
@@ -486,7 +487,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
         if all_peaks_x:
             current_group = [all_peaks_x[0]]
             for x in all_peaks_x[1:]:
-                if x - current_group[0] <= 5.0: # Limitar el ancho total del clúster a 5.0 cm-1
+                if x - current_group[0] <= request.tolerance: # Limitar el ancho total del clúster dinámicamente
                     current_group.append(x)
                 else:
                     groups.append(np.mean(current_group))
@@ -519,7 +520,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
             present_in = []
             wn_values = []
             for s_idx, name in enumerate(names):
-                match = next((p for p in spectra_peak_details[s_idx] if abs(p["x"] - g_wn) <= 5.0), None)
+                match = next((p for p in spectra_peak_details[s_idx] if abs(p["x"] - g_wn) <= request.tolerance), None)
                 if match:
                     present_in.append(name)
                     wn_values.append(f"{match['x']:.1f}")
