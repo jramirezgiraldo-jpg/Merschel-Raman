@@ -486,7 +486,7 @@ async def generate_taxonomic_report(request: CharacterizeRequest):
         if all_peaks_x:
             current_group = [all_peaks_x[0]]
             for x in all_peaks_x[1:]:
-                if x - current_group[-1] <= 5.0: # Tolerancia ±5 cm-1
+                if x - current_group[0] <= 5.0: # Limitar el ancho total del clúster a 5.0 cm-1
                     current_group.append(x)
                 else:
                     groups.append(np.mean(current_group))
