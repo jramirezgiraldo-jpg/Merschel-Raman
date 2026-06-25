@@ -1813,7 +1813,22 @@
                 throw new Error(data.error);
             }
             if(data.predictions) {
-                data.predictions.forEach((pred, i) => { if(predictSet[i]) predictSet[i].prediction = pred; });
+                // Mapear por nombre para evitar desalineación si hay muestras inválidas filtradas
+                data.predictions.forEach((pred, i) => { 
+                    if(payloadTest[i] && payloadTest[i].name) {
+                        const targetName = payloadTest[i].name;
+                        const item = predictSet.find(s => s.name === targetName);
+                        if(item) item.prediction = pred;
+                    }
+                });
+                
+                // Las muestras que no fueron enviadas (inválidas) se marcan como error
+                predictSet.forEach(item => {
+                    if(item.prediction && item.prediction.includes('Esperando')) {
+                        item.prediction = '❌ Error de cálculo';
+                    }
+                });
+                
                 renderPredictResults();
             }
         } catch(e) {
