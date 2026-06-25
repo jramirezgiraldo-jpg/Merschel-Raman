@@ -1745,8 +1745,8 @@
                 return { 
                     name: (item.file ? item.file.name : null) || item.name || "desconocido.csv", 
                     label: item.label || item.clase || "sin_etiqueta", 
-                    x: (datosX || []).map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v), 
-                    y: (datosY || []).map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v) 
+                    x: (datosX || []).map(v => (v === null || isNaN(Number(v)) || !isFinite(Number(v))) ? 0.0 : Number(v)), 
+                    y: (datosY || []).map(v => (v === null || isNaN(Number(v)) || !isFinite(Number(v))) ? 0.0 : Number(v)) 
                 };
             }));
             const payloadTrain = trainData.filter(m => m.x && m.x.length > 0);
@@ -1774,8 +1774,8 @@
                 return { 
                     name: (item.file ? item.file.name : null) || item.name || "desconocido.csv", 
                     label: item.label || item.clase || "sin_etiqueta", 
-                    x: (datosX || []).map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v), 
-                    y: (datosY || []).map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v) 
+                    x: (datosX || []).map(v => (v === null || isNaN(Number(v)) || !isFinite(Number(v))) ? 0.0 : Number(v)), 
+                    y: (datosY || []).map(v => (v === null || isNaN(Number(v)) || !isFinite(Number(v))) ? 0.0 : Number(v)) 
                 };
             }));
             const payloadTest = testData.filter(m => m.x && m.x.length > 0);
@@ -1818,6 +1818,12 @@
             }
         } catch(e) {
             console.error("Detalle del error en JS:", e);
+            predictSet.forEach(item => {
+                if(item.prediction && item.prediction.includes('Esperando')) {
+                    item.prediction = '❌ Error de formato / Servidor';
+                }
+            });
+            renderPredictResults();
         } finally {
             hideLoader();
         }
