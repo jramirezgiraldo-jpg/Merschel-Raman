@@ -491,7 +491,7 @@
                         <label style="font-size:0.7rem; font-weight:bold;">Algoritmo:</label>
                         <select id="algo-selector" style="width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px; margin-bottom:6px;">
                             <option value="PLS-DA">Mínimos Cuadrados Parciales (PLS-DA)</option>
-                            <option value="SVM">Máquinas de Vectores de Soporte (SVM)</option>
+                            <option value="SVM">Máquinas de Soporte Vectorial (SVM)</option>
                             <option value="RF">Bosques Aleatorios (Random Forest)</option>
                         </select>
                     </div>
@@ -1708,12 +1708,15 @@
 
     function renderPredictResults() {
         const tbody = document.getElementById('predict-results-body');
-        if(!predictSet.length) return;
-        tbody.innerHTML = predictSet.map(s => `
-            <tr style="border-bottom:1px solid #f1f5f9;">
+        if(!predictSet.length) { tbody.innerHTML = ''; return; }
+        tbody.innerHTML = predictSet.map((s, i) => `
+            <tr style="border-bottom:1px solid #f1f5f9;" id="blind-row-${i}">
                 <td style="padding:4px 0; max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"
                     title="${extractCleanName(s.name)}">${extractCleanName(s.name)}</td>
-                <td style="padding:4px 0; text-align:right; font-weight:bold; color:${s.prediction.includes('Esperando') ? '#94a3b8' : 'var(--primary)'}">${s.prediction}</td>
+                <td style="padding:4px 0; text-align:right; font-weight:bold; color:${s.prediction.includes('Esperando') ? '#94a3b8' : 'var(--primary)'}">
+                    ${s.prediction}
+                    <span style="cursor: pointer; color: #ef4444; font-weight: bold; margin-left: 15px; font-size: 1.1rem; padding: 2px 8px; border-radius: 50%; background-color: #fee2e2;" onclick="this.parentElement.remove();" title="Eliminar resultado">✕</span>
+                </td>
             </tr>
         `).join('');
     }
@@ -1923,7 +1926,40 @@
                 document.getElementById('infoContainer').style.display = 'none';
             } else {
                 document.getElementById('plotContainer').style.display = 'none';
-                document.getElementById('infoContainer').style.display = 'flex';
+                
+                const selectedAlg = document.getElementById('algo-selector').value;
+                const container = document.getElementById('infoContainer');
+
+                if (selectedAlg.includes('SVM') || selectedAlg.includes('Soporte')) {
+                    container.innerHTML = `
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px;">
+                            <svg width="150" height="150" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="20" cy="30" r="5" fill="#3b82f6" /><circle cx="35" cy="45" r="5" fill="#3b82f6" />
+                                <circle cx="75" cy="70" r="5" fill="#ef4444" /><circle cx="60" cy="85" r="5" fill="#ef4444" />
+                                <line x1="10" y1="90" x2="90" y2="10" stroke="#10b981" stroke-width="4" />
+                                <line x1="25" y1="95" x2="95" y2="25" stroke="#10b981" stroke-width="2" stroke-dasharray="4" />
+                                <line x1="-5" y1="65" x2="65" y2="-5" stroke="#10b981" stroke-width="2" stroke-dasharray="4" />
+                            </svg>
+                            <h3 style="color: #334155; margin-top: 20px; font-family: sans-serif;">Máquinas de Soporte Vectorial</h3>
+                            <p style="font-size: 0.9rem; color: #64748b; text-align: center; font-family: sans-serif; max-width: 80%;">Clasificación basada en la optimización de hiperplanos multidimensionales. Las proyecciones de coordenadas 2D no son aplicables bajo este kernel.</p>
+                        </div>`;
+                } else if (selectedAlg.includes('RF') || selectedAlg.includes('Forest')) {
+                    container.innerHTML = `
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px;">
+                            <!-- SVG de Árbol de Decisión -->
+                            <svg width="120" height="120" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="40" y="10" width="20" height="15" rx="3" fill="#1A365D" />
+                                <line x1="50" y1="25" x2="25" y2="45" stroke="#cbd5e1" stroke-width="3" />
+                                <line x1="50" y1="25" x2="75" y2="45" stroke="#cbd5e1" stroke-width="3" />
+                                <rect x="15" y="45" width="20" height="15" rx="3" fill="#3b82f6" />
+                                <rect x="65" y="45" width="20" height="15" rx="3" fill="#ef4444" />
+                            </svg>
+                            <h3 style="color: #334155; margin-top: 20px; font-family: sans-serif;">Bosques Aleatorios</h3>
+                            <p style="font-size: 0.9rem; color: #64748b; text-align: center; font-family: sans-serif; max-width: 80%;">Modelo de ensamble estructural. Visualización de dispersión espacial no disponible.</p>
+                        </div>`;
+                }
+                
+                container.style.display = 'flex';
             }
             
             const scoreXTitle = isPlsDa ? 'Variable Latente 1' : 'Componente Principal 1 (PC1)';
@@ -2343,6 +2379,20 @@
             hideLoader();
             console.error(e);
             alert("Error generando reporte.");
+        }
+    }
+
+    // Función inyectada para eliminar muestras ciegas individualmente
+    function removeBlindSample(index) {
+        try {
+            // 1. Eliminar del array en memoria
+            if (index >= 0 && index < predictSet.length) {
+                predictSet.splice(index, 1);
+            }
+            // 2. Volver a renderizar la lista (esto actualiza el DOM automáticamente)
+            renderPredictResults();
+        } catch (error) {
+            console.error("Error al eliminar la muestra:", error);
         }
     }
   </script>

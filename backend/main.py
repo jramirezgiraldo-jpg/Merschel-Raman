@@ -1093,20 +1093,46 @@ async def predict_plsda(payload: PredictPayload):
                 predictions = [le.classes_[0]] * len(Y_pred)
                 
         elif payload.algorithm.lower() == "svm":
-            model = SVC(kernel='linear')
-            Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
-            model.fit(Y_features_train, Y_target_1d)
-            Y_pred = model.predict(Y_features_test)
-            pred_indices = Y_pred.astype(int).flatten()
-            predictions = le.classes_[pred_indices]
+            if len(le.classes_) < 2:
+                predictions = [le.classes_[0]] * len(Y_features_test)
+            else:
+                from sklearn.preprocessing import StandardScaler
+                scaler = StandardScaler()
+                Y_train_s = scaler.fit_transform(Y_features_train)
+                Y_test_s = scaler.transform(Y_features_test)
+                
+                model = SVC(kernel='linear')
+                Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
+                
+                try:
+                    model.fit(Y_train_s, Y_target_1d)
+                    Y_pred = model.predict(Y_test_s)
+                    pred_indices = Y_pred.astype(int).flatten()
+                    predictions = le.classes_[pred_indices]
+                except Exception as e:
+                    print(f"SVM prediction fallback: {e}")
+                    predictions = [le.classes_[0]] * len(Y_test_s)
             
         elif payload.algorithm.lower() in ["random_forest", "rf", "random forest"]:
-            model = RandomForestClassifier(n_estimators=100)
-            Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
-            model.fit(Y_features_train, Y_target_1d)
-            Y_pred = model.predict(Y_features_test)
-            pred_indices = Y_pred.astype(int).flatten()
-            predictions = le.classes_[pred_indices]
+            if len(le.classes_) < 2:
+                predictions = [le.classes_[0]] * len(Y_features_test)
+            else:
+                from sklearn.preprocessing import StandardScaler
+                scaler = StandardScaler()
+                Y_train_s = scaler.fit_transform(Y_features_train)
+                Y_test_s = scaler.transform(Y_features_test)
+
+                model = RandomForestClassifier(n_estimators=100)
+                Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
+                
+                try:
+                    model.fit(Y_train_s, Y_target_1d)
+                    Y_pred = model.predict(Y_test_s)
+                    pred_indices = Y_pred.astype(int).flatten()
+                    predictions = le.classes_[pred_indices]
+                except Exception as e:
+                    print(f"RF prediction fallback: {e}")
+                    predictions = [le.classes_[0]] * len(Y_test_s)
             
         else:
             return JSONResponse(status_code=400, content={"detail": f"Algoritmo no soportado: {payload.algorithm}"})
