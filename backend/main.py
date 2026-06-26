@@ -1096,6 +1096,8 @@ async def predict_plsda(payload: PredictPayload):
             if len(le.classes_) < 2:
                 predictions = [le.classes_[0]] * len(Y_features_test)
             else:
+                # Alineación y dimensionalidad estricta garantizada por aplicar_quimiometria (interp1d a 1550 variables)
+                # Escalado estricto: ajustado solo en entrenamiento, transformado en ciegas
                 from sklearn.preprocessing import StandardScaler
                 scaler = StandardScaler()
                 Y_train_s = scaler.fit_transform(Y_features_train)
