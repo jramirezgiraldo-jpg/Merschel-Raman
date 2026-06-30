@@ -1101,10 +1101,14 @@ async def predict_plsda(payload: PredictPayload):
             else:
                 from sklearn.preprocessing import StandardScaler
                 from sklearn.pipeline import Pipeline
-                from sklearn.decomposition import PCA
+                class PLSExtractor(PLSRegression):
+                    def fit_transform(self, X, y=None):
+                        self.fit(X, y)
+                        return self.transform(X)
                 
                 pipeline_svm = Pipeline([
                     ('scaler', StandardScaler()),
+                    ('pls_extractor', PLSExtractor(n_components=n_comps)),
                     ('svm', SVC(kernel='linear', class_weight='balanced', C=1.0, probability=True))
                 ])
                 Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
@@ -1128,6 +1132,7 @@ async def predict_plsda(payload: PredictPayload):
                 
                 pipeline_rf = Pipeline([
                     ('scaler', StandardScaler()),
+                    ('pls_extractor', PLSExtractor(n_components=n_comps)),
                     ('rf', RandomForestClassifier(n_estimators=100, class_weight='balanced', random_state=42))
                 ])
                 Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
