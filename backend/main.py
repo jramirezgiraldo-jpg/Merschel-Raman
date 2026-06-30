@@ -1103,7 +1103,7 @@ async def predict_plsda(payload: PredictPayload):
                 Y_train_s = scaler.fit_transform(Y_features_train)
                 Y_test_s = scaler.transform(Y_features_test)
                 
-                model = SVC(kernel='linear')
+                model = SVC(kernel='linear', class_weight='balanced', C=1.0, probability=True)
                 Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
                 
                 try:
@@ -1124,7 +1124,7 @@ async def predict_plsda(payload: PredictPayload):
                 Y_train_s = scaler.fit_transform(Y_features_train)
                 Y_test_s = scaler.transform(Y_features_test)
 
-                model = RandomForestClassifier(n_estimators=100)
+                model = RandomForestClassifier(n_estimators=100, class_weight='balanced', random_state=42)
                 Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
                 
                 try:
