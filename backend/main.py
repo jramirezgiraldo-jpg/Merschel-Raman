@@ -1121,7 +1121,7 @@ async def predict_plsda(payload: PredictPayload):
                 
                 pipeline_svm = Pipeline([
                     ('pls_extractor', PLSExtractor(n_components=n_comps)),
-                    ('svm', SVC(kernel='rbf', class_weight='balanced', C=1.0, probability=True))
+                    ('svm', SVC(kernel='linear', class_weight='balanced', C=1.0, probability=True))
                 ])
                 Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
                 
@@ -1139,9 +1139,10 @@ async def predict_plsda(payload: PredictPayload):
                 predictions = [le.classes_[0]] * len(Y_features_test)
             else:
                 from sklearn.pipeline import Pipeline
+                from sklearn.decomposition import PCA
                 
                 pipeline_rf = Pipeline([
-                    ('pls_extractor', PLSExtractor(n_components=n_comps)),
+                    ('pca', PCA(n_components=n_comps, random_state=42)),
                     ('rf', RandomForestClassifier(n_estimators=100, class_weight='balanced', random_state=42))
                 ])
                 Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()

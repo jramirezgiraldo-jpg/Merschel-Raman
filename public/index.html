@@ -1767,8 +1767,9 @@
             }));
             const payloadTrain = trainData.filter(m => m.x && m.x.length > 0);
 
-            const testValid = predictSet.filter(item => item !== undefined && item !== null && item.file);
-            let testData = await Promise.all(testValid.map(async item => {
+            const testValid = predictSet.map((item, index) => ({item, index})).filter(o => o.item !== undefined && o.item !== null && o.item.file);
+            let testData = await Promise.all(testValid.map(async o => {
+                let item = o.item;
                 let datosX = item.x || item.wavenumbers || (item.file && item.file.data ? (item.file.data.x || item.file.data.wavenumbers) : null);
                 let datosY = item.y || item.absorbances || (item.file && item.file.data ? (item.file.data.y || item.file.data.absorbances) : null);
                 if (!datosX || !datosY || datosX.length === 0) {
@@ -1791,7 +1792,8 @@
                     name: (item.file ? item.file.name : null) || item.name || "desconocido.csv", 
                     label: item.label || item.clase || "sin_etiqueta", 
                     x: (datosX || []).map(v => (v === null || isNaN(Number(v)) || !isFinite(Number(v))) ? 0.0 : Number(v)), 
-                    y: (datosY || []).map(v => (v === null || isNaN(Number(v)) || !isFinite(Number(v))) ? 0.0 : Number(v)) 
+                    y: (datosY || []).map(v => (v === null || isNaN(Number(v)) || !isFinite(Number(v))) ? 0.0 : Number(v)),
+                    originalIndex: o.index
                 };
             }));
             const payloadTest = testData.filter(m => m.x && m.x.length > 0);
@@ -1829,11 +1831,11 @@
                 throw new Error(data.error);
             }
             if(data.predictions) {
-                // Mapear por nombre para evitar desalineación si hay muestras inválidas filtradas
+                // Mapear por índice absoluto para evitar desalineación o sobrescritura de archivos con nombres duplicados
                 data.predictions.forEach((pred, i) => { 
-                    if(payloadTest[i] && payloadTest[i].name) {
-                        const targetName = payloadTest[i].name;
-                        const item = predictSet.find(s => s.name === targetName);
+                    if(payloadTest[i] && payloadTest[i].originalIndex !== undefined) {
+                        const originalIdx = payloadTest[i].originalIndex;
+                        const item = predictSet[originalIdx];
                         if(item) item.prediction = pred;
                     }
                 });
