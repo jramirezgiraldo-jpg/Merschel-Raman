@@ -128,8 +128,8 @@ async def validation_exception_handler(request, exc):
 # El middleware DEBE ir inmediatamente después de la instanciación de app
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://jramirezgiraldo-jpg.github.io"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

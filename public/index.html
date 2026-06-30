@@ -1721,6 +1721,19 @@
         `).join('');
     }
 
+    async function fetchWithRetry(url, options, maxRetries = 5, delayMs = 8500) {
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                const response = await fetch(url, options);
+                return response;
+            } catch (error) {
+                if (i === maxRetries - 1) throw error;
+                console.warn(`[Auto-Retry] Intento ${i + 1} fallido hacia ${url}. Reintentando en ${delayMs/1000}s...`, error);
+                await new Promise(resolve => setTimeout(resolve, delayMs));
+            }
+        }
+    }
+
     async function predictUnknowns() {
         if(!predictSet.length) return alert("Sube muestras ciegas para predecir.");
         showLoader();
@@ -1793,11 +1806,11 @@
                 algorithm: algorithm
             };
 
-            const response = await fetch(`${API_BASE_URL}/api/predict`, {
+            const response = await fetchWithRetry(`${API_BASE_URL}/api/predict`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
-            });
+            }, 5, 8500);
             
             if(!response.ok) {
                 try {
@@ -1899,11 +1912,11 @@
                 algorithm: algorithm
             };
             
-            const response = await fetch(`${API_BASE_URL}/api/pls_da`, {
+            const response = await fetchWithRetry(`${API_BASE_URL}/api/pls_da`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
-            });
+            }, 5, 8500);
             
             if(!response.ok) {
                 const errData = await response.json().catch(() => ({}));
