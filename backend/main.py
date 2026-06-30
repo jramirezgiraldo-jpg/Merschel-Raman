@@ -11,6 +11,25 @@ from sklearn.cross_decomposition import PLSRegression
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.pipeline import Pipeline
+from sklearn.base import BaseEstimator, TransformerMixin
+
+class PLSExtractor(BaseEstimator, TransformerMixin):
+    def __init__(self, n_components=2):
+        self.n_components = n_components
+        self.pls = PLSRegression(n_components=self.n_components)
+        self.lb = LabelBinarizer()
+
+    def fit(self, X, y):
+        # Binarización ortogonal para evitar regresión ordinal
+        y_bin = self.lb.fit_transform(y)
+        self.pls.fit(X, y_bin)
+        return self
+
+    def transform(self, X):
+        # Extrae exclusivamente los scores latentes limpios (X_scores)
+        return self.pls.transform(X)
+
 from fastapi.middleware.cors import CORSMiddleware
 import re
 import pandas as pd
@@ -1099,26 +1118,6 @@ async def predict_plsda(payload: PredictPayload):
             if len(le.classes_) < 2:
                 predictions = [le.classes_[0]] * len(Y_features_test)
             else:
-                from sklearn.pipeline import Pipeline
-                from sklearn.base import BaseEstimator, TransformerMixin
-                from sklearn.preprocessing import LabelBinarizer
-                
-                class PLSExtractor(BaseEstimator, TransformerMixin):
-                    def __init__(self, n_components=2):
-                        self.n_components = n_components
-                        self.pls = PLSRegression(n_components=self.n_components)
-                        self.lb = LabelBinarizer()
-                
-                    def fit(self, X, y):
-                        # Binarización ortogonal para evitar regresión ordinal
-                        y_bin = self.lb.fit_transform(y)
-                        self.pls.fit(X, y_bin)
-                        return self
-                
-                    def transform(self, X):
-                        # Extrae exclusivamente los scores latentes limpios (X_scores)
-                        return self.pls.transform(X)
-                
                 pipeline_svm = Pipeline([
                     ('pls_extractor', PLSExtractor(n_components=n_comps)),
                     ('svm', SVC(kernel='linear', class_weight='balanced', C=1.0, probability=True))
@@ -1138,9 +1137,6 @@ async def predict_plsda(payload: PredictPayload):
             if len(le.classes_) < 2:
                 predictions = [le.classes_[0]] * len(Y_features_test)
             else:
-                from sklearn.pipeline import Pipeline
-                from sklearn.decomposition import PCA
-                
                 pipeline_rf = Pipeline([
                     ('pca', PCA(n_components=n_comps, random_state=42)),
                     ('rf', RandomForestClassifier(n_estimators=100, class_weight='balanced', random_state=42))
