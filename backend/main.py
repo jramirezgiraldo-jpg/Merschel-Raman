@@ -1096,45 +1096,49 @@ async def predict_plsda(payload: PredictPayload):
             if len(le.classes_) < 2:
                 predictions = [le.classes_[0]] * len(Y_features_test)
             else:
-                # Alineación y dimensionalidad estricta garantizada por aplicar_quimiometria (interp1d a 1550 variables)
-                # Escalado estricto: ajustado solo en entrenamiento, transformado en ciegas
                 from sklearn.preprocessing import StandardScaler
-                scaler = StandardScaler()
-                Y_train_s = scaler.fit_transform(Y_features_train)
-                Y_test_s = scaler.transform(Y_features_test)
+                from sklearn.pipeline import Pipeline
+                from sklearn.decomposition import PCA
                 
-                model = SVC(kernel='linear', class_weight='balanced', C=1.0, probability=True)
+                pipeline_svm = Pipeline([
+                    ('scaler', StandardScaler()),
+                    ('pca', PCA(n_components=n_comps, random_state=42)),
+                    ('svm', SVC(kernel='linear', class_weight='balanced', C=1.0, probability=True))
+                ])
                 Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
                 
                 try:
-                    model.fit(Y_train_s, Y_target_1d)
-                    Y_pred = model.predict(Y_test_s)
+                    pipeline_svm.fit(Y_features_train, Y_target_1d)
+                    Y_pred = pipeline_svm.predict(Y_features_test)
                     pred_indices = Y_pred.astype(int).flatten()
                     predictions = le.classes_[pred_indices]
                 except Exception as e:
                     print(f"SVM prediction fallback: {e}")
-                    predictions = [le.classes_[0]] * len(Y_test_s)
+                    predictions = [le.classes_[0]] * len(Y_features_test)
             
         elif payload.algorithm.lower() in ["random_forest", "rf", "random forest"]:
             if len(le.classes_) < 2:
                 predictions = [le.classes_[0]] * len(Y_features_test)
             else:
                 from sklearn.preprocessing import StandardScaler
-                scaler = StandardScaler()
-                Y_train_s = scaler.fit_transform(Y_features_train)
-                Y_test_s = scaler.transform(Y_features_test)
-
-                model = RandomForestClassifier(n_estimators=100, class_weight='balanced', random_state=42)
+                from sklearn.pipeline import Pipeline
+                from sklearn.decomposition import PCA
+                
+                pipeline_rf = Pipeline([
+                    ('scaler', StandardScaler()),
+                    ('pca', PCA(n_components=n_comps, random_state=42)),
+                    ('rf', RandomForestClassifier(n_estimators=100, class_weight='balanced', random_state=42))
+                ])
                 Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
                 
                 try:
-                    model.fit(Y_train_s, Y_target_1d)
-                    Y_pred = model.predict(Y_test_s)
+                    pipeline_rf.fit(Y_features_train, Y_target_1d)
+                    Y_pred = pipeline_rf.predict(Y_features_test)
                     pred_indices = Y_pred.astype(int).flatten()
                     predictions = le.classes_[pred_indices]
                 except Exception as e:
                     print(f"RF prediction fallback: {e}")
-                    predictions = [le.classes_[0]] * len(Y_test_s)
+                    predictions = [le.classes_[0]] * len(Y_features_test)
             
         else:
             return JSONResponse(status_code=400, content={"detail": f"Algoritmo no soportado: {payload.algorithm}"})
