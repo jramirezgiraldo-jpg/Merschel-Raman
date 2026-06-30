@@ -108,16 +108,6 @@ def aplicar_quimiometria(espectros_json):
         X_mat[i, :] = np.nan_to_num(f(malla_fija), nan=0.0)
         y_list.append(str(item["label"]).strip())
         
-    # Corrección de Línea Base (ALS) para eliminar fluorescencia y ruido físico antes de estabilizar
-    from pybaselines import Baseline
-    baseline_fitter = Baseline()
-    
-    def _base_als_quim(y):
-        base, _ = baseline_fitter.asls(y, lam=1e5, p=0.01, max_iter=10)
-        return y - base
-        
-    X_mat = np.array([_base_als_quim(y) for y in X_mat])
-
     # Normalización SNV vectorizada para todo el conjunto
     X_mat = (X_mat - X_mat.mean(axis=1, keepdims=True)) / (X_mat.std(axis=1, keepdims=True) + 1e-8)
     
@@ -1089,18 +1079,21 @@ async def predict_plsda(payload: PredictPayload):
         n_comps = max(1, min(n_components, Y_features_train.shape[0]-1))
         
         if payload.algorithm.lower() in ["pls_da", "pls-da"]:
-            pls = PLSRegression(n_components=n_comps)
-            pls.fit(Y_features_train, Y_target)
-            Y_pred = pls.predict(Y_features_test)
-            
-            if len(le.classes_) > 2:
-                pred_indices = np.argmax(Y_pred, axis=1)
-                predictions = le.classes_[pred_indices]
-            elif len(le.classes_) == 2:
-                pred_indices = (Y_pred > 0.5).astype(int).flatten()
-                predictions = le.classes_[pred_indices]
-            else:
-                predictions = [le.classes_[0]] * len(Y_pred)
+            try:
+                pls = PLSRegression(n_components=n_comps)
+                pls.fit(Y_features_train, Y_target)
+                Y_pred = pls.predict(Y_features_test)
+                
+                if len(le.classes_) > 2:
+                    pred_indices = np.argmax(Y_pred, axis=1)
+                    predictions = le.classes_[pred_indices]
+                elif len(le.classes_) == 2:
+                    pred_indices = (Y_pred > 0.5).astype(int).flatten()
+                    predictions = le.classes_[pred_indices]
+                else:
+                    predictions = [le.classes_[0]] * len(Y_pred)
+            except Exception as e:
+                return JSONResponse(status_code=400, content={"detail": f"Error interno de varianza (PLS-DA colapsó): {str(e)}"})
                 
         elif payload.algorithm.lower() == "svm":
             if len(le.classes_) < 2:
@@ -1112,7 +1105,7 @@ async def predict_plsda(payload: PredictPayload):
                 
                 pipeline_svm = Pipeline([
                     ('scaler', StandardScaler()),
-                    ('svm', SVC(kernel='linear', class_weight='balanced', C=0.01, probability=True))
+                    ('svm', SVC(kernel='linear', class_weight='balanced', C=1.0, probability=True))
                 ])
                 Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
                 
@@ -1135,7 +1128,7 @@ async def predict_plsda(payload: PredictPayload):
                 
                 pipeline_rf = Pipeline([
                     ('scaler', StandardScaler()),
-                    ('rf', RandomForestClassifier(n_estimators=100, max_depth=10, min_samples_leaf=2, class_weight='balanced', random_state=42))
+                    ('rf', RandomForestClassifier(n_estimators=100, class_weight='balanced', random_state=42))
                 ])
                 Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
                 
