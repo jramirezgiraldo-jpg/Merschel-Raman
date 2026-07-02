@@ -491,8 +491,8 @@
                         <label style="font-size:0.7rem; font-weight:bold;">Algoritmo:</label>
                         <select id="algo-selector" style="width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px; margin-bottom:6px;">
                             <option value="PLS-DA">Mínimos Cuadrados Parciales (PLS-DA)</option>
-                            <option value="SVM">Máquinas de Soporte Vectorial (SVM)</option>
-                            <option value="RF">Bosques Aleatorios (Random Forest)</option>
+                            <option value="Regresión Logística Penalizada (Elastic Net)">Regresión Logística Penalizada (Elastic Net)</option>
+                            <option value="PCA-kNN">PCA-kNN</option>
                         </select>
                     </div>
 
@@ -1945,7 +1945,7 @@
                 const selectedAlg = document.getElementById('algo-selector').value;
                 const container = document.getElementById('infoContainer');
 
-                if (selectedAlg.includes('SVM') || selectedAlg.includes('Soporte')) {
+                if (selectedAlg.includes('Elastic Net') || selectedAlg.includes('Logística')) {
                     container.innerHTML = `
                         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px;">
                             <svg width="150" height="150" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -1955,22 +1955,18 @@
                                 <line x1="25" y1="95" x2="95" y2="25" stroke="#10b981" stroke-width="2" stroke-dasharray="4" />
                                 <line x1="-5" y1="65" x2="65" y2="-5" stroke="#10b981" stroke-width="2" stroke-dasharray="4" />
                             </svg>
-                            <h3 style="color: #334155; margin-top: 20px; font-family: sans-serif;">Máquinas de Soporte Vectorial</h3>
-                            <p style="font-size: 0.9rem; color: #64748b; text-align: center; font-family: sans-serif; max-width: 80%;">Clasificación basada en la optimización de hiperplanos multidimensionales. Las proyecciones de coordenadas 2D no son aplicables bajo este kernel.</p>
+                            <h3 style="color: #334155; margin-top: 20px; font-family: sans-serif;">Regresión Logística (Elastic Net)</h3>
+                            <p style="font-size: 0.9rem; color: #64748b; text-align: center; font-family: sans-serif; max-width: 80%;">Clasificación basada en la optimización de hiperplanos con regularización L1/L2 combinada.</p>
                         </div>`;
-                } else if (selectedAlg.includes('RF') || selectedAlg.includes('Forest')) {
+                } else if (selectedAlg.includes('kNN') || selectedAlg.includes('PCA')) {
                     container.innerHTML = `
                         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px;">
-                            <!-- SVG de Árbol de Decisión -->
-                            <svg width="120" height="120" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                                <rect x="40" y="10" width="20" height="15" rx="3" fill="#1A365D" />
-                                <line x1="50" y1="25" x2="25" y2="45" stroke="#cbd5e1" stroke-width="3" />
-                                <line x1="50" y1="25" x2="75" y2="45" stroke="#cbd5e1" stroke-width="3" />
-                                <rect x="15" y="45" width="20" height="15" rx="3" fill="#3b82f6" />
-                                <rect x="65" y="45" width="20" height="15" rx="3" fill="#ef4444" />
+                            <svg width="150" height="150" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="20" y="20" width="10" height="40" fill="#3b82f6" /><rect x="40" y="40" width="10" height="20" fill="#3b82f6" />
+                                <rect x="70" y="50" width="10" height="30" fill="#ef4444" /><rect x="55" y="70" width="10" height="10" fill="#ef4444" />
                             </svg>
-                            <h3 style="color: #334155; margin-top: 20px; font-family: sans-serif;">Bosques Aleatorios</h3>
-                            <p style="font-size: 0.9rem; color: #64748b; text-align: center; font-family: sans-serif; max-width: 80%;">Modelo de ensamble estructural. Visualización de dispersión espacial no disponible.</p>
+                            <h3 style="color: #334155; margin-top: 20px; font-family: sans-serif;">PCA-kNN</h3>
+                            <p style="font-size: 0.9rem; color: #64748b; text-align: center; font-family: sans-serif; max-width: 80%;">Clasificación por similitud de distancia en un espacio reducido de Componentes Principales.</p>
                         </div>`;
                 }
                 

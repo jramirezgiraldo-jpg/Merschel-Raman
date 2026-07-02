@@ -9,8 +9,8 @@ from sklearn.decomposition import PCA
 from scipy.cluster.hierarchy import linkage, dendrogram
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.preprocessing import LabelBinarizer, LabelEncoder, StandardScaler
-from sklearn.svm import SVC
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -1114,13 +1114,13 @@ async def predict_plsda(payload: PredictPayload):
             except Exception as e:
                 return JSONResponse(status_code=400, content={"detail": f"Error interno de varianza (PLS-DA colapsó): {str(e)}"})
                 
-        elif payload.algorithm.lower() == "svm":
+        elif payload.algorithm == 'Regresión Logística Penalizada (Elastic Net)':
             if len(le.classes_) < 2:
                 predictions = [le.classes_[0]] * len(Y_features_test)
             else:
-                pipeline_svm = Pipeline([
+                pipeline_elastic = Pipeline([
                     ('scaler', StandardScaler()),
-                    ('svm', SVC(kernel='linear', class_weight='balanced', C=1.0, probability=True))
+                    ('logreg', LogisticRegression(penalty='elasticnet', solver='saga', l1_ratio=0.5, class_weight='balanced', max_iter=10000))
                 ])
                 Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
                 
@@ -1129,21 +1129,21 @@ async def predict_plsda(payload: PredictPayload):
                 Y_target_1d = encoder_estricto.fit_transform(Y_target_1d)
                 
                 try:
-                    pipeline_svm.fit(Y_features_train, Y_target_1d)
-                    Y_pred = pipeline_svm.predict(Y_features_test)
+                    pipeline_elastic.fit(Y_features_train, Y_target_1d)
+                    Y_pred = pipeline_elastic.predict(Y_features_test)
                     pred_indices = Y_pred.astype(int).flatten()
                     predictions = le.classes_[pred_indices]
                 except Exception as e:
-                    print(f"SVM prediction fallback: {e}")
+                    print(f"ElasticNet prediction fallback: {e}")
                     predictions = [le.classes_[0]] * len(Y_features_test)
             
-        elif payload.algorithm.lower() in ["random_forest", "rf", "random forest"]:
+        elif payload.algorithm == 'PCA-kNN':
             if len(le.classes_) < 2:
                 predictions = [le.classes_[0]] * len(Y_features_test)
             else:
-                pipeline_rf = Pipeline([
-                    ('pls_extractor', PLSExtractor(n_components=n_comps)),
-                    ('rf', RandomForestClassifier(n_estimators=100, class_weight='balanced', random_state=42))
+                pipeline_knn = Pipeline([
+                    ('pca', PCA(n_components=n_comps)),
+                    ('knn', KNeighborsClassifier(n_neighbors=min(3, max(1, len(Y_features_train) - 1)), weights='distance'))
                 ])
                 Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
                 
@@ -1152,12 +1152,12 @@ async def predict_plsda(payload: PredictPayload):
                 Y_target_1d = encoder_estricto.fit_transform(Y_target_1d)
                 
                 try:
-                    pipeline_rf.fit(Y_features_train, Y_target_1d)
-                    Y_pred = pipeline_rf.predict(Y_features_test)
+                    pipeline_knn.fit(Y_features_train, Y_target_1d)
+                    Y_pred = pipeline_knn.predict(Y_features_test)
                     pred_indices = Y_pred.astype(int).flatten()
                     predictions = le.classes_[pred_indices]
                 except Exception as e:
-                    print(f"RF prediction fallback: {e}")
+                    print(f"PCA-kNN prediction fallback: {e}")
                     predictions = [le.classes_[0]] * len(Y_features_test)
             
         else:
