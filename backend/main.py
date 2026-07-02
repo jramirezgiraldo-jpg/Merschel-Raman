@@ -1007,27 +1007,42 @@ async def calculate_pls_da(payload: PLSDAPayload):
             else:
                 weights = np.abs(pls.coef_).flatten()
                 
-        elif algorithm.lower() == "svm":
-            clf = SVC(kernel='linear')
+        elif algorithm == 'Regresión Logística Penalizada (Elastic Net)':
+            pipeline_elastic = Pipeline([
+                ('scaler', StandardScaler()),
+                ('logreg', LogisticRegression(penalty='elasticnet', solver='saga', l1_ratio=0.5, class_weight='balanced', max_iter=10000))
+            ])
             Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
-            clf.fit(Y_features, Y_target_1d)
-            pca = PCA(n_components=n_components)
+            encoder_estricto = LabelEncoder()
+            Y_target_1d = encoder_estricto.fit_transform(Y_target_1d)
+            
+            pipeline_elastic.fit(Y_features, Y_target_1d)
+            pca = PCA(n_components=2)
             scores = pca.fit_transform(Y_features)
             plot_type = "Proyección PCA"
             
+            clf = pipeline_elastic.named_steps['logreg']
             if clf.coef_.ndim > 1:
                 weights = np.mean(np.abs(clf.coef_), axis=0)
             else:
                 weights = np.abs(clf.coef_).flatten()
                 
-        elif algorithm.lower() in ["random_forest", "rf", "random forest"]:
-            clf = RandomForestClassifier(n_estimators=100)
+        elif algorithm == 'PCA-kNN':
+            pipeline_knn = Pipeline([
+                ('pca', PCA(n_components=n_comps)),
+                ('knn', KNeighborsClassifier(n_neighbors=min(3, max(1, len(Y_features) - 1)), weights='distance'))
+            ])
             Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
-            clf.fit(Y_features, Y_target_1d)
-            pca = PCA(n_components=2)
-            scores = pca.fit_transform(Y_features)
-            weights = clf.feature_importances_
+            encoder_estricto = LabelEncoder()
+            Y_target_1d = encoder_estricto.fit_transform(Y_target_1d)
+            
+            pipeline_knn.fit(Y_features, Y_target_1d)
+            
+            pca_step = pipeline_knn.named_steps['pca']
+            scores = pca_step.transform(Y_features)
             plot_type = "Proyección PCA"
+            
+            weights = np.mean(np.abs(pca_step.components_), axis=0)
             
         else:
             return {"error": f"Algoritmo no soportado: {algorithm}"}
