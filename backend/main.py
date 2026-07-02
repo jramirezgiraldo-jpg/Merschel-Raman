@@ -8,7 +8,7 @@ from pybaselines import Baseline
 from sklearn.decomposition import PCA
 from scipy.cluster.hierarchy import linkage, dendrogram
 from sklearn.cross_decomposition import PLSRegression
-from sklearn.preprocessing import LabelBinarizer
+from sklearn.preprocessing import LabelBinarizer, LabelEncoder, StandardScaler
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
@@ -1119,10 +1119,14 @@ async def predict_plsda(payload: PredictPayload):
                 predictions = [le.classes_[0]] * len(Y_features_test)
             else:
                 pipeline_svm = Pipeline([
-                    ('pls_extractor', PLSExtractor(n_components=n_comps)),
+                    ('scaler', StandardScaler()),
                     ('svm', SVC(kernel='linear', class_weight='balanced', C=1.0, probability=True))
                 ])
                 Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
+                
+                # Sanitización estricta de tipos para compatibilidad total con Pipelines
+                encoder_estricto = LabelEncoder()
+                Y_target_1d = encoder_estricto.fit_transform(Y_target_1d)
                 
                 try:
                     pipeline_svm.fit(Y_features_train, Y_target_1d)
@@ -1138,10 +1142,14 @@ async def predict_plsda(payload: PredictPayload):
                 predictions = [le.classes_[0]] * len(Y_features_test)
             else:
                 pipeline_rf = Pipeline([
-                    ('pca', PCA(n_components=n_comps, random_state=42)),
+                    ('pls_extractor', PLSExtractor(n_components=n_comps)),
                     ('rf', RandomForestClassifier(n_estimators=100, class_weight='balanced', random_state=42))
                 ])
                 Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
+                
+                # Sanitización estricta de tipos para compatibilidad total con Pipelines
+                encoder_estricto = LabelEncoder()
+                Y_target_1d = encoder_estricto.fit_transform(Y_target_1d)
                 
                 try:
                     pipeline_rf.fit(Y_features_train, Y_target_1d)
