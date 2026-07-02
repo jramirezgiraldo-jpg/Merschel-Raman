@@ -1027,7 +1027,7 @@ async def calculate_pls_da(payload: PLSDAPayload):
             else:
                 weights = np.abs(clf.coef_).flatten()
                 
-        elif algorithm == 'PCA-kNN':
+        elif algorithm.strip().lower() == 'pca-knn':
             pipeline_knn = Pipeline([
                 ('pca', PCA(n_components=n_comps)),
                 ('knn', KNeighborsClassifier(n_neighbors=min(3, max(1, len(Y_features) - 1)), weights='distance'))
@@ -1152,7 +1152,7 @@ async def predict_plsda(payload: PredictPayload):
                     print(f"ElasticNet prediction fallback: {e}")
                     predictions = [le.classes_[0]] * len(Y_features_test)
             
-        elif payload.algorithm == 'PCA-kNN':
+        elif payload.algorithm.strip().lower() == 'pca-knn':
             if len(le.classes_) < 2:
                 predictions = [le.classes_[0]] * len(Y_features_test)
             else:
