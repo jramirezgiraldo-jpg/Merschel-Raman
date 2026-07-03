@@ -1027,18 +1027,18 @@ async def calculate_pls_da(payload: PLSDAPayload):
             else:
                 weights = np.abs(clf.coef_).flatten()
                 
-        elif algorithm.strip().lower() == 'pca-knn':
-            pipeline_knn = Pipeline([
+        elif algorithm.strip().lower() == 'pca-lda':
+            pipeline_lda = Pipeline([
                 ('pca', PCA(n_components=n_comps)),
-                ('knn', KNeighborsClassifier(n_neighbors=min(3, max(1, len(Y_features) - 1)), weights='distance'))
+                ('lda', LinearDiscriminantAnalysis())
             ])
             Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
             encoder_estricto = LabelEncoder()
             Y_target_1d = encoder_estricto.fit_transform(Y_target_1d)
             
-            pipeline_knn.fit(Y_features, Y_target_1d)
+            pipeline_lda.fit(Y_features, Y_target_1d)
             
-            pca_step = pipeline_knn.named_steps['pca']
+            pca_step = pipeline_lda.named_steps['pca']
             scores = pipeline_lda.transform(Y_features)
             plot_type = "Proyección PCA"
             
