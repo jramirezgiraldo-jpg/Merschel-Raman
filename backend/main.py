@@ -1039,7 +1039,7 @@ async def calculate_pls_da(payload: PLSDAPayload):
             pipeline_lda.fit(Y_features, Y_target_1d)
             
             pca_step = pipeline_lda.named_steps['pca']
-            scores = pca_step.transform(Y_features)
+            scores = pipeline_lda.transform(Y_features)
             plot_type = "Proyección PCA"
             
             weights = np.mean(np.abs(pca_step.components_), axis=0)
