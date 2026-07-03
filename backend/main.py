@@ -10,7 +10,7 @@ from scipy.cluster.hierarchy import linkage, dendrogram
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.preprocessing import LabelBinarizer, LabelEncoder, StandardScaler
 from sklearn.linear_model import LogisticRegression
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.pipeline import Pipeline
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -1152,13 +1152,13 @@ async def predict_plsda(payload: PredictPayload):
                     print(f"ElasticNet prediction fallback: {e}")
                     predictions = [le.classes_[0]] * len(Y_features_test)
             
-        elif payload.algorithm.strip().lower() == 'pca-knn':
+        elif payload.algorithm.strip().lower() == 'pca-lda':
             if len(le.classes_) < 2:
                 predictions = [le.classes_[0]] * len(Y_features_test)
             else:
-                pipeline_knn = Pipeline([
+                pipeline_lda = Pipeline([
                     ('pca', PCA(n_components=n_comps)),
-                    ('knn', KNeighborsClassifier(n_neighbors=min(3, max(1, len(Y_features_train) - 1)), weights='distance'))
+                    ('lda', LinearDiscriminantAnalysis())
                 ])
                 Y_target_1d = np.argmax(Y_target, axis=1) if Y_target.ndim > 1 and Y_target.shape[1] > 1 else Y_target.flatten()
                 
@@ -1167,12 +1167,12 @@ async def predict_plsda(payload: PredictPayload):
                 Y_target_1d = encoder_estricto.fit_transform(Y_target_1d)
                 
                 try:
-                    pipeline_knn.fit(Y_features_train, Y_target_1d)
-                    Y_pred = pipeline_knn.predict(Y_features_test)
+                    pipeline_lda.fit(Y_features_train, Y_target_1d)
+                    Y_pred = pipeline_lda.predict(Y_features_test)
                     pred_indices = Y_pred.astype(int).flatten()
                     predictions = le.classes_[pred_indices]
                 except Exception as e:
-                    print(f"PCA-kNN prediction fallback: {e}")
+                    print(f"PCA-LDA prediction fallback: {e}")
                     predictions = [le.classes_[0]] * len(Y_features_test)
             
         else:
