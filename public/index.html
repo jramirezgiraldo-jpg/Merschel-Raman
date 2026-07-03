@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -150,7 +150,7 @@
     .loader-text h2 { color: #ffffff; margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: 0.5px; }
     .loader-text p { color: #94a3b8; margin: 8px 0 0; font-size: 1rem; font-weight: 600; }
 
-    #status-text { display: none; } /* Ocultar aviso estÃ¡ndar */
+    #status-text { display: none; } /* Ocultar aviso estándar */
 
     .graph-container::after { content: 'Hershell-Raman V8.2'; position: absolute; bottom: 10px; right: 10px; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); opacity: 0.2; pointer-events: none; }
     /* AYUDA QUIMIOMETRICA */
@@ -159,7 +159,7 @@
     .help-modal { display: none; background: #fff; border-left: 4px solid var(--purple); padding: 12px; margin: 10px 0; font-size: 0.85rem; color: #333; font-family: 'Times New Roman', serif; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); line-height: 1.4; }
     .btn-delete-batch { background: transparent; color: #ef4444; border: none; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; transition: background 0.2s; }
     .btn-delete-batch:hover { background: #fee2e2; }
-    /* TEMA: TABLA ESPECTRO ÃšNICO (Azul Marino) */
+    /* TEMA: TABLA ESPECTRO ÚNICO (Azul Marino) */
     .table-single-spectrum { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 0.9rem; }
     .table-single-spectrum th { background-color: #1A365D; color: white; padding: 12px; text-align: left; text-transform: uppercase; font-weight: 600; }
     .table-single-spectrum td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; color: #334155; }
@@ -167,7 +167,7 @@
     .badge-nuevo { background-color: #8b5cf6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin-left: 8px; }
     .badge-completado { background-color: #6366f1; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin-left: 8px; }
 
-    /* TEMA: TABLA COMPARATIVA MULTIPLE (Verde SemÃ¡ntico) */
+    /* TEMA: TABLA COMPARATIVA MULTIPLE (Verde Semántico) */
     .table-multi-spectrum { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 0.9rem; border: 1px solid #e2e8f0; }
     .table-multi-spectrum th { background-color: #059669; color: white; padding: 12px; text-align: left; text-transform: uppercase; font-weight: 600; border-right: 1px solid #047857; }
     .table-multi-spectrum td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; color: #334155; }
@@ -185,7 +185,7 @@
 <body>
 
 <div id="welcomeModal" class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.9); display: flex; justify-content: center; align-items: center; z-index: 9999; opacity: 1; transition: opacity 0.3s ease;">
-    <div class="modal-box" style="background-color: white; border-radius: 12px; width: 90%; max-width: 850px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3); display: flex; flex-wrap: wrap; overflow: hidden; position: relative;">
+    <div class="modal-box" style="background-color: white; border-radius: 12px; width: 90%; max-width: 850px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3); display: flex; flex-wrap: wrap; overflow-y: auto; max-height: 90vh; position: relative;">
         
         <div style="flex: 1 1 300px; background-color: #f8fafc; display: flex; justify-content: center; align-items: center; padding: 40px; border-right: 1px solid #e2e8f0;">
             <img src="./logo.png" alt="Hershell-Raman Logo" style="width: 100%; max-width: 280px; filter: drop-shadow(0 10px 8px rgba(0,0,0,0.04));">
@@ -195,20 +195,20 @@
             <h2 style="color: #1A365D; margin-top: 0; margin-bottom: 15px; font-family: sans-serif; font-size: 1.8rem;">Bienvenido a Hershell-Raman</h2>
             
             <p style="color: #334155; font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px; text-align: justify; font-family: sans-serif;">
-                Plataforma avanzada para el anÃ¡lisis espectroscÃ³pico y quimiometrÃ­a automatizada. Esta herramienta ha sido <b>desarrollada Ã­ntegramente bajo el modelo de IngenierÃ­a de Prompts (Prompt Engineering)</b>, garantizando una arquitectura cientÃ­fica guiada por el experto humano.
+                Plataforma avanzada para el análisis espectroscópico y quimiometría automatizada. Esta herramienta ha sido <b>desarrollada íntegramente bajo el modelo de Ingeniería de Prompts (Prompt Engineering)</b>, garantizando una arquitectura científica guiada por el experto humano.
             </p>
             
             <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 15px; margin-bottom: 20px; border-radius: 0 6px 6px 0;">
                 <p style="color: #166534; font-size: 0.9rem; margin: 0; line-height: 1.5; font-family: sans-serif; text-align: justify;">
-                    <b>ðŸ”’ Privacidad y Control Absoluto:</b> Usted tiene completo control sobre sus datos. La plataforma procesa la informaciÃ³n de forma segura en su sesiÃ³n local. Hershell-Raman <b>no retiene, no almacena y no aprende</b> de los datos analizados a travÃ©s de nuestra plataforma. Sus firmas espectrales son estrictamente confidenciales y efÃ­meros.
+                    <b>🔒 Privacidad y Control Absoluto:</b> Usted tiene completo control sobre sus datos. La plataforma procesa la información de forma segura en su sesión local. Hershell-Raman <b>no retiene, no almacena y no aprende</b> de los datos analizados a través de nuestra plataforma. Sus firmas espectrales son estrictamente confidenciales y efímeros.
                 </p>
             </div>
 
             <p style="color: #334155; font-size: 0.85rem; background-color: #f1f5f9; padding: 12px; border-left: 3px solid #1A365D; margin-bottom: 25px; font-family: sans-serif; border-radius: 0 4px 4px 0;">
-                <b>ðŸ’¡ RecomendaciÃ³n:</b> Inicie cargando su matriz de datos en formato CSV en la secciÃ³n "Originales".
+                <b>💡 Recomendación:</b> Inicie cargando su matriz de datos en formato CSV en la sección "Originales".
             </p>
             
-            <button onclick="closeWelcomeModal()" style="background-color: #059669; color: white; border: none; padding: 14px 20px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 1.05rem; transition: background-color 0.2s; box-shadow: 0 4px 6px rgba(5, 150, 105, 0.2);">Comenzar AnÃ¡lisis</button>
+            <button onclick="closeWelcomeModal()" style="background-color: #059669; color: white; border: none; padding: 14px 20px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 1.05rem; transition: background-color 0.2s; box-shadow: 0 4px 6px rgba(5, 150, 105, 0.2);">Comenzar Análisis</button>
         </div>
     </div>
 </div>
@@ -237,8 +237,8 @@
             <label style="font-size:0.75rem; margin-right:5px; font-weight:600; color:var(--text-muted);">Archivo:</label>
             <input type="file" id="file-input" multiple accept=".csv,.txt" style="padding:4px;" />
         </div>
-        <button onclick="document.getElementById('converter-modal').style.display='flex'" class="secondary" style="padding:4px 8px;">âš¡ Conversor</button>
-        <button onclick="document.getElementById('manual-modal').style.display='flex'" class="secondary" style="padding:4px 8px;">ðŸ“– Manual</button>
+        <button onclick="document.getElementById('converter-modal').style.display='flex'" class="secondary" style="padding:4px 8px;">⚡ Conversor</button>
+        <button onclick="document.getElementById('manual-modal').style.display='flex'" class="secondary" style="padding:4px 8px;">📖 Manual</button>
         <button onclick="document.getElementById('about-modal').style.display='flex'" class="secondary" style="padding:4px 8px;">?</button>
     </div>
   </header>
@@ -246,11 +246,11 @@
   <nav class="topbar">
     <button class="nav-item active" onclick="switchTab('upload')">1. Originales</button>
     <button class="nav-item" onclick="switchTab('preprocessing')">2. Procesamiento</button>
-    <button class="nav-item" onclick="switchTab('chemometrics')">3. QuimiometrÃ­a</button>
+    <button class="nav-item" onclick="switchTab('chemometrics')">3. Quimiometría</button>
     <button class="nav-item" onclick="switchTab('supervisada')" style="color:var(--red);">4. Supervisado</button>
     <button class="nav-item" onclick="switchTab('results')">5. Resultados</button>
     <button class="nav-item" onclick="switchTab('image-comparison')" style="color:var(--purple);">6. Comparador</button>
-    <button class="nav-item" onclick="switchTab('characterization')" style="color:var(--primary-dark);">7. CaracterizaciÃ³n</button>
+    <button class="nav-item" onclick="switchTab('characterization')" style="color:var(--primary-dark);">7. Caracterización</button>
   </nav>
 
   <div class="status-strip">
@@ -283,35 +283,35 @@
                 <div class="toolbar-group" id="grp-tipo">
                     <span class="toolbar-label">TIPO ESPECTRO</span>
                     <div class="toolbar-buttons">
-                        <button id="set-ftir-btn" class="primary" onclick="setSpectrumType('FTIR')" data-title="EspectroscopÃ­a FTIR" data-desc="Define el eje Y como Absorbancia. Basado en la absorciÃ³n de radiaciÃ³n IR que provoca transiciones vibracionales." data-math="A = -\log_{10}(T)">FTIR</button>
-                        <button id="set-raman-btn" class="secondary" onclick="setSpectrumType('Raman')" data-title="EspectroscopÃ­a Raman" data-desc="Define el eje Y como Intensidad. Basado en la dispersiÃ³n inelÃ¡stica de fotones (cambio en la polarizabilidad)." data-math="I_R \propto \nu^4 I_0 |\alpha|^2">Raman</button>
+                        <button id="set-ftir-btn" class="primary" onclick="setSpectrumType('FTIR')" data-title="Espectroscopía FTIR" data-desc="Define el eje Y como Absorbancia. Basado en la absorción de radiación IR que provoca transiciones vibracionales." data-math="A = -\log_{10}(T)">FTIR</button>
+                        <button id="set-raman-btn" class="secondary" onclick="setSpectrumType('Raman')" data-title="Espectroscopía Raman" data-desc="Define el eje Y como Intensidad. Basado en la dispersión inelástica de fotones (cambio en la polarizabilidad)." data-math="I_R \propto \nu^4 I_0 |\alpha|^2">Raman</button>
                     </div>
                 </div>
                 
                 <div class="toolbar-group" id="grp-conv">
-                    <span class="toolbar-label">CONVERSIÃ“N</span>
+                    <span class="toolbar-label">CONVERSIÓN</span>
                     <div class="toolbar-buttons">
-                        <button id="abs-to-trans-btn" onclick="convertAbsToTrans()" data-title="Absorbancia a Transmitancia" data-desc="Convierte la escala logarÃ­tmica (absorciÃ³n) a un porcentaje lineal de luz transmitida." data-math="%T = 10^{-A} \times 100">Aâ†’T</button>
-                        <button id="trans-to-abs-btn" onclick="convertTransToAbs()" data-title="Transmitancia a Absorbancia" data-desc="Aplica la Ley de Beer-Lambert para linealizar la concentraciÃ³n respecto a la seÃ±al." data-math="A = 2 - \log_{10}(\%T)">Tâ†’A</button>
-                        <button id="atr-correction-btn" onclick="applyATRCorrection()" data-title="CorrecciÃ³n ATR" data-desc="Compensa el hecho de que en Reflectancia Total Atenuada, la profundidad de penetraciÃ³n del haz IR es proporcional a la longitud de onda." data-math="d_p = \frac{\lambda}{2\pi \sqrt{n_1^2 \sin^2\theta - n_2^2}}">ATR</button>
+                        <button id="abs-to-trans-btn" onclick="convertAbsToTrans()" data-title="Absorbancia a Transmitancia" data-desc="Convierte la escala logarítmica (absorción) a un porcentaje lineal de luz transmitida." data-math="%T = 10^{-A} \times 100">A→T</button>
+                        <button id="trans-to-abs-btn" onclick="convertTransToAbs()" data-title="Transmitancia a Absorbancia" data-desc="Aplica la Ley de Beer-Lambert para linealizar la concentración respecto a la señal." data-math="A = 2 - \log_{10}(\%T)">T→A</button>
+                        <button id="atr-correction-btn" onclick="applyATRCorrection()" data-title="Corrección ATR" data-desc="Compensa el hecho de que en Reflectancia Total Atenuada, la profundidad de penetración del haz IR es proporcional a la longitud de onda." data-math="d_p = \frac{\lambda}{2\pi \sqrt{n_1^2 \sin^2\theta - n_2^2}}">ATR</button>
                     </div>
                 </div>
 
                 <div class="toolbar-group" id="grp-corr">
-                    <span class="toolbar-label">CORRECCIÃ“N ATMOSFÃ‰RICA</span>
+                    <span class="toolbar-label">CORRECCIÓN ATMOSFÉRICA</span>
                     <div class="toolbar-buttons">
-                        <button id="remove-co2-btn" class="secondary" onclick="applyCO2Removal()" data-title="Eliminar COâ‚‚" data-desc="El COâ‚‚ atmosfÃ©rico absorbe fuertemente entre 2300-2400 cmâ»Â¹ (estiramiento asimÃ©trico). Usa interpolaciÃ³n lineal para suprimir el artefacto." data-math="y_{int} = y_0 + (x - x_0)\frac{y_1 - y_0}{x_1 - x_0}">-COâ‚‚</button>
-                        <button id="remove-h2o-btn" class="secondary" onclick="applyH2ORemoval()" data-title="Eliminar Hâ‚‚O" data-desc="El vapor de agua genera un espectro rotovibracional complejo entre 3500-3900 cmâ»Â¹. Se suprime por interpolaciÃ³n." data-math="Rango: 3500 - 3900 cm^{-1}">-Hâ‚‚O</button>
-                        <button id="mcr-als-btn" class="secondary" onclick="alert('MCR-ALS Simulado')" data-title="ResoluciÃ³n MCR-ALS" data-desc="ResoluciÃ³n de Curvas Multivariadas. Descompone mezclas complejas en espectros puros (perfiles) y concentraciones usando mÃ­nimos cuadrados alternados." data-math="D = C \times S^T + E">MCR</button>
+                        <button id="remove-co2-btn" class="secondary" onclick="applyCO2Removal()" data-title="Eliminar CO₂" data-desc="El CO₂ atmosférico absorbe fuertemente entre 2300-2400 cm⁻¹ (estiramiento asimétrico). Usa interpolación lineal para suprimir el artefacto." data-math="y_{int} = y_0 + (x - x_0)\frac{y_1 - y_0}{x_1 - x_0}">-CO₂</button>
+                        <button id="remove-h2o-btn" class="secondary" onclick="applyH2ORemoval()" data-title="Eliminar H₂O" data-desc="El vapor de agua genera un espectro rotovibracional complejo entre 3500-3900 cm⁻¹. Se suprime por interpolación." data-math="Rango: 3500 - 3900 cm^{-1}">-H₂O</button>
+                        <button id="mcr-als-btn" class="secondary" onclick="alert('MCR-ALS Simulado')" data-title="Resolución MCR-ALS" data-desc="Resolución de Curvas Multivariadas. Descompone mezclas complejas en espectros puros (perfiles) y concentraciones usando mínimos cuadrados alternados." data-math="D = C \times S^T + E">MCR</button>
                     </div>
                 </div>
 
                 <div class="toolbar-group" id="grp-base">
-                    <span class="toolbar-label">LÃNEA BASE</span>
+                    <span class="toolbar-label">LÍNEA BASE</span>
                     <div id="baseline-method-buttons" class="toolbar-buttons">
-                        <button data-group="baseline" data-value="none" class="primary" data-title="Sin LÃ­nea Base" data-desc="Desactiva la correcciÃ³n. Mantiene el fondo original (crudo)." data-math="y_{corr} = y">Off</button>
-                        <button data-group="baseline" data-value="als" class="secondary" data-title="Asymmetric Least Squares (ALS)" data-desc="Ajusta una lÃ­nea base suave penalizando las curvaturas bruscas, ignorando los picos asimÃ©tricos positivos (seÃ±al biolÃ³gica)." data-math="\min \sum w(y-z)^2 + \lambda \sum (\Delta^2 z)^2">ALS</button>
-                        <button data-group="baseline" data-value="rollingball" class="secondary" data-title="Rolling Ball" data-desc="Filtro morfolÃ³gico. Simula una esfera de radio R rodando bajo el espectro. Excelente para eliminar fluorescencia severa (tÃ­pica en Raman)." data-math="Base = \text{dilataciÃ³n}(\text{erosiÃ³n}(y))">Roll</button>
+                        <button data-group="baseline" data-value="none" class="primary" data-title="Sin Línea Base" data-desc="Desactiva la corrección. Mantiene el fondo original (crudo)." data-math="y_{corr} = y">Off</button>
+                        <button data-group="baseline" data-value="als" class="secondary" data-title="Asymmetric Least Squares (ALS)" data-desc="Ajusta una línea base suave penalizando las curvaturas bruscas, ignorando los picos asimétricos positivos (señal biológica)." data-math="\min \sum w(y-z)^2 + \lambda \sum (\Delta^2 z)^2">ALS</button>
+                        <button data-group="baseline" data-value="rollingball" class="secondary" data-title="Rolling Ball" data-desc="Filtro morfológico. Simula una esfera de radio R rodando bajo el espectro. Excelente para eliminar fluorescencia severa (típica en Raman)." data-math="Base = \text{dilatación}(\text{erosión}(y))">Roll</button>
                     </div>
                 </div>
                 
@@ -319,44 +319,44 @@
                     <span class="toolbar-label">DERIVADAS / SUAVIZADO</span>
                     <div id="derivative-method-buttons" class="toolbar-buttons" style="margin-bottom:4px;">
                         <button data-group="derivative" data-value="none" class="primary" data-title="Sin Derivada" data-desc="Mantiene el espectro de orden cero." data-math="y' = y">0</button>
-                        <button data-group="derivative" data-value="d1" class="secondary" data-title="Primera Derivada" data-desc="Elimina desplazamientos constantes de la lÃ­nea base. Cruza por cero en los mÃ¡ximos de los picos originales." data-math="\frac{dy}{dx}">1Âª</button>
-                        <button data-group="derivative" data-value="d2" class="secondary" data-title="Segunda Derivada" data-desc="Elimina lÃ­neas base lineales. Resuelve bandas solapadas (los mÃ­nimos corresponden a los mÃ¡ximos de los picos originales)." data-math="\frac{d^2y}{dx^2}">2Âª</button>
+                        <button data-group="derivative" data-value="d1" class="secondary" data-title="Primera Derivada" data-desc="Elimina desplazamientos constantes de la línea base. Cruza por cero en los máximos de los picos originales." data-math="\frac{dy}{dx}">1ª</button>
+                        <button data-group="derivative" data-value="d2" class="secondary" data-title="Segunda Derivada" data-desc="Elimina líneas base lineales. Resuelve bandas solapadas (los mínimos corresponden a los máximos de los picos originales)." data-math="\frac{d^2y}{dx^2}">2ª</button>
                     </div>
                     <div id="smoothing-method-buttons" class="toolbar-buttons">
                         <button data-group="smoothing" data-value="none" class="primary" data-title="Sin Suavizado" data-desc="Mantiene el ruido de alta frecuencia intacto." data-math="y_{smooth} = y">Off</button>
-                        <button data-group="smoothing" data-value="savgol" class="secondary" data-title="Filtro Savitzky-Golay" data-desc="Suavizado mediante ajuste polinÃ³mico local por mÃ­nimos cuadrados. Reduce el ruido sin ensanchar ni reducir artificialmente la altura de los picos." data-math="y_j^* = \frac{1}{N} \sum_{i=-m}^{m} C_i y_{j+i}">S-G</button>
-                        <button data-group="smoothing" data-value="movingavg" class="secondary" data-title="Media MÃ³vil" data-desc="Filtro de paso bajo simple. Promedia puntos adyacentes en una ventana de tamaÃ±o n. Puede distorsionar bandas estrechas." data-math="y_i = \frac{1}{n} \sum_{k=0}^{n-1} x_{i-k}">Avg</button>
+                        <button data-group="smoothing" data-value="savgol" class="secondary" data-title="Filtro Savitzky-Golay" data-desc="Suavizado mediante ajuste polinómico local por mínimos cuadrados. Reduce el ruido sin ensanchar ni reducir artificialmente la altura de los picos." data-math="y_j^* = \frac{1}{N} \sum_{i=-m}^{m} C_i y_{j+i}">S-G</button>
+                        <button data-group="smoothing" data-value="movingavg" class="secondary" data-title="Media Móvil" data-desc="Filtro de paso bajo simple. Promedia puntos adyacentes en una ventana de tamaño n. Puede distorsionar bandas estrechas." data-math="y_i = \frac{1}{n} \sum_{k=0}^{n-1} x_{i-k}">Avg</button>
                     </div>
                 </div>
 
                 <div class="toolbar-group" id="grp-norm">
-                    <span class="toolbar-label">NORMALIZACIÃ“N</span>
+                    <span class="toolbar-label">NORMALIZACIÓN</span>
                     <div id="norm-method-buttons" class="toolbar-buttons">
-                        <button data-group="norm" data-value="none" class="primary" data-title="Sin NormalizaciÃ³n" data-desc="Conserva las intensidades absolutas originales." data-math="y_{norm} = y">Off</button>
-                        <button data-group="norm" data-value="minmax" class="secondary" data-title="NormalizaciÃ³n Min-Max" data-desc="Escala linealmente todo el espectro al intervalo [0, 1]. Ãštil para comparar formas de bandas independientemente de la concentraciÃ³n." data-math="y_{norm} = \frac{y - y_{min}}{y_{max} - y_{min}}">0-1</button>
-                        <button data-group="norm" data-value="snv" class="secondary" data-title="Standard Normal Variate (SNV)" data-desc="Centra el espectro en cero y lo escala a varianza unitaria. Elimina efectos multiplicativos por dispersiÃ³n de luz (scattering) o variaciones de camino Ã³ptico." data-math="y_{norm} = \frac{y - \mu}{\sigma}">SNV</button>
-                        <button data-group="norm" data-value="area" class="secondary" data-title="NormalizaciÃ³n por Ãrea" data-desc="Ajusta el espectro para que el Ã¡rea total bajo la curva sea igual a 1 (Norma L1)." data-math="y_{norm} = \frac{y}{\sum |y_i|}">Area</button>
+                        <button data-group="norm" data-value="none" class="primary" data-title="Sin Normalización" data-desc="Conserva las intensidades absolutas originales." data-math="y_{norm} = y">Off</button>
+                        <button data-group="norm" data-value="minmax" class="secondary" data-title="Normalización Min-Max" data-desc="Escala linealmente todo el espectro al intervalo [0, 1]. Útil para comparar formas de bandas independientemente de la concentración." data-math="y_{norm} = \frac{y - y_{min}}{y_{max} - y_{min}}">0-1</button>
+                        <button data-group="norm" data-value="snv" class="secondary" data-title="Standard Normal Variate (SNV)" data-desc="Centra el espectro en cero y lo escala a varianza unitaria. Elimina efectos multiplicativos por dispersión de luz (scattering) o variaciones de camino óptico." data-math="y_{norm} = \frac{y - \mu}{\sigma}">SNV</button>
+                        <button data-group="norm" data-value="area" class="secondary" data-title="Normalización por Área" data-desc="Ajusta el espectro para que el área total bajo la curva sea igual a 1 (Norma L1)." data-math="y_{norm} = \frac{y}{\sum |y_i|}">Area</button>
                     </div>
                 </div>
 
                 <div class="toolbar-group" id="grp-act">
                     <span class="toolbar-label">ACCIONES</span>
                     <div class="toolbar-buttons">
-                        <button class="primary" id="apply-btn" style="width:100%; display:none;" data-title="Cadena de Procesamiento" data-desc="Ejecuta secuencialmente todos los filtros, correcciones y normalizaciones seleccionados en el panel superior." data-math="Pipeline: Base \rightarrow Filtro \rightarrow Deriv \rightarrow Norm">âš¡ Aplicar Procesos</button>
-                        <button id="consolidate-btn" class="btn-avg" style="flex:1;" onclick="generateConsolidatedView()" data-title="AnÃ¡lisis EstadÃ­stico BÃ¡sico" data-desc="Calcula y grafica el espectro promedio y sombrea la desviaciÃ³n estÃ¡ndar (\pm 1\sigma) para observar la varianza de la muestra." data-math="\bar{y}, \pm \sigma">ðŸ“‰ Media</button>
-                        <button id="reset-btn" style="flex:1;" onclick="resetData()" data-title="Restaurar Original" data-desc="Purga todos los vectores de memoria y recarga la matriz de datos crudos (Raw Data)." data-math="Data = Data_{raw}">â†º Reset</button>
+                        <button class="primary" id="apply-btn" style="width:100%; display:none;" data-title="Cadena de Procesamiento" data-desc="Ejecuta secuencialmente todos los filtros, correcciones y normalizaciones seleccionados en el panel superior." data-math="Pipeline: Base \rightarrow Filtro \rightarrow Deriv \rightarrow Norm">⚡ Aplicar Procesos</button>
+                        <button id="consolidate-btn" class="btn-avg" style="flex:1;" onclick="generateConsolidatedView()" data-title="Análisis Estadístico Básico" data-desc="Calcula y grafica el espectro promedio y sombrea la desviación estándar (\pm 1\sigma) para observar la varianza de la muestra." data-math="\bar{y}, \pm \sigma">📉 Media</button>
+                        <button id="reset-btn" style="flex:1;" onclick="resetData()" data-title="Restaurar Original" data-desc="Purga todos los vectores de memoria y recarga la matriz de datos crudos (Raw Data)." data-math="Data = Data_{raw}">↺ Reset</button>
                     </div>
                 </div>
 
                 <div class="config-panel">
-                    <span class="toolbar-label" style="display:block; margin-bottom:8px;">CONFIGURACIÃ“N DE HERRAMIENTAS</span>
+                    <span class="toolbar-label" style="display:block; margin-bottom:8px;">CONFIGURACIÓN DE HERRAMIENTAS</span>
                     <div class="config-item"><span>Tipo Espectro</span><input type="checkbox" checked onchange="toggleTool('grp-tipo', this)"></div>
-                    <div class="config-item"><span>ConversiÃ³n</span><input type="checkbox" checked onchange="toggleTool('grp-conv', this)"></div>
-                    <div class="config-item"><span>Corr. AtmosfÃ©rica</span><input type="checkbox" checked onchange="toggleTool('grp-corr', this)"></div>
-                    <div class="config-item"><span>LÃ­nea Base</span><input type="checkbox" checked onchange="toggleTool('grp-base', this)"></div>
+                    <div class="config-item"><span>Conversión</span><input type="checkbox" checked onchange="toggleTool('grp-conv', this)"></div>
+                    <div class="config-item"><span>Corr. Atmosférica</span><input type="checkbox" checked onchange="toggleTool('grp-corr', this)"></div>
+                    <div class="config-item"><span>Línea Base</span><input type="checkbox" checked onchange="toggleTool('grp-base', this)"></div>
                     <div class="config-item"><span>Derivadas/Suav.</span><input type="checkbox" checked onchange="toggleTool('grp-der', this)"></div>
-                    <div class="config-item"><span>NormalizaciÃ³n</span><input type="checkbox" checked onchange="toggleTool('grp-norm', this)"></div>
-                    <div class="config-item"><span>DetecciÃ³n Picos</span><input type="checkbox" checked onchange="toggleTool('grp-peak', this)"></div>
+                    <div class="config-item"><span>Normalización</span><input type="checkbox" checked onchange="toggleTool('grp-norm', this)"></div>
+                    <div class="config-item"><span>Detección Picos</span><input type="checkbox" checked onchange="toggleTool('grp-peak', this)"></div>
                 </div>
 
             </div>
@@ -364,10 +364,10 @@
             <div class="workspace-wrapper">
                 
                 <div class="workspace-header">
-                    <span style="font-size:0.85rem; font-weight:700; color:var(--text-main);">Ãrea de Trabajo</span>
+                    <span style="font-size:0.85rem; font-weight:700; color:var(--text-main);">Área de Trabajo</span>
                     <div class="view-switcher-container">
-                        <button class="view-btn active" onclick="switchProcView('graph')" id="btn-view-graph" data-title="VisualizaciÃ³n GrÃ¡fica" data-desc="Renderizado interactivo vectorial impulsado por Plotly.js." data-math="Plot(X, Y)">ðŸ“ˆ GrÃ¡fico</button>
-                        <button class="view-btn" onclick="switchProcView('table')" id="btn-view-table" data-title="Tabla de Asignaciones" data-desc="Matriz de datos de picos encontrados con correlaciÃ³n a biblioteca de biomolÃ©culas." data-math="DataTable(Peaks)">ðŸ“ Tabla de Picos</button>
+                        <button class="view-btn active" onclick="switchProcView('graph')" id="btn-view-graph" data-title="Visualización Gráfica" data-desc="Renderizado interactivo vectorial impulsado por Plotly.js." data-math="Plot(X, Y)">📈 Gráfico</button>
+                        <button class="view-btn" onclick="switchProcView('table')" id="btn-view-table" data-title="Tabla de Asignaciones" data-desc="Matriz de datos de picos encontrados con correlación a biblioteca de biomoléculas." data-math="DataTable(Peaks)">📝 Tabla de Picos</button>
                     </div>
                 </div>
 
@@ -377,24 +377,24 @@
                 <div id="proc-view-table" class="view-pane">
                     <div class="table-view-container">
                         <div class="table-view-header">
-                            <h3 style="margin:0; font-size:1rem; color:var(--primary);">IdentificaciÃ³n Espectral</h3>
-                            <button class="btn-download-table" onclick="downloadPeakTable()">ðŸ“¥ Descargar Tabla (.txt)</button>
+                            <h3 style="margin:0; font-size:1rem; color:var(--primary);">Identificación Espectral</h3>
+                            <button class="btn-download-table" onclick="downloadPeakTable()">📥 Descargar Tabla (.txt)</button>
                         </div>
                         <div class="table-scroll">
                             <table>
                                 <thead>
                                     <tr>
                                         <th style="width:15%">Espectro</th>
-                                        <th style="width:10%">cmâ»Â¹</th>
+                                        <th style="width:10%">cm⁻¹</th>
                                         <th style="width:15%">Intensidad</th>
-                                        <th style="width:15%">VibraciÃ³n</th>
+                                        <th style="width:15%">Vibración</th>
                                         <th style="width:15%">Grupo</th>
-                                        <th style="width:20%">BiomolÃ©cula</th>
-                                        <th>AcciÃ³n</th>
+                                        <th style="width:20%">Biomolécula</th>
+                                        <th>Acción</th>
                                     </tr>
                                 </thead>
                                 <tbody id="peaks-table-body">
-                                    <tr><td colspan="7" style="text-align:center; padding:3rem; color:#94a3b8;">Sin datos. Realiza una detecciÃ³n primero.</td></tr>
+                                    <tr><td colspan="7" style="text-align:center; padding:3rem; color:#94a3b8;">Sin datos. Realiza una detección primero.</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -408,12 +408,12 @@
         <div class="card">
             <div class="toolbar">
                 <div class="toolbar-group">
-                    <span class="toolbar-label">MÃ‰TODOS EXPLORATORIOS</span>
+                    <span class="toolbar-label">MÉTODOS EXPLORATORIOS</span>
                     <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:12px;">Modelos No Supervisados basados en Varianza y Distancia.</p>
                     <div class="toolbar-buttons" style="flex-direction:column; gap:8px;">
                         <button class="primary" onclick="runChemometrics('pca')">1. PCA (Scores)</button>
                         <button class="secondary" onclick="runChemometrics('hca')">2. Dendrograma (HCA)</button>
-                        <button class="secondary" onclick="runChemometrics('correlation')">3. Matriz CorrelaciÃ³n</button>
+                        <button class="secondary" onclick="runChemometrics('correlation')">3. Matriz Correlación</button>
                     </div>
                 </div>
 
@@ -432,7 +432,7 @@
                     </div>
 
                     <div style="margin-bottom:10px;">
-                        <label style="font-size:0.7rem; font-weight:bold;">LÃ­nea de Corte (HCA):</label>
+                        <label style="font-size:0.7rem; font-weight:bold;">Línea de Corte (HCA):</label>
                         <div style="display:flex;gap:5px;align-items:center;">
                             <input type="range" id="hca-threshold" min="0" max="100" step="1" value="0" style="flex:1">
                             <output id="threshold-val" style="font-size:0.7rem;">Off</output>
@@ -451,7 +451,7 @@
                     </div>
 
                     <div style="margin-bottom:10px;">
-                        <label style="font-size:0.7rem; font-weight:bold;">Rango Espectral (cmâ»Â¹):</label>
+                        <label style="font-size:0.7rem; font-weight:bold;">Rango Espectral (cm⁻¹):</label>
                         <div style="display:flex;gap:5px;align-items:center;">
                             <input type="number" id="chemo-range-min" value="0" style="width:45%; font-size:0.7rem; padding:2px;">
                             <span style="font-size:0.7rem;">-</span>
@@ -460,7 +460,7 @@
                     </div>
 
                     <div style="margin-bottom:10px;">
-                        <label style="font-size:0.7rem; font-weight:bold;">Escalado (Pre-AnÃ¡lisis):</label>
+                        <label style="font-size:0.7rem; font-weight:bold;">Escalado (Pre-Análisis):</label>
                         <select id="chemo-scaling" onchange="runChemometrics(currentChemoType)" style="width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px;">
                             <option value="none">Ninguno</option>
                             <option value="minmax">Min-Max (0-1)</option>
@@ -468,7 +468,7 @@
                         </select>
                     </div>
 
-                    <button id="btn-update-chemo" class="primary" style="margin-top: 10px; width: 100%;" data-title="ActualizaciÃ³n DinÃ¡mica" data-desc="Re-ejecuta el pipeline quimiomÃ©trico completo aplicando los recortes de rango y escalado actuales sobre la matriz de datos." data-math="Pipeline: Recorte \rightarrow Escalado \rightarrow Modelo">ðŸ”„ Actualizar GrÃ¡ficos</button>
+                    <button id="btn-update-chemo" class="primary" style="margin-top: 10px; width: 100%;" data-title="Actualización Dinámica" data-desc="Re-ejecuta el pipeline quimiométrico completo aplicando los recortes de rango y escalado actuales sobre la matriz de datos." data-math="Pipeline: Recorte \rightarrow Escalado \rightarrow Modelo">🔄 Actualizar Gráficos</button>
                 </div>
                 
                 <div id="chemo-status" style="margin-top:10px; font-size:0.75rem; color:var(--primary); font-weight:bold;"></div>
@@ -484,14 +484,14 @@
         <div class="card">
             <div class="toolbar">
                 <div class="toolbar-group">
-                    <span class="toolbar-label">MÃšLTIPLES ALGORITMOS</span>
-                    <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:12px;">ClasificaciÃ³n Supervisada Avanzada.</p>
+                    <span class="toolbar-label">MÚLTIPLES ALGORITMOS</span>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:12px;">Clasificación Supervisada Avanzada.</p>
                     
                     <div style="margin-bottom:10px;">
                         <label style="font-size:0.7rem; font-weight:bold;">Algoritmo:</label>
                         <select id="algo-selector" style="width:100%; padding:4px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:4px; margin-bottom:6px;">
-                            <option value="PLS-DA">MÃ­nimos Cuadrados Parciales (PLS-DA)</option>
-                            <option value="RegresiÃ³n LogÃ­stica Penalizada (Elastic Net)">RegresiÃ³n LogÃ­stica Penalizada (Elastic Net)</option>
+                            <option value="PLS-DA">Mínimos Cuadrados Parciales (PLS-DA)</option>
+                            <option value="Regresión Logística Penalizada (Elastic Net)">Regresión Logística Penalizada (Elastic Net)</option>
                             <option value="PCA-LDA">PCA-LDA</option>
                         </select>
                     </div>
@@ -500,7 +500,7 @@
                         <label style="font-size:0.7rem; font-weight:bold;">Componentes (LV) (Solo PLS-DA):</label>
                         <input type="number" id="pls-comps" value="2" min="1" max="10" style="width:100%; padding:4px; box-sizing:border-box;">
                     </div>
-                    <button class="primary" style="width:100%" onclick="runPlsDa()">ðŸ”¥ Entrenar Modelo</button>
+                    <button class="primary" style="width:100%" onclick="runPlsDa()">🔥 Entrenar Modelo</button>
                     <div id="pls-status" style="margin-top:10px; font-size:0.75rem; color:var(--primary); font-weight:bold;"></div>
                 </div>
             </div>
@@ -514,13 +514,13 @@
                             <option value="" disabled selected>-- Seleccione etiqueta --</option>
                             <option value="CUSTOM_INPUT">+ Nueva Clase...</option>
                         </select>
-<input type="text" id="etiqueta-manual" placeholder="Escriba el taxÃ³n (ej. Candida)" style="display: none; margin-top: 8px;">
+<input type="text" id="etiqueta-manual" placeholder="Escriba el taxón (ej. Candida)" style="display: none; margin-top: 8px;">
 
                         
                         
                         <div style="display:flex; align-items:center; gap:5px; margin-top:8px;">
                             <input type="file" id="train-file-input" multiple accept=".csv,.txt" style="display:none;" onchange="handleTrainingUpload(event)" />
-                            <button class="primary" style="width:100%; font-size:0.75rem; padding:6px;" onclick="document.getElementById('train-file-input').click()">ðŸ“¥ Cargar y Etiquetar Lote</button>
+                            <button class="primary" style="width:100%; font-size:0.75rem; padding:6px;" onclick="document.getElementById('train-file-input').click()">📥 Cargar y Etiquetar Lote</button>
                         </div>
                     </div>
                     
@@ -538,14 +538,14 @@
                     </table>
                 </div>
                 
-                <!-- Panel: GrÃ¡ficas PLS-DA -->
+                <!-- Panel: Gráficas PLS-DA -->
                 <div style="flex:1; display:flex; flex-direction:column; padding:10px; gap:10px; overflow-y:auto; background:white;">
                     <div style="display:flex; justify-content: flex-end; align-items: center;">
-                        <button id="btn-ayuda-quimiometria" class="btn-help" onclick="document.getElementById('pls-help-modal').style.display = document.getElementById('pls-help-modal').style.display === 'block' ? 'none' : 'block'">ðŸ’¡ Entender GrÃ¡ficos</button>
+                        <button id="btn-ayuda-quimiometria" class="btn-help" onclick="document.getElementById('pls-help-modal').style.display = document.getElementById('pls-help-modal').style.display === 'block' ? 'none' : 'block'">💡 Entender Gráficos</button>
                     </div>
                     <div id="pls-help-modal" class="help-modal">
-                        <b>â–  GrÃ¡fico de Scores (LV1 vs LV2):</b> ProyecciÃ³n espacial multidimensional de las muestras espectrales en las primeras Variables Latentes. Permite visualizar la separaciÃ³n fenotÃ­pica real y el agrupamiento clonal de las especies hÃ­dricas.<br><br>
-                        <b>â–  Carga de Biomarcadores Latentes (VIP Score):</b> GrÃ¡fico de Importancia de la Variable en la ProyecciÃ³n. Los picos que superan el umbral crÃ­tico de > 1.0 identifican formalmente los nÃºmeros de onda de los biomarcadores macromoleculares (Amidas, lÃ­pidos o carbohidratos constitutivos de las cubiertas de los parÃ¡sitos) responsables de la discriminaciÃ³n estadÃ­stica del modelo.
+                        <b>■ Gráfico de Scores (LV1 vs LV2):</b> Proyección espacial multidimensional de las muestras espectrales en las primeras Variables Latentes. Permite visualizar la separación fenotípica real y el agrupamiento clonal de las especies hídricas.<br><br>
+                        <b>■ Carga de Biomarcadores Latentes (VIP Score):</b> Gráfico de Importancia de la Variable en la Proyección. Los picos que superan el umbral crítico de > 1.0 identifican formalmente los números de onda de los biomarcadores macromoleculares (Amidas, lípidos o carbohidratos constitutivos de las cubiertas de los parásitos) responsables de la discriminación estadística del modelo.
                     </div>
                     
                     <div id="plotContainer" style="display:flex; flex-direction:row; width:100%; gap:10px;">
@@ -555,19 +555,19 @@
                     
                     <div id="infoContainer" style="display:none; flex:1; min-height:350px; border:1px solid #e2e8f0; border-radius:6px; padding:20px; box-sizing:border-box; background-color:#f8fafc; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
                         <svg style="width:48px;height:48px;color:#64748b;margin-bottom:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <h3 style="color:#1e293b; margin-bottom:12px; font-size:1.1rem;">AnÃ¡lisis Multivariante Directo</h3>
-                        <p id="infoText" style="color:#475569; font-size:0.9rem; max-width:600px; line-height:1.5;">El algoritmo estÃ¡ procesando los espectros en el espacio hiperdimensional original de 1550 variables espectrales (sin reducciÃ³n a componentes principales). No existe una proyecciÃ³n bidimensional (2D) disponible para la visualizaciÃ³n del lÃ­mite de decisiÃ³n en esta configuraciÃ³n hiperespacial.</p>
+                        <h3 style="color:#1e293b; margin-bottom:12px; font-size:1.1rem;">Análisis Multivariante Directo</h3>
+                        <p id="infoText" style="color:#475569; font-size:0.9rem; max-width:600px; line-height:1.5;">El algoritmo está procesando los espectros en el espacio hiperdimensional original de 1550 variables espectrales (sin reducción a componentes principales). No existe una proyección bidimensional (2D) disponible para la visualización del límite de decisión en esta configuración hiperespacial.</p>
                     </div>
                 </div>
 
                 <!-- Panel: Muestra Ciega -->
                 <div style="width: 200px; border-left:1px solid #e2e8f0; overflow-y:auto; padding:10px; background:#fefce8; flex-shrink:0;">
-                    <span class="toolbar-label" style="display:block; margin-bottom:10px; color:var(--purple);">PREDICCIÃ“N CIEGOS</span>
+                    <span class="toolbar-label" style="display:block; margin-bottom:10px; color:var(--purple);">PREDICCIÓN CIEGOS</span>
                     
                     <div style="margin-bottom: 12px;">
                         <input type="file" id="predict-file-input" multiple accept=".csv,.txt" style="display:none;" onchange="handlePredictUpload(event)" />
-                        <button class="secondary" style="width:100%; font-size:0.75rem; padding:6px; margin-bottom:6px;" onclick="document.getElementById('predict-file-input').click()">ðŸ“‚ Subir Muestras</button>
-                        <button class="primary" style="width:100%; font-size:0.75rem; padding:6px; background:var(--purple); border-color:var(--purple);" onclick="predictUnknowns()">ðŸ”® Clasificar</button>
+                        <button class="secondary" style="width:100%; font-size:0.75rem; padding:6px; margin-bottom:6px;" onclick="document.getElementById('predict-file-input').click()">📂 Subir Muestras</button>
+                        <button class="primary" style="width:100%; font-size:0.75rem; padding:6px; background:var(--purple); border-color:var(--purple);" onclick="predictUnknowns()">🔮 Clasificar</button>
                     </div>
 
                     <span class="toolbar-label" style="display:block; margin-bottom:10px;">Resultados</span>
@@ -585,8 +585,8 @@
         <div class="card">
             <div class="toolbar">
                 <div class="toolbar-group">
-                    <span class="toolbar-label">VALIDACIÃ“N Ã“PTICA</span>
-                    <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:12px;">ComparaciÃ³n espectral pre-procesada.</p>
+                    <span class="toolbar-label">VALIDACIÓN ÓPTICA</span>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:12px;">Comparación espectral pre-procesada.</p>
                     
                     <div style="margin-bottom:10px;">
                         <label style="font-size:0.7rem; font-weight:bold;">Promedio de Clase (Train):</label>
@@ -598,7 +598,7 @@
                         <select id="comp-sample" class="form-control" style="width:100%; font-size:0.8rem; padding:4px; margin-bottom:10px;"></select>
                     </div>
 
-                    <button id="btn-comparar-optico" class="bg-indigo-600" style="width:100%; padding:8px; background-color:#4f46e5; color:white; border-color:#4338ca; border-radius:6px;" onclick="runVisualComparison()">ðŸ” Comparar Espectros</button>
+                    <button id="btn-comparar-optico" class="bg-indigo-600" style="width:100%; padding:8px; background-color:#4f46e5; color:white; border-color:#4338ca; border-radius:6px;" onclick="runVisualComparison()">🔍 Comparar Espectros</button>
                     <div id="comp-status" style="margin-top:10px; font-size:0.75rem; color:var(--primary); font-weight:bold;"></div>
                 </div>
             </div>
@@ -614,8 +614,8 @@
         <div class="card">
             <div class="toolbar">
                 <div class="toolbar-group">
-                    <span class="toolbar-label">CONTROL DE CARACTERIZACIÃ“N</span>
-                    <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:12px;">IdentificaciÃ³n multiespectral y asignaciÃ³n vibracional.</p>
+                    <span class="toolbar-label">CONTROL DE CARACTERIZACIÓN</span>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:12px;">Identificación multiespectral y asignación vibracional.</p>
                     
                     <div style="margin-bottom:10px;">
                         <label style="font-size:0.7rem; font-weight:bold;">Prominencia (Sensibilidad):</label>
@@ -624,35 +624,35 @@
                             <output id="char-prom-val" style="font-size:0.7rem;">0.05</output>
                         </div>
                     <div style="margin-bottom:10px;">
-                        <label for="clusterTolerance" data-i18n="cluster_tol" style="font-size:0.7rem; font-weight:bold;">Tolerancia de AgrupaciÃ³n (cmâ»Â¹): <span id="tolValue">5.0</span></label>
+                        <label for="clusterTolerance" data-i18n="cluster_tol" style="font-size:0.7rem; font-weight:bold;">Tolerancia de Agrupación (cm⁻¹): <span id="tolValue">5.0</span></label>
                         <div style="display:flex;gap:5px;align-items:center;">
                             <input type="range" id="clusterTolerance" min="1.0" max="10.0" step="0.5" value="5.0" style="flex:1" oninput="document.getElementById('tolValue').innerText = this.value">
                         </div>
                     </div>
 
                     <div class="alert-warning" style="background-color: #fff3cd; color: #856404; padding: 8px; border-radius: 4px; font-size: 0.8rem; margin-bottom: 10px; border-left: 4px solid #ffeeba;">
-                        âš ï¸ <b>Nota MetodolÃ³gica:</b> Para evitar falsos positivos, asegÃºrese de aplicar alisado (Smoothing) en la pestaÃ±a de Procesamiento antes de identificar picos.
+                        ⚠️ <b>Nota Metodológica:</b> Para evitar falsos positivos, asegúrese de aplicar alisado (Smoothing) en la pestaña de Procesamiento antes de identificar picos.
                     </div>
 
                     <div class="toolbar-buttons" style="flex-direction:column; gap:8px;">
-                        <button class="primary" style="width:100%" onclick="characterizeSpectra()">ðŸ” Identificar Picos (AutomÃ¡tico)</button>
-                        <button class="secondary" style="width:100%" onclick="renderCharTableUI()">ðŸ’¾ Generar Tabla de CaracterizaciÃ³n</button>
-                        <button class="primary" style="width:100%; background:var(--purple); border-color:var(--purple);" onclick="generateTaxonomicReport()">ðŸ“„ Generar reporte de caracterizaciÃ³n</button>
-                        <button class="btn-download-table" style="width:100%; justify-content:center;" onclick="downloadCharTable()">ðŸ“¥ Descargar Tabla (CSV)</button>
+                        <button class="primary" style="width:100%" onclick="characterizeSpectra()">🔍 Identificar Picos (Automático)</button>
+                        <button class="secondary" style="width:100%" onclick="renderCharTableUI()">💾 Generar Tabla de Caracterización</button>
+                        <button class="primary" style="width:100%; background:var(--purple); border-color:var(--purple);" onclick="generateTaxonomicReport()">📄 Generar reporte de caracterización</button>
+                        <button class="btn-download-table" style="width:100%; justify-content:center;" onclick="downloadCharTable()">📥 Descargar Tabla (CSV)</button>
                     </div>
 
                     <div class="toolbar-group" style="border-top:1px solid #e2e8f0; padding-top:12px; margin-top:12px;">
-                        <span class="toolbar-label">EDICIÃ“N MANUAL INTERACTIVA</span>
-                        <p style="font-size:0.65rem; color:var(--text-muted); margin-bottom:8px;">Activa el modo selecciÃ³n y haz clic directo en el espectro para aÃ±adir biomarcadores.</p>
-                        <button class="secondary" id="btn-toggle-char-mode" style="width:100%; font-size:0.75rem; padding:8px; margin-bottom:8px;" onclick="toggleCharPeakMode()">ðŸ–±ï¸ Activar SelecciÃ³n por Clic</button>
-                        <button class="secondary" style="width:100%; font-size:0.75rem; padding:8px; color:#ef4444; border-color:#fca5a5;" id="btn-remove-peak" onclick="removeSelectedPeak()">âŒ Borrar Pico Seleccionado</button>
+                        <span class="toolbar-label">EDICIÓN MANUAL INTERACTIVA</span>
+                        <p style="font-size:0.65rem; color:var(--text-muted); margin-bottom:8px;">Activa el modo selección y haz clic directo en el espectro para añadir biomarcadores.</p>
+                        <button class="secondary" id="btn-toggle-char-mode" style="width:100%; font-size:0.75rem; padding:8px; margin-bottom:8px;" onclick="toggleCharPeakMode()">🖱️ Activar Selección por Clic</button>
+                        <button class="secondary" style="width:100%; font-size:0.75rem; padding:8px; color:#ef4444; border-color:#fca5a5;" id="btn-remove-peak" onclick="removeSelectedPeak()">❌ Borrar Pico Seleccionado</button>
                     </div>
                 </div>
                 <div id="char-status" style="margin-top:10px; font-size:0.75rem; color:var(--primary); font-weight:bold;"></div>
             </div>
             <div class="workspace-wrapper">
                 <div class="workspace-header">
-                    <span style="font-size:0.85rem; font-weight:700; color:var(--text-main);">AnÃ¡lisis de Picos y Asignaciones Biomoleculares</span>
+                    <span style="font-size:0.85rem; font-weight:700; color:var(--text-main);">Análisis de Picos y Asignaciones Biomoleculares</span>
                 </div>
                 <div style="flex: 1; display: flex; flex-direction: column; padding: 10px; gap: 10px; overflow: hidden; background: white;">
                     <div class="graph-container" id="char-graph" style="flex: 1.2; min-height: 300px; border: 1px solid var(--border); border-radius: 8px;"></div>
@@ -661,12 +661,12 @@
                             <table id="char-table" class="table-single-spectrum" style="width:100%; border-collapse:collapse;">
                                 <thead id="char-table-head">
                                     <tr style="background:#f1f5f9;">
-                                        <th style="padding:10px; border-bottom:2px solid var(--border);">Wavenumber (cmâ»Â¹)</th>
-                                        <th style="padding:10px; border-bottom:2px solid var(--border);">AsignaciÃ³n Sugerida</th>
+                                        <th style="padding:10px; border-bottom:2px solid var(--border);">Wavenumber (cm⁻¹)</th>
+                                        <th style="padding:10px; border-bottom:2px solid var(--border);">Asignación Sugerida</th>
                                     </tr>
                                 </thead>
                                 <tbody id="char-table-body">
-                                    <tr><td colspan="2" style="text-align:center; padding:3rem; color:#94a3b8;">Sin datos. Realiza la identificaciÃ³n automÃ¡tica.</td></tr>
+                                    <tr><td colspan="2" style="text-align:center; padding:3rem; color:#94a3b8;">Sin datos. Realiza la identificación automática.</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -679,65 +679,65 @@
   </main>
 
   <div id="converter-modal"><div class="modal-box"><h3>Conversor</h3><p>Convierte archivos de espectros.</p><button onclick="document.getElementById('converter-modal').style.display='none'">Cerrar</button></div></div>
-  <div id="about-modal"><div class="modal-box"><h3>Hershell-Raman V8.2</h3><p>ActualizaciÃ³n: LÃ³gica restaurada, Tooltips de rigor cientÃ­fico (MatemÃ¡tica/FÃ­sica) y Toggles para configuraciÃ³n de interfaz aÃ±adidos. CorrecciÃ³n de eventos de clic mÃºltiple.</p><button onclick="document.getElementById('about-modal').style.display='none'">Cerrar</button></div></div>
+  <div id="about-modal"><div class="modal-box"><h3>Hershell-Raman V8.2</h3><p>Actualización: Lógica restaurada, Tooltips de rigor científico (Matemática/Física) y Toggles para configuración de interfaz añadidos. Corrección de eventos de clic múltiple.</p><button onclick="document.getElementById('about-modal').style.display='none'">Cerrar</button></div></div>
 
   <div id="manual-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: none; justify-content: center; align-items: center;">
     <div class="modal-box" style="width: 800px; max-height: 90vh; overflow-y: auto; background: #fff; padding: 30px; border-radius: 8px; position:relative;">
       <div style="position:absolute; top:20px; right:20px; display:flex; align-items:center;">
         <select id="lang-select" onchange="changeLanguage(this.value)" style="padding:6px; font-size:0.8rem; border-radius:4px; border:1px solid #cbd5e1; cursor:pointer;">
-          <option value="es">ðŸ‡ªðŸ‡¸ ES</option>
-          <option value="en">ðŸ‡¬ðŸ‡§ EN</option>
-          <option value="fr">ðŸ‡«ðŸ‡· FR</option>
-          <option value="pt">ðŸ‡µðŸ‡¹ PT</option>
+          <option value="es">🇪🇸 ES</option>
+          <option value="en">🇬🇧 EN</option>
+          <option value="fr">🇫🇷 FR</option>
+          <option value="pt">🇵🇹 PT</option>
         </select>
         <button onclick="document.getElementById('manual-modal').style.display='none'" style="margin-left:10px;" class="btn-delete">X</button>
       </div>
       <h2 id="t_title" style="color:var(--primary); margin-top:0; font-size:1.8rem;">Manual de Usuario - Hershell-Raman</h2>
-      <p id="t_subtitle" style="color:var(--text-muted); font-size:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:15px; margin-bottom:20px;">Plataforma para el anÃ¡lisis quimiomÃ©trico avanzado</p>
+      <p id="t_subtitle" style="color:var(--text-muted); font-size:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:15px; margin-bottom:20px;">Plataforma para el análisis quimiométrico avanzado</p>
       
-      <h3 id="t_intro_title" style="color:#1e40af;">1. IntroducciÃ³n CientÃ­fica</h3>
-      <p id="t_intro_p1" style="font-size:0.9rem;">Bienvenido a <strong>Hershell-Raman</strong>. Nuestra plataforma rinde homenaje a dos gigantes que forjaron la espectroscopÃ­a:</p>
+      <h3 id="t_intro_title" style="color:#1e40af;">1. Introducción Científica</h3>
+      <p id="t_intro_p1" style="font-size:0.9rem;">Bienvenido a <strong>Hershell-Raman</strong>. Nuestra plataforma rinde homenaje a dos gigantes que forjaron la espectroscopía:</p>
       <ul style="font-size:0.9rem;">
-        <li id="t_intro_hersch"><strong>William Herschel:</strong> Sus experimentos sentaron las bases para descubrir la radiaciÃ³n Infrarroja, abriendo la puerta a la espectroscopÃ­a vibracional.</li>
-        <li id="t_intro_raman"><strong>C.V. Raman:</strong> Galardonado con el Premio Nobel, responsable del descubrimiento de la dispersiÃ³n inelÃ¡stica de fotones interactuando con las vibraciones moleculares (el Efecto Raman).</li>
+        <li id="t_intro_hersch"><strong>William Herschel:</strong> Sus experimentos sentaron las bases para descubrir la radiación Infrarroja, abriendo la puerta a la espectroscopía vibracional.</li>
+        <li id="t_intro_raman"><strong>C.V. Raman:</strong> Galardonado con el Premio Nobel, responsable del descubrimiento de la dispersión inelástica de fotones interactuando con las vibraciones moleculares (el Efecto Raman).</li>
       </ul>
-      <p id="t_intro_p2" style="font-size:0.9rem;">La espectroscopÃ­a vibracional es crucial. Permite el <strong>fenotipado de protozoos</strong> y la caracterizaciÃ³n molecular a nivel "label-free" (sin marcadores quÃ­micos), capturando la <strong>Huella dactilar</strong> fundamental de las muestras.</p>
+      <p id="t_intro_p2" style="font-size:0.9rem;">La espectroscopía vibracional es crucial. Permite el <strong>fenotipado de protozoos</strong> y la caracterización molecular a nivel "label-free" (sin marcadores químicos), capturando la <strong>Huella dactilar</strong> fundamental de las muestras.</p>
 
-      <h3 id="t_guide_title" style="color:#1e40af; margin-top:20px;">2. GuÃ­a de Inicio RÃ¡pido</h3>
+      <h3 id="t_guide_title" style="color:#1e40af; margin-top:20px;">2. Guía de Inicio Rápido</h3>
       <div style="background:#eff6ff; border-left:4px solid #3b82f6; padding:12px; margin:15px 0;">
-        <p id="t_guide_format" style="margin:0; font-size:0.9rem;"><strong>Formatos Admitidos:</strong> La aplicaciÃ³n acepta archivos <code>.csv</code> o <code>.txt</code>. La primera columna debe ser el Wavenumber y la segunda la Intensidad.</p>
+        <p id="t_guide_format" style="margin:0; font-size:0.9rem;"><strong>Formatos Admitidos:</strong> La aplicación acepta archivos <code>.csv</code> o <code>.txt</code>. La primera columna debe ser el Wavenumber y la segunda la Intensidad.</p>
       </div>
-      <p id="t_guide_q" style="font-size:0.9rem; font-weight:bold;">Â¿CÃ³mo cargar muestras?</p>
+      <p id="t_guide_q" style="font-size:0.9rem; font-weight:bold;">¿Cómo cargar muestras?</p>
       <ol style="font-size:0.9rem; margin-bottom:20px;">
-        <li id="t_guide_step1">Localice el botÃ³n de carga en la secciÃ³n Archivo.</li>
+        <li id="t_guide_step1">Localice el botón de carga en la sección Archivo.</li>
         <li id="t_guide_step2">Haga clic en "Elegir archivos" o "Upload".</li>
         <li id="t_guide_step3">Seleccione desde su ordenador los espectros que desee analizar.</li>
-        <li id="t_guide_step4">Los espectros se mostrarÃ¡n automÃ¡ticamente en la vista grÃ¡fica.</li>
+        <li id="t_guide_step4">Los espectros se mostrarán automáticamente en la vista gráfica.</li>
       </ol>
 
-      <h3 id="t_tools_title" style="color:#1e40af;">3. ExplicaciÃ³n de Herramientas de Procesamiento</h3>
-      <p id="t_tools_p" style="font-size:0.9rem;">Nuestra plataforma encapsula potentes rutinas analÃ­ticas empleando <code>pybaselines</code>:</p>
+      <h3 id="t_tools_title" style="color:#1e40af;">3. Explicación de Herramientas de Procesamiento</h3>
+      <p id="t_tools_p" style="font-size:0.9rem;">Nuestra plataforma encapsula potentes rutinas analíticas empleando <code>pybaselines</code>:</p>
       <ul style="font-size:0.9rem;">
-        <li id="t_tools_baseline"><strong>LÃ­nea base:</strong> Integrada vÃ­a <code>pybaselines</code> en Python. Su fin es suprimir la fluorescencia intrÃ­nseca y dispersiones que desvÃ­an las mediciones Raman.</li>
-        <li id="t_tools_norm"><strong>NormalizaciÃ³n:</strong> Ajuste vital de escalas de intensidad para muestras bajo diferentes escenarios. Permite comparar las magnitudes espectrales de manera justa.</li>
-        <li id="t_tools_diff"><strong>AnÃ¡lisis Diferencial:</strong> Nuestro algoritmo detecta <strong>Biomarcadores</strong> exclusivos al contrastar matemÃ¡ticamente diferentes estirpes de muestras.</li>
+        <li id="t_tools_baseline"><strong>Línea base:</strong> Integrada vía <code>pybaselines</code> en Python. Su fin es suprimir la fluorescencia intrínseca y dispersiones que desvían las mediciones Raman.</li>
+        <li id="t_tools_norm"><strong>Normalización:</strong> Ajuste vital de escalas de intensidad para muestras bajo diferentes escenarios. Permite comparar las magnitudes espectrales de manera justa.</li>
+        <li id="t_tools_diff"><strong>Análisis Diferencial:</strong> Nuestro algoritmo detecta <strong>Biomarcadores</strong> exclusivos al contrastar matemáticamente diferentes estirpes de muestras.</li>
       </ul>
 
-      <h3 id="t_interp_title" style="color:#1e40af; margin-top:20px;">4. InterpretaciÃ³n de Resultados</h3>
+      <h3 id="t_interp_title" style="color:#1e40af; margin-top:20px;">4. Interpretación de Resultados</h3>
       <p id="t_interp_p" style="font-size:0.9rem;">Obtenga entendimiento claro para interpretar Toxoplasma y protozoos:</p>
       <ul style="font-size:0.9rem;">
-        <li id="t_interp_arrows"><strong>Flechas de Colores para Picos Diferenciales:</strong> El sistema identifica picos diferenciales exclusivos y los marca con flechas de colores segÃºn la leyenda. Esto permite discernir entre especies como Toxoplasma de manera visual.</li>
-        <li id="t_interp_fingerprint"><strong>RegiÃ³n Huella dactilar (400-1800 cmâ»Â¹):</strong> Esta regiÃ³n acoge las vibraciones moleculares clave que otorgan la identidad biolÃ³gica y quÃ­mica estructural definitiva de los microorganismos.</li>
+        <li id="t_interp_arrows"><strong>Flechas de Colores para Picos Diferenciales:</strong> El sistema identifica picos diferenciales exclusivos y los marca con flechas de colores según la leyenda. Esto permite discernir entre especies como Toxoplasma de manera visual.</li>
+        <li id="t_interp_fingerprint"><strong>Región Huella dactilar (400-1800 cm⁻¹):</strong> Esta región acoge las vibraciones moleculares clave que otorgan la identidad biológica y química estructural definitiva de los microorganismos.</li>
       </ul>
     </div>
   </div>
 
   <script>
     const translations = {
-      es: { title: "Manual de Usuario - Hershell-Raman", subtitle: "Plataforma para el anÃ¡lisis quimiomÃ©trico avanzado", intro_title: "1. IntroducciÃ³n CientÃ­fica", intro_p1: "Bienvenido a <strong>Hershell-Raman</strong>. Nuestra plataforma rinde homenaje a dos gigantes que forjaron la espectroscopÃ­a:", intro_hersch: "<strong>William Herschel:</strong> Sus experimentos sentaron las bases para descubrir la radiaciÃ³n Infrarroja, abriendo la puerta a la espectroscopÃ­a vibracional.", intro_raman: "<strong>C.V. Raman:</strong> Galardonado con el Premio Nobel, responsable del descubrimiento de la dispersiÃ³n inelÃ¡stica de fotones interactuando con las vibraciones moleculares (el Efecto Raman).", intro_p2: "La espectroscopÃ­a vibracional es crucial. Permite el <strong>fenotipado de protozoos</strong> y la caracterizaciÃ³n molecular a nivel 'label-free', capturando la <strong>Huella dactilar</strong> fundamental de las muestras.", guide_title: "2. GuÃ­a de Inicio RÃ¡pido", guide_format: "<strong>Formatos Admitidos:</strong> La aplicaciÃ³n acepta archivos <code>.csv</code> o <code>.txt</code>. La primera columna debe ser el Wavenumber y la segunda la Intensidad.", guide_q: "Â¿CÃ³mo cargar muestras?", guide_step1: "Localice el botÃ³n de carga en la secciÃ³n Archivo.", guide_step2: "Haga clic en 'Elegir archivos' o 'Upload'.", guide_step3: "Seleccione desde su ordenador los espectros que desee analizar.", guide_step4: "Los espectros se mostrarÃ¡n automÃ¡ticamente en la vista grÃ¡fica.", tools_title: "3. ExplicaciÃ³n de Herramientas de Procesamiento", tools_p: "Nuestra plataforma encapsula potentes rutinas analÃ­ticas empleando <code>pybaselines</code>:", tools_baseline: "<strong>LÃ­nea base:</strong> Integrada vÃ­a <code>pybaselines</code> en Python. Su fin es suprimir la fluorescencia intrÃ­nseca y dispersiones que desvÃ­an las mediciones Raman.", tools_norm: "<strong>NormalizaciÃ³n:</strong> Ajuste vital de escalas de intensidad para muestras bajo diferentes escenarios. Permite comparar las magnitudes espectrales de manera justa.", tools_diff: "<strong>AnÃ¡lisis Diferencial:</strong> Nuestro algoritmo detecta <strong>Biomarcadores</strong> exclusivos al contrastar matemÃ¡ticamente diferentes estirpes de muestras.", interp_title: "4. InterpretaciÃ³n de Resultados", interp_p: "Obtenga entendimiento claro para interpretar Toxoplasma y protozoos:", interp_arrows: "<strong>Flechas de Colores para Picos Diferenciales:</strong> El sistema identifica picos diferenciales exclusivos y los marca con flechas de colores segÃºn la leyenda. Esto permite discernir entre especies como Toxoplasma de manera visual.", interp_fingerprint: "<strong>RegiÃ³n Huella dactilar (400-1800 cmâ»Â¹):</strong> Esta regiÃ³n acoge las vibraciones moleculares clave que otorgan la identidad biolÃ³gica y quÃ­mica estructural definitiva de los microorganismos." },
-      en: { title: "User Manual - Hershell-Raman", subtitle: "Platform for advanced chemometric analysis", intro_title: "1. Scientific Introduction", intro_p1: "Welcome to <strong>Hershell-Raman</strong>. Our platform pays tribute to two giants who forged spectroscopy:", intro_hersch: "<strong>William Herschel:</strong> His experiments laid the groundwork for discovering Infrared radiation, opening the door to vibrational spectroscopy.", intro_raman: "<strong>C.V. Raman:</strong> Nobel Laureate, responsible for discovering the inelastic scattering of photons interacting with molecular vibrations (the Raman Effect).", intro_p2: "Vibrational spectroscopy is a crucial non-destructive technology. It enables the <strong>phenotyping of protozoa</strong> and molecular characterization at a 'label-free' level, capturing the fundamental <strong>Fingerprint</strong> of the samples.", guide_title: "2. Quick Start Guide", guide_format: "<strong>Supported Formats:</strong> The application accepts <code>.csv</code> or <code>.txt</code> files. The first column must be the Wavenumber and the second the Intensity.", guide_q: "How to load samples?", guide_step1: "Locate the upload button in the File section.", guide_step2: "Click on 'Choose files' or 'Upload'.", guide_step3: "Select the spectra you want to analyze from your computer.", guide_step4: "The spectra will automatically be displayed in the graphical view.", tools_title: "3. Explanation of Processing Tools", tools_p: "Our platform encapsulates powerful analytical routines using <code>pybaselines</code>:", tools_baseline: "<strong>Baseline:</strong> Integrated via <code>pybaselines</code> in Python. Its purpose is to suppress intrinsic fluorescence and scattering that derivate Raman measurements.", tools_norm: "<strong>Normalization:</strong> Vital adjustment of intensity scales for samples under different scenarios. Allows comparison of spectral magnitudes.", tools_diff: "<strong>Differential Analysis:</strong> The algorithm detects exclusive <strong>Biomarkers</strong> by cross-comparing different lineages.", interp_title: "4. Interpretation of Results", interp_p: "Obtain clear understanding to interpret Toxoplasma and protozoa:", interp_arrows: "<strong>Colored Arrows for Differential Peaks:</strong> The system identifies exclusive differential peaks and marks them with colored arrows according to the legend. This visually aids in discerning species like Toxoplasma.", interp_fingerprint: "<strong>Fingerprint Region (400-1800 cmâ»Â¹):</strong> This segment holds the key vibrations that confer the singular structural and chemical identity to the microorganisms." },
-      fr: { title: "Manuel de l'Utilisateur - Hershell-Raman", subtitle: "Plateforme pour l'analyse chimiomÃ©trique avancÃ©e", intro_title: "1. Introduction Scientifique", intro_p1: "Bienvenue sur <strong>Hershell-Raman</strong>. Notre plateforme rend hommage Ã  deux gÃ©ants qui ont forgÃ© la spectroscopie :", intro_hersch: "<strong>William Herschel:</strong> Ses expÃ©riences ont jetÃ© les bases de la dÃ©couverte du rayonnement Infrarouge, ouvrant la voie Ã  la spectroscopie vibrationnelle.", intro_raman: "<strong>C.V. Raman:</strong> LaurÃ©at du prix Nobel, responsable de la dÃ©couverte de la diffusion inÃ©lastique des photons interagissant avec les vibrations molÃ©culaires (l'effet Raman).", intro_p2: "La spectroscopie vibrationnelle est une technologie non destructive cruciale. Elle permet le <strong>phÃ©notypage des protozoaires</strong> et la caractÃ©risation molÃ©culaire Ã  un niveau Â« sans marqueur Â», en capturant l'<strong>Empreinte digitale</strong> fondamentale des Ã©chantillons.", guide_title: "2. Guide de DÃ©marrage Rapide", guide_format: "<strong>Formats Pris en Charge :</strong> L'application accepte les fichiers <code>.csv</code> ou <code>.txt</code>. La premiÃ¨re colonne doit Ãªtre le Wavenumber (nombre d'ondes) et la seconde l'IntensitÃ©.", guide_q: "Comment charger des Ã©chantillons ?", guide_step1: "Localisez le bouton de tÃ©lÃ©chargement dans la section Fichier.", guide_step2: "Cliquez sur 'Choisir des fichiers' ou 'Upload'.", guide_step3: "SÃ©lectionnez les spectres que vous souhaitez analyser depuis votre ordinateur.", guide_step4: "Les spectres seront automatiquement affichÃ©s dans la vue graphique.", tools_title: "3. Explication des Outils de Traitement", tools_p: "Notre plateforme intÃ¨gre de puissantes routines analytiques utilisant <code>pybaselines</code> :", tools_baseline: "<strong>Ligne de base:</strong> IntÃ©grÃ© via <code>pybaselines</code> en Python. Son but est de supprimer la fluorescence intrinsÃ¨que et les diffusions qui dÃ©vient les mesures Raman.", tools_norm: "<strong>Normalisation:</strong> Ajustement vital des Ã©chelles d'intensitÃ© pour les Ã©chantillons dans diffÃ©rents scÃ©narios. Permet la comparaison des grandeurs spectrales.", tools_diff: "<strong>Analyse DiffÃ©rentielle:</strong> L'algorithme dÃ©tecte des <strong>Biomarqueurs</strong> exclusifs en croisant diffÃ©rentes lignÃ©es.", interp_title: "4. InterprÃ©tation des RÃ©sultats", interp_p: "Obtenez une comprÃ©hension claire pour interprÃ©ter Toxoplasma et les protozoaires :", interp_arrows: "<strong>FlÃ¨ches colorÃ©es pour les pics diffÃ©rentiels :</strong> Le systÃ¨me identifie les pics diffÃ©rentiels exclusifs et les dÃ©signe par des flÃ¨ches colorÃ©es selon la lÃ©gende. Cela aide Ã  discerner visuellement des espÃ¨ces comme Toxoplasma.", interp_fingerprint: "<strong>RÃ©gion de l'Empreinte digitale (400-1800 cmâ»Â¹) :</strong> Ce segment abrite les vibrations clÃ©s qui confÃ¨rent l'identitÃ© structurelle et chimique unique aux micro-organismes." },
-      pt: { title: "Manual do UsuÃ¡rio - Hershell-Raman", subtitle: "Plataforma para anÃ¡lise quimiomÃ©trica avanÃ§ada", intro_title: "1. IntroduÃ§Ã£o CientÃ­fica", intro_p1: "Bem-vindo ao <strong>Hershell-Raman</strong>. Nossa plataforma homenageia dois gigantes que forjaram a espectroscopia:", intro_hersch: "<strong>William Herschel:</strong> Seus experimentos estabeleceram as bases para descobrir a radiaÃ§Ã£o infravermelha, abrindo a porta para a espectroscopia vibracional.", intro_raman: "<strong>C.V. Raman:</strong> Ganhador do PrÃªmio Nobel, responsÃ¡vel por descobrir a dispersÃ£o inelÃ¡stica de fÃ³tons interagindo com vibraÃ§Ãµes moleculares (o Efeito Raman).", intro_p2: "A espectroscopia vibracional Ã© uma tecnologia nÃ£o destrutiva crucial. Permite a <strong>fenotipagem de protozoÃ¡rios</strong> e a caracterizaÃ§Ã£o molecular em um nÃ­vel 'label-free' (sem marcadores), capturando a <strong>ImpressÃ£o digital</strong> fundamental das amostras.", guide_title: "2. Guia de InÃ­cio RÃ¡pido", guide_format: "<strong>Formatos Suportados:</strong> A aplicaÃ§Ã£o aceita arquivos <code>.csv</code> ou <code>.txt</code>. A primeira coluna deve ser o Wavenumber (NÃºmero de Onda) e a segunda a Intensidade.", guide_q: "Como carregar amostras?", guide_step1: "Localize o botÃ£o de upload na seÃ§Ã£o Arquivo.", guide_step2: "Clique em 'Escolher arquivos' ou 'Upload'.", guide_step3: "Selecione os espectros que deseja analisar a partir do seu computador.", guide_step4: "Os espectros serÃ£o exibidos automaticamente na vista grÃ¡fica.", tools_title: "3. ExplicaÃ§Ã£o das Ferramentas de Processamento", tools_p: "Nossa plataforma encapsula rotinas analÃ­ticas poderosas usando <code>pybaselines</code>:", tools_baseline: "<strong>Linha de base:</strong> Integrado via <code>pybaselines</code> em Python. Seu propÃ³sito Ã© suprimir a fluorescÃªncia intrÃ­nseca e dispersÃµes que desviam as mediÃ§Ãµes Raman.", tools_norm: "<strong>NormalizaÃ§Ã£o:</strong> Ajuste vital de escalas de intensidade para amostras sob diferentes cenÃ¡rios. Permite comparar magnitudes espectrais.", tools_diff: "<strong>AnÃ¡lise Diferencial:</strong> O algoritmo detecta <strong>Biomarcadores</strong> exclusivos ao cruzar transversalmente diferentes linhagens.", interp_title: "4. InterpretaÃ§Ã£o de Resultados", interp_p: "Obtenha um entendimento claro para interpretar Toxoplasma e protozoÃ¡rios:", interp_arrows: "<strong>Setas Coloridas para Picos Diferenciais:</strong> O sistema identifica picos diferenciais exclusivos e os marca com setas coloridas conforme a legenda. Isso ajuda a entender visualmente espÃ©cies como o Toxoplasma.", interp_fingerprint: "<strong>RegiÃ£o da ImpressÃ£o digital (400-1800 cmâ»Â¹):</strong> Este segmento abriga as vibraÃ§Ãµes fundamentais que conferem a identidade estrutural e quÃ­mica singular aos microorganismos." }
+      es: { title: "Manual de Usuario - Hershell-Raman", subtitle: "Plataforma para el análisis quimiométrico avanzado", intro_title: "1. Introducción Científica", intro_p1: "Bienvenido a <strong>Hershell-Raman</strong>. Nuestra plataforma rinde homenaje a dos gigantes que forjaron la espectroscopía:", intro_hersch: "<strong>William Herschel:</strong> Sus experimentos sentaron las bases para descubrir la radiación Infrarroja, abriendo la puerta a la espectroscopía vibracional.", intro_raman: "<strong>C.V. Raman:</strong> Galardonado con el Premio Nobel, responsable del descubrimiento de la dispersión inelástica de fotones interactuando con las vibraciones moleculares (el Efecto Raman).", intro_p2: "La espectroscopía vibracional es crucial. Permite el <strong>fenotipado de protozoos</strong> y la caracterización molecular a nivel 'label-free', capturando la <strong>Huella dactilar</strong> fundamental de las muestras.", guide_title: "2. Guía de Inicio Rápido", guide_format: "<strong>Formatos Admitidos:</strong> La aplicación acepta archivos <code>.csv</code> o <code>.txt</code>. La primera columna debe ser el Wavenumber y la segunda la Intensidad.", guide_q: "¿Cómo cargar muestras?", guide_step1: "Localice el botón de carga en la sección Archivo.", guide_step2: "Haga clic en 'Elegir archivos' o 'Upload'.", guide_step3: "Seleccione desde su ordenador los espectros que desee analizar.", guide_step4: "Los espectros se mostrarán automáticamente en la vista gráfica.", tools_title: "3. Explicación de Herramientas de Procesamiento", tools_p: "Nuestra plataforma encapsula potentes rutinas analíticas empleando <code>pybaselines</code>:", tools_baseline: "<strong>Línea base:</strong> Integrada vía <code>pybaselines</code> en Python. Su fin es suprimir la fluorescencia intrínseca y dispersiones que desvían las mediciones Raman.", tools_norm: "<strong>Normalización:</strong> Ajuste vital de escalas de intensidad para muestras bajo diferentes escenarios. Permite comparar las magnitudes espectrales de manera justa.", tools_diff: "<strong>Análisis Diferencial:</strong> Nuestro algoritmo detecta <strong>Biomarcadores</strong> exclusivos al contrastar matemáticamente diferentes estirpes de muestras.", interp_title: "4. Interpretación de Resultados", interp_p: "Obtenga entendimiento claro para interpretar Toxoplasma y protozoos:", interp_arrows: "<strong>Flechas de Colores para Picos Diferenciales:</strong> El sistema identifica picos diferenciales exclusivos y los marca con flechas de colores según la leyenda. Esto permite discernir entre especies como Toxoplasma de manera visual.", interp_fingerprint: "<strong>Región Huella dactilar (400-1800 cm⁻¹):</strong> Esta región acoge las vibraciones moleculares clave que otorgan la identidad biológica y química estructural definitiva de los microorganismos." },
+      en: { title: "User Manual - Hershell-Raman", subtitle: "Platform for advanced chemometric analysis", intro_title: "1. Scientific Introduction", intro_p1: "Welcome to <strong>Hershell-Raman</strong>. Our platform pays tribute to two giants who forged spectroscopy:", intro_hersch: "<strong>William Herschel:</strong> His experiments laid the groundwork for discovering Infrared radiation, opening the door to vibrational spectroscopy.", intro_raman: "<strong>C.V. Raman:</strong> Nobel Laureate, responsible for discovering the inelastic scattering of photons interacting with molecular vibrations (the Raman Effect).", intro_p2: "Vibrational spectroscopy is a crucial non-destructive technology. It enables the <strong>phenotyping of protozoa</strong> and molecular characterization at a 'label-free' level, capturing the fundamental <strong>Fingerprint</strong> of the samples.", guide_title: "2. Quick Start Guide", guide_format: "<strong>Supported Formats:</strong> The application accepts <code>.csv</code> or <code>.txt</code> files. The first column must be the Wavenumber and the second the Intensity.", guide_q: "How to load samples?", guide_step1: "Locate the upload button in the File section.", guide_step2: "Click on 'Choose files' or 'Upload'.", guide_step3: "Select the spectra you want to analyze from your computer.", guide_step4: "The spectra will automatically be displayed in the graphical view.", tools_title: "3. Explanation of Processing Tools", tools_p: "Our platform encapsulates powerful analytical routines using <code>pybaselines</code>:", tools_baseline: "<strong>Baseline:</strong> Integrated via <code>pybaselines</code> in Python. Its purpose is to suppress intrinsic fluorescence and scattering that derivate Raman measurements.", tools_norm: "<strong>Normalization:</strong> Vital adjustment of intensity scales for samples under different scenarios. Allows comparison of spectral magnitudes.", tools_diff: "<strong>Differential Analysis:</strong> The algorithm detects exclusive <strong>Biomarkers</strong> by cross-comparing different lineages.", interp_title: "4. Interpretation of Results", interp_p: "Obtain clear understanding to interpret Toxoplasma and protozoa:", interp_arrows: "<strong>Colored Arrows for Differential Peaks:</strong> The system identifies exclusive differential peaks and marks them with colored arrows according to the legend. This visually aids in discerning species like Toxoplasma.", interp_fingerprint: "<strong>Fingerprint Region (400-1800 cm⁻¹):</strong> This segment holds the key vibrations that confer the singular structural and chemical identity to the microorganisms." },
+      fr: { title: "Manuel de l'Utilisateur - Hershell-Raman", subtitle: "Plateforme pour l'analyse chimiométrique avancée", intro_title: "1. Introduction Scientifique", intro_p1: "Bienvenue sur <strong>Hershell-Raman</strong>. Notre plateforme rend hommage à deux géants qui ont forgé la spectroscopie :", intro_hersch: "<strong>William Herschel:</strong> Ses expériences ont jeté les bases de la découverte du rayonnement Infrarouge, ouvrant la voie à la spectroscopie vibrationnelle.", intro_raman: "<strong>C.V. Raman:</strong> Lauréat du prix Nobel, responsable de la découverte de la diffusion inélastique des photons interagissant avec les vibrations moléculaires (l'effet Raman).", intro_p2: "La spectroscopie vibrationnelle est une technologie non destructive cruciale. Elle permet le <strong>phénotypage des protozoaires</strong> et la caractérisation moléculaire à un niveau « sans marqueur », en capturant l'<strong>Empreinte digitale</strong> fondamentale des échantillons.", guide_title: "2. Guide de Démarrage Rapide", guide_format: "<strong>Formats Pris en Charge :</strong> L'application accepte les fichiers <code>.csv</code> ou <code>.txt</code>. La première colonne doit être le Wavenumber (nombre d'ondes) et la seconde l'Intensité.", guide_q: "Comment charger des échantillons ?", guide_step1: "Localisez le bouton de téléchargement dans la section Fichier.", guide_step2: "Cliquez sur 'Choisir des fichiers' ou 'Upload'.", guide_step3: "Sélectionnez les spectres que vous souhaitez analyser depuis votre ordinateur.", guide_step4: "Les spectres seront automatiquement affichés dans la vue graphique.", tools_title: "3. Explication des Outils de Traitement", tools_p: "Notre plateforme intègre de puissantes routines analytiques utilisant <code>pybaselines</code> :", tools_baseline: "<strong>Ligne de base:</strong> Intégré via <code>pybaselines</code> en Python. Son but est de supprimer la fluorescence intrinsèque et les diffusions qui dévient les mesures Raman.", tools_norm: "<strong>Normalisation:</strong> Ajustement vital des échelles d'intensité pour les échantillons dans différents scénarios. Permet la comparaison des grandeurs spectrales.", tools_diff: "<strong>Analyse Différentielle:</strong> L'algorithme détecte des <strong>Biomarqueurs</strong> exclusifs en croisant différentes lignées.", interp_title: "4. Interprétation des Résultats", interp_p: "Obtenez une compréhension claire pour interpréter Toxoplasma et les protozoaires :", interp_arrows: "<strong>Flèches colorées pour les pics différentiels :</strong> Le système identifie les pics différentiels exclusifs et les désigne par des flèches colorées selon la légende. Cela aide à discerner visuellement des espèces comme Toxoplasma.", interp_fingerprint: "<strong>Région de l'Empreinte digitale (400-1800 cm⁻¹) :</strong> Ce segment abrite les vibrations clés qui confèrent l'identité structurelle et chimique unique aux micro-organismes." },
+      pt: { title: "Manual do Usuário - Hershell-Raman", subtitle: "Plataforma para análise quimiométrica avançada", intro_title: "1. Introdução Científica", intro_p1: "Bem-vindo ao <strong>Hershell-Raman</strong>. Nossa plataforma homenageia dois gigantes que forjaram a espectroscopia:", intro_hersch: "<strong>William Herschel:</strong> Seus experimentos estabeleceram as bases para descobrir a radiação infravermelha, abrindo a porta para a espectroscopia vibracional.", intro_raman: "<strong>C.V. Raman:</strong> Ganhador do Prêmio Nobel, responsável por descobrir a dispersão inelástica de fótons interagindo com vibrações moleculares (o Efeito Raman).", intro_p2: "A espectroscopia vibracional é uma tecnologia não destrutiva crucial. Permite a <strong>fenotipagem de protozoários</strong> e a caracterização molecular em um nível 'label-free' (sem marcadores), capturando a <strong>Impressão digital</strong> fundamental das amostras.", guide_title: "2. Guia de Início Rápido", guide_format: "<strong>Formatos Suportados:</strong> A aplicação aceita arquivos <code>.csv</code> ou <code>.txt</code>. A primeira coluna deve ser o Wavenumber (Número de Onda) e a segunda a Intensidade.", guide_q: "Como carregar amostras?", guide_step1: "Localize o botão de upload na seção Arquivo.", guide_step2: "Clique em 'Escolher arquivos' ou 'Upload'.", guide_step3: "Selecione os espectros que deseja analisar a partir do seu computador.", guide_step4: "Os espectros serão exibidos automaticamente na vista gráfica.", tools_title: "3. Explicação das Ferramentas de Processamento", tools_p: "Nossa plataforma encapsula rotinas analíticas poderosas usando <code>pybaselines</code>:", tools_baseline: "<strong>Linha de base:</strong> Integrado via <code>pybaselines</code> em Python. Seu propósito é suprimir a fluorescência intrínseca e dispersões que desviam as medições Raman.", tools_norm: "<strong>Normalização:</strong> Ajuste vital de escalas de intensidade para amostras sob diferentes cenários. Permite comparar magnitudes espectrais.", tools_diff: "<strong>Análise Diferencial:</strong> O algoritmo detecta <strong>Biomarcadores</strong> exclusivos ao cruzar transversalmente diferentes linhagens.", interp_title: "4. Interpretação de Resultados", interp_p: "Obtenha um entendimento claro para interpretar Toxoplasma e protozoários:", interp_arrows: "<strong>Setas Coloridas para Picos Diferenciais:</strong> O sistema identifica picos diferenciais exclusivos e os marca com setas coloridas conforme a legenda. Isso ajuda a entender visualmente espécies como o Toxoplasma.", interp_fingerprint: "<strong>Região da Impressão digital (400-1800 cm⁻¹):</strong> Este segmento abriga as vibrações fundamentais que conferem a identidade estrutural e química singular aos microorganismos." }
     };
 
     function changeLanguage(lang) {
@@ -747,10 +747,10 @@
       }
     }
 
-    // ConfiguraciÃ³n de entorno dinÃ¡mico a instancia Live de Render
+    // Configuración de entorno dinámico a instancia Live de Render
     const API_BASE_URL = 'https://merschel-raman.onrender.com';
 
-    // --- TOOLTIPS CIENTÃFICOS ---
+    // --- TOOLTIPS CIENTÍFICOS ---
     const tooltipElement = document.getElementById('science-tooltip');
     
     function initTooltips() {
@@ -784,31 +784,31 @@
         if(group) group.style.display = checkbox.checked ? 'flex' : 'none';
     }
 
-    // --- LÃ“GICA ORIGINAL RESTAURADA ---
+    // --- LÓGICA ORIGINAL RESTAURADA ---
     const library = [
-        { range: [3070, 3060], vib: "Estiramiento =C-H", group: "Alqueno", bio: "Ãcidos grasos insaturados" },
-        { range: [2960, 2920], vib: "Estiramiento CH2/CH3", group: "Alquilo", bio: "LÃ­pidos y ProteÃ­nas" },
-        { range: [1745, 1735], vib: "Estiramiento C=O", group: "Ã‰ster", bio: "Ã‰steres de lÃ­pidos" },
-        { range: [1675, 1650], vib: "Estiramiento C=O: Amida I", group: "PÃ©ptido", bio: "ProteÃ­nas" },
-        { range: [1560, 1540], vib: "DeformaciÃ³n N-H: Amida II", group: "PÃ©ptido", bio: "ProteÃ­nas" },
-        { range: [1480, 1400], vib: "DeformaciÃ³n C-H2 / C-H3 (Scissoring/FlexiÃ³n)", group: "Alquilo", bio: "LÃ­pidos / Cadenas alifÃ¡ticas" },
-        { range: [1400, 1300], vib: "DeformaciÃ³n C-H (TorsiÃ³n/Wagging)", group: "Alquilo", bio: "ColÃ¡geno / ProteÃ­nas" },
-        { range: [1300, 1200], vib: "Estiramiento asimÃ©trico P=O y DeformaciÃ³n N-H", group: "Fosfato/Amida", bio: "Ãcidos Nucleicos / Amida III" },
-        { range: [1180, 1150], vib: "Estiramiento asimÃ©trico C-O-C", group: "Ã‰ter", bio: "Carbohidratos / Enlaces GlicosÃ­dicos" },
-        { range: [1090, 1070], vib: "Estiramiento C-O", group: "Ã‰ter", bio: "Carbohidratos" },
-        { range: [1050, 1000], vib: "Estiramiento C-O y C-N", group: "Residuo", bio: "GlucÃ³geno / Residuos de aminoÃ¡cidos" },
-        { range: [1005, 1003], vib: "RespiraciÃ³n del anillo", group: "AromÃ¡tico", bio: "Fenilalanina (ProteÃ­nas)" },
-        { range: [950, 900],   vib: "Estiramiento C-C y DeformaciÃ³n C-H", group: "Esqueleto", bio: "Carbohidratos/ProteÃ­nas" },
+        { range: [3070, 3060], vib: "Estiramiento =C-H", group: "Alqueno", bio: "Ácidos grasos insaturados" },
+        { range: [2960, 2920], vib: "Estiramiento CH2/CH3", group: "Alquilo", bio: "Lípidos y Proteínas" },
+        { range: [1745, 1735], vib: "Estiramiento C=O", group: "Éster", bio: "Ésteres de lípidos" },
+        { range: [1675, 1650], vib: "Estiramiento C=O: Amida I", group: "Péptido", bio: "Proteínas" },
+        { range: [1560, 1540], vib: "Deformación N-H: Amida II", group: "Péptido", bio: "Proteínas" },
+        { range: [1480, 1400], vib: "Deformación C-H2 / C-H3 (Scissoring/Flexión)", group: "Alquilo", bio: "Lípidos / Cadenas alifáticas" },
+        { range: [1400, 1300], vib: "Deformación C-H (Torsión/Wagging)", group: "Alquilo", bio: "Colágeno / Proteínas" },
+        { range: [1300, 1200], vib: "Estiramiento asimétrico P=O y Deformación N-H", group: "Fosfato/Amida", bio: "Ácidos Nucleicos / Amida III" },
+        { range: [1180, 1150], vib: "Estiramiento asimétrico C-O-C", group: "Éter", bio: "Carbohidratos / Enlaces Glicosídicos" },
+        { range: [1090, 1070], vib: "Estiramiento C-O", group: "Éter", bio: "Carbohidratos" },
+        { range: [1050, 1000], vib: "Estiramiento C-O y C-N", group: "Residuo", bio: "Glucógeno / Residuos de aminoácidos" },
+        { range: [1005, 1003], vib: "Respiración del anillo", group: "Aromático", bio: "Fenilalanina (Proteínas)" },
+        { range: [950, 900],   vib: "Estiramiento C-C y Deformación C-H", group: "Esqueleto", bio: "Carbohidratos/Proteínas" },
         { range: [520, 480], vib: "Enlaces S-S", group: "Sulfuro", bio: "Puentes disulfuro" }
     ];
 
     function getFallbackInfo(x) {
-        if (x > 1560) return {vib:"DeformaciÃ³n N-H y Estiramiento C=O", group:"Mixto", bio:"InteracciÃ³n de ProteÃ­nas"};
-        if (x > 1480 && x < 1540) return {vib:"DeformaciÃ³n C-H y Estiramiento C-N", group:"Amida mixta", bio:"ProteÃ­nas"};
-        if (x > 1090 && x < 1150) return {vib:"TensiÃ³n de esqueleto C-C y C-O", group:"Mixto", bio:"Carbohidratos complejos"};
-        if (x > 950 && x < 1000) return {vib:"VibraciÃ³n de estiramiento esquelÃ©tico C-C", group:"AlifÃ¡tico", bio:"Modo alifÃ¡tico"};
-        if (x < 900) return {vib:"TensiÃ³n de esqueleto C-C y deformaciones anulares", group:"Esqueleto", bio:"Carbohidratos"};
-        return {vib:"TensiÃ³n de esqueleto vibracional mixta", group:"InteracciÃ³n", bio:"Fingerprint"};
+        if (x > 1560) return {vib:"Deformación N-H y Estiramiento C=O", group:"Mixto", bio:"Interacción de Proteínas"};
+        if (x > 1480 && x < 1540) return {vib:"Deformación C-H y Estiramiento C-N", group:"Amida mixta", bio:"Proteínas"};
+        if (x > 1090 && x < 1150) return {vib:"Tensión de esqueleto C-C y C-O", group:"Mixto", bio:"Carbohidratos complejos"};
+        if (x > 950 && x < 1000) return {vib:"Vibración de estiramiento esquelético C-C", group:"Alifático", bio:"Modo alifático"};
+        if (x < 900) return {vib:"Tensión de esqueleto C-C y deformaciones anulares", group:"Esqueleto", bio:"Carbohidratos"};
+        return {vib:"Tensión de esqueleto vibracional mixta", group:"Interacción", bio:"Fingerprint"};
     }
 
     let spectraList = [], processedSpectra = [], selectedPeaks = [], isPeakMode=false;
@@ -820,8 +820,8 @@
     let currentBaseline = 'none', currentDerivative = 'none', currentSmoothing = 'none', currentNorm = 'none';
     let currentTreatmentLegend = 'Procesamiento: Ninguno (Datos crudos)';
 
-    // â”€â”€â”€ CONSTANTES GLOBALES DE LEYENDA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    // Aplicar a TODOS los grÃ¡ficos de espectros para garantizar visibilidad total
+    // ─── CONSTANTES GLOBALES DE LEYENDA ────────────────────────────────────────
+    // Aplicar a TODOS los gráficos de espectros para garantizar visibilidad total
     const LEGEND_LAYOUT = {
         orientation: 'v',
         x: 1.02,
@@ -834,19 +834,19 @@
         borderwidth: 1
     };
     const SPECTRUM_MARGIN = { t: 60, b: 45, l: 60, r: 250 };
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ──────────────────────────────────────────────────────────────────────────
 
     /**
      * extractCleanName(raw)
-     * â€” Extrae texto limpio SIN ningÃºn HTML.
-     * â€” Usado para: tablas, innerHTML, titles, logs.
-     * â€” NUNCA usa etiquetas HTML.
+     * — Extrae texto limpio SIN ningún HTML.
+     * — Usado para: tablas, innerHTML, titles, logs.
+     * — NUNCA usa etiquetas HTML.
      */
     function extractCleanName(raw) {
         let clean = String(raw || '');
-        // 1. Eliminar explÃ­citamente el bug "i>" y tags
+        // 1. Eliminar explícitamente el bug "i>" y tags
         clean = clean.replace(/i>/g, '').replace(/<i>/gi, '').replace(/<\/i>/gi, '');
-        // 2. PURGA REGEX: Mantener SOLO letras, nÃºmeros, espacios y guiones
+        // 2. PURGA REGEX: Mantener SOLO letras, números, espacios y guiones
         clean = clean.replace(/[^a-zA-Z0-9\s\-]/g, '');
         // 3. Limpiar extensiones y residuos
         clean = clean.replace(/csv/gi, '').replace(/txt/gi, '').trim();
@@ -863,8 +863,8 @@
      * Convierte texto plano a Mathematical Sans-Serif Italic en Unicode.
      */
     function toUnicodeItalic(text) {
-        const A = 0x1D608; // ð˜ˆ
-        const a = 0x1D622; // ð˜¢
+        const A = 0x1D608; // 𝘈
+        const a = 0x1D622; // 𝘢
         let result = '';
         for (let i = 0; i < text.length; i++) {
             let code = text.charCodeAt(i);
@@ -881,8 +881,8 @@
 
     /**
      * getTraceName(nameStr)
-     * â€” VersiÃ³n pura para leyendas de Plotly sin HTML.
-     * â€” BYPASS DEFINITIVO: ConversiÃ³n a Unicode Italic
+     * — Versión pura para leyendas de Plotly sin HTML.
+     * — BYPASS DEFINITIVO: Conversión a Unicode Italic
      */
     function getTraceName(nameStr) {
         const clean = extractCleanName(nameStr);
@@ -899,9 +899,9 @@
         } else {
             let parts = [];
             const bNames = {'als': 'ALS', 'rollingball': 'Roll'};
-            const dNames = {'d1': '1Âª', 'd2': '2Âª'};
+            const dNames = {'d1': '1ª', 'd2': '2ª'};
             const sNames = {'savgol': 'S-G', 'movingavg': 'Avg'};
-            const nNames = {'minmax': '0-1', 'snv': 'SNV', 'area': 'Ãrea'};
+            const nNames = {'minmax': '0-1', 'snv': 'SNV', 'area': 'Área'};
             
             if(currentBaseline !== 'none') parts.push(`Base: ${bNames[currentBaseline]}`);
             if(currentDerivative !== 'none') parts.push(`Deriv: ${dNames[currentDerivative]}`);
@@ -912,7 +912,7 @@
         }
     }
 
-    // FunciÃ³n de seguridad (CinturÃ³n de Seguridad) para evitar TypeErrors
+    // Función de seguridad (Cinturón de Seguridad) para evitar TypeErrors
     function safeAddListener(id, event, callback) {
         const checkElement = setInterval(() => {
             const el = document.getElementById(id);
@@ -980,7 +980,7 @@
         const cP = document.getElementById('char-prominence'), cPV = document.getElementById('char-prom-val');
         if(cP && cPV) cP.oninput = () => cPV.value = parseFloat(cP.value).toFixed(2);
         
-        initPlot('char-graph', 'VisualizaciÃ³n de Picos Identificados');
+        initPlot('char-graph', 'Visualización de Picos Identificados');
     };
 
     function switchTab(id) {
@@ -990,7 +990,7 @@
         const idx = ['upload', 'preprocessing', 'chemometrics', 'supervisada', 'results', 'image-comparison', 'characterization'].indexOf(id);
         if(idx>=0) document.querySelectorAll('.nav-item')[idx].classList.add('active');
         
-        // Disparador de redibujado de la tabla PLS-DA al entrar a la viÃ±eta
+        // Disparador de redibujado de la tabla PLS-DA al entrar a la viñeta
         if(id === 'supervisada') renderDatabaseSummary();
         if(id === 'image-comparison') populateComparatorDropdowns();
         
@@ -1013,12 +1013,12 @@
         }
     }
 
-    // CORRECCIÃ“N: Los eventos de click se asignan SOLO UNA VEZ al inicializar el grÃ¡fico.
+    // CORRECCIÓN: Los eventos de click se asignan SOLO UNA VEZ al inicializar el gráfico.
     function initPlot(id, title) {
         Plotly.newPlot(id, [], {
             title: { text: title, font: {size:12, color:'#94a3b8'} },
             margin: SPECTRUM_MARGIN,
-            xaxis: { title: 'cmâ»Â¹', autorange: 'reversed' },
+            xaxis: { title: 'cm⁻¹', autorange: 'reversed' },
             yaxis: { title: currentYTitle },
             showlegend: true,
             legend: LEGEND_LAYOUT,
@@ -1034,11 +1034,7 @@
     }
 
     // --- LOADER ---
-    function showLoader(mensaje) { 
-        const title = document.querySelector('.loader-text h2');
-        if (title) title.innerText = mensaje || "Procesando Espectros...";
-        document.getElementById('loading-overlay').style.display = 'flex'; 
-    }
+    function showLoader(mensaje) { const title = document.querySelector('.loader-text h2'); if (title) title.innerText = mensaje || 'Procesando Espectros...'; document.getElementById('loading-overlay').style.display = 'flex'; }
     function hideLoader() { document.getElementById('loading-overlay').style.display = 'none'; }
 
     function loadFiles(e) {
@@ -1073,7 +1069,7 @@
     async function applyProcessing() {
         if(!spectraList || spectraList.length === 0) return alert("Carga espectros primero.");
         
-        showLoader('Cargando espectros...');
+        showLoader();
         try {
             const payload = {
                 spectra: spectraList.map(s => ({ name: s.rawName || s.name, x: s.original.x, y: s.original.y })),
@@ -1098,7 +1094,7 @@
                 // s.name ya viene del backend formateado
                 return { 
                     rawName: spectraList[idx].rawName,
-                    name: getTraceName(s.name),  // ValidaciÃ³n final: nunca vacÃ­o
+                    name: getTraceName(s.name),  // Validación final: nunca vacío
                     x: x, y: y,
                     original: spectraList[idx].original
                 };
@@ -1128,13 +1124,13 @@
 
     function draw(data, id, extraAnnotations = []) {
         const traces = data.map((s, idx) => {
-            // ExtracciÃ³n Forzada (Purga de la memoria corrupta)
+            // Extracción Forzada (Purga de la memoria corrupta)
             let nombre = String(s.rawName || s.name || '');
             
-            // 1. Eliminar explÃ­citamente el bug "i>" y cualquier tag
+            // 1. Eliminar explícitamente el bug "i>" y cualquier tag
             nombre = nombre.replace(/i>/g, '').replace(/<i>/gi, '').replace(/<\/i>/gi, '');
             
-            // 2. PURGA REGEX: Mantener SOLO letras, nÃºmeros, espacios y guiones
+            // 2. PURGA REGEX: Mantener SOLO letras, números, espacios y guiones
             nombre = nombre.replace(/[^a-zA-Z0-9\s\-]/g, '');
             
             // 3. Limpiar extensiones y residuos
@@ -1146,7 +1142,7 @@
             }
             nombre = nombre.trim();
             
-            // BYPASS DEFINITIVO: ConversiÃ³n a Unicode Italic
+            // BYPASS DEFINITIVO: Conversión a Unicode Italic
             const italic_unicode_name = toUnicodeItalic(nombre);
             
             return { 
@@ -1156,7 +1152,7 @@
                 type: 'scatter', 
                 mode: 'lines', 
                 line: { width: 1.5, color: palette[idx % palette.length] },
-                hoverinfo: 'x+y+name', // OptimizaciÃ³n para selecciÃ³n de picos
+                hoverinfo: 'x+y+name', // Optimización para selección de picos
                 showlegend: true 
             };
         });
@@ -1189,7 +1185,7 @@
 
         // Plotly.react actualiza datos sin borrar los event listeners previamente asignados
         Plotly.react(id, traces, {
-            xaxis: { title: 'cmâ»Â¹', autorange: 'reversed' },
+            xaxis: { title: 'cm⁻¹', autorange: 'reversed' },
             yaxis: { title: currentYTitle },
             margin: SPECTRUM_MARGIN,
             showlegend: true,
@@ -1197,7 +1193,7 @@
             paper_bgcolor: 'transparent',
             plot_bgcolor: 'transparent',
             annotations: annotationsArray,
-            dragmode: 'zoom',      // RESTAURA drag-to-zoom hÃ­brido
+            dragmode: 'zoom',      // RESTAURA drag-to-zoom híbrido
             clickmode: 'event',    // EVENTOS DE CLIC PUROS
             hovermode: 'closest',  // ANCLA AL PICO
             hoverdistance: 20      // AUMENTA RADIO DE CAPTURA
@@ -1216,13 +1212,13 @@
         if(!spectraList.length) return alert("Carga espectros primero.");
         
         // 1. Bloqueo Global de UI Reactiva
-        showLoader('Aplicando preprocesamiento...');
+        showLoader();
         document.querySelectorAll('.toolbar-buttons button').forEach(b => b.disabled = true);
         
         const applyBtn = document.getElementById('apply-btn');
         if (applyBtn) {
             applyBtn.disabled = true;
-            applyBtn.innerText = "Procesando cÃ¡lculos vectorizados...";
+            applyBtn.innerText = "Procesando cálculos vectorizados...";
         }
         document.getElementById('status-text').innerText = "Cargando... Delegando a Python...";
         
@@ -1244,17 +1240,17 @@
             }
             const data = await response.json();
             
-            // Sobreescribir con resultados de Python (LÃ­nea Base y Suavizado)
+            // Sobreescribir con resultados de Python (Línea Base y Suavizado)
             processedSpectra = data.spectra;
 
-            // (AÃºn corremos derivativa/norm temporalmente en JS hasta el prÃ³ximo paso)
+            // (Aún corremos derivativa/norm temporalmente en JS hasta el próximo paso)
             processedSpectra = processedSpectra.map((s, idx) => {
                 let x = s.x, y = s.y;
                 if (currentDerivative === 'd1') y = calcDeriv(x, y, 'd1'); else if (currentDerivative === 'd2') y = calcDeriv(x, y, 'd2');
                 if (currentNorm === 'minmax') y = normMinMax(y); else if (currentNorm === 'snv') y = normSNV(y); else if (currentNorm === 'area') y = normArea(y);
                 return { 
                     rawName: spectraList[idx] ? spectraList[idx].rawName : undefined,
-                    name: getTraceName(s.name),  // ValidaciÃ³n final: nunca vacÃ­o
+                    name: getTraceName(s.name),  // Validación final: nunca vacío
                     x: x, y: y,
                     original: spectraList[idx] ? spectraList[idx].original : {x: s.x, y: s.y}
                 };
@@ -1262,20 +1258,20 @@
 
             updateTreatmentLegendText();
             draw(processedSpectra, 'processed-graph'); 
-            document.getElementById('status-text').innerText = "Procesado VÃ­a FastAPI âœ“";
+            document.getElementById('status-text').innerText = "Procesado Vía FastAPI ✓";
 
         } catch(e) {
             console.error(e);
-            document.getElementById('status-text').innerText = "âŒ " + e.message;
+            document.getElementById('status-text').innerText = "❌ " + e.message;
         } finally {
-            // LiberaciÃ³n de UI Reactiva
+            // Liberación de UI Reactiva
             hideLoader();
             document.querySelectorAll('.toolbar-buttons button').forEach(b => b.disabled = false);
             
             const applyBtn = document.getElementById('apply-btn');
             if (applyBtn) {
                 applyBtn.disabled = false;
-                applyBtn.innerText = "âš¡ Aplicar Procesos";
+                applyBtn.innerText = "⚡ Aplicar Procesos";
             }
         }
     }
@@ -1285,9 +1281,9 @@
         currentYTitle = t==='FTIR'?'Absorbancia':'Intensidad'; 
         Plotly.relayout('spectrum-graph',{yaxis:{title:currentYTitle}}); 
     }
-    function convertAbsToTrans() { processedSpectra.forEach(s=>s.y=s.y.map(v=>100*10**(-v))); currentYTitle='%T'; currentTreatmentLegend = 'ConversiÃ³n: Transmitancia'; draw(processedSpectra,'processed-graph'); }
-    function convertTransToAbs() { processedSpectra.forEach(s=>s.y=s.y.map(v=>-Math.log10(v/100))); currentYTitle='Abs'; currentTreatmentLegend = 'ConversiÃ³n: Absorbancia'; draw(processedSpectra,'processed-graph'); }
-    function applyATRCorrection() { processedSpectra.forEach(s=>s.y=s.y.map((v,i)=>v*s.x[i]/1000)); currentTreatmentLegend = 'CorrecciÃ³n: ATR'; draw(processedSpectra,'processed-graph'); }
+    function convertAbsToTrans() { processedSpectra.forEach(s=>s.y=s.y.map(v=>100*10**(-v))); currentYTitle='%T'; currentTreatmentLegend = 'Conversión: Transmitancia'; draw(processedSpectra,'processed-graph'); }
+    function convertTransToAbs() { processedSpectra.forEach(s=>s.y=s.y.map(v=>-Math.log10(v/100))); currentYTitle='Abs'; currentTreatmentLegend = 'Conversión: Absorbancia'; draw(processedSpectra,'processed-graph'); }
+    function applyATRCorrection() { processedSpectra.forEach(s=>s.y=s.y.map((v,i)=>v*s.x[i]/1000)); currentTreatmentLegend = 'Corrección: ATR'; draw(processedSpectra,'processed-graph'); }
     function interpolate(x, y, min, max) { let idx = []; for(let i=0; i<x.length; i++) if(x[i]>=min && x[i]<=max) idx.push(i); if(idx.length<2) return y; let start=idx[0]-1, end=idx[idx.length-1]+1; if(start<0 || end>=x.length) return y; let m = (y[end]-y[start])/(x[end]-x[start]); let newY = [...y]; for(let k of idx) newY[k] = y[start] + m*(x[k]-x[start]); return newY; }
     function applyCO2Removal() { processedSpectra.forEach(s=>s.y=interpolate(s.x, s.y, 2300, 2400)); draw(processedSpectra,'processed-graph'); }
     function applyH2ORemoval() { processedSpectra.forEach(s=>s.y=interpolate(s.x, s.y, 3500, 3900)); draw(processedSpectra,'processed-graph'); }
@@ -1309,7 +1305,7 @@
     }
     
     function generateConsolidatedView() {
-        if (processedSpectra.length < 2) return alert("MÃ­nimo 2 espectros.");
+        if (processedSpectra.length < 2) return alert("Mínimo 2 espectros.");
         const refX = processedSpectra[0].x, meanY = processedSpectra[0].y.map(y => y + 0.1);
         Plotly.react('processed-graph', [
             { x: refX, y: meanY.map(y => y + 0.05), type: 'scatter', mode: 'lines', name: 'SD+', line: {width:0}, showlegend:false },
@@ -1320,7 +1316,7 @@
             margin: SPECTRUM_MARGIN,
             showlegend: true,
             legend: LEGEND_LAYOUT,
-            xaxis: { title: 'cmâ»Â¹', autorange:'reversed' },
+            xaxis: { title: 'cm⁻¹', autorange:'reversed' },
             yaxis: { title: currentYTitle },
             paper_bgcolor:'transparent', plot_bgcolor:'transparent'
         }, { responsive: true, displayModeBar: 'hover' });
@@ -1399,7 +1395,7 @@
     
     function updatePeakTable() {
         const b = document.getElementById('peaks-table-body');
-        if(!selectedPeaks.length) { b.innerHTML='<tr><td colspan="7" style="text-align:center; padding:3rem; color:#94a3b8;">Sin datos. Realiza una detecciÃ³n primero.</td></tr>'; return; }
+        if(!selectedPeaks.length) { b.innerHTML='<tr><td colspan="7" style="text-align:center; padding:3rem; color:#94a3b8;">Sin datos. Realiza una detección primero.</td></tr>'; return; }
         b.innerHTML = selectedPeaks.map((p,i)=>`<tr>
             <td style="font-weight:600; color:var(--primary); font-size:0.75rem;">${p.spectrumName || '-'}</td>
             <td>${p.x.toFixed(1)}</td>
@@ -1433,7 +1429,7 @@
         showLoader('Aplicando algoritmos quimiométricos...');
         try {
             const cleanSpectra = processedSpectra.map(s => ({
-                // CRÃTICO: rawName nunca tiene HTML, garantiza limpieza correcta en backend
+                // CRÍTICO: rawName nunca tiene HTML, garantiza limpieza correcta en backend
                 name: s.rawName || s.name,
                 x: s.x.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v),
                 y: s.y.map(v => (!isFinite(v) || isNaN(v)) ? 0.0 : v)
@@ -1465,7 +1461,7 @@
                 hideLoader();
                 
                 // Mostrar el error EXACTO al usuario
-                alert(`Fallo en QuimiometrÃ­a: \n${JSON.stringify(errorMessage)}`);
+                alert(`Fallo en Quimiometría: \n${JSON.stringify(errorMessage)}`);
                 return;
             }
             const data = await response.json();
@@ -1474,11 +1470,11 @@
         } catch(e) {
             hideLoader();
             console.error(e);
-            alert("Error en anÃ¡lisis quimiomÃ©trico.");
+            alert("Error en análisis quimiométrico.");
         }
     }
 
-// --- COMPARACIÃ“N DE ESPECTROS (DIFERENCIAL) ---
+// --- COMPARACIÓN DE ESPECTROS (DIFERENCIAL) ---
     function populateComparatorDropdowns() {
         const classSelect = document.getElementById('comp-class');
         const sampleSelect = document.getElementById('comp-sample');
@@ -1500,7 +1496,7 @@
         
         if(!trainItems.length || !blindItem) return alert("Datos no encontrados");
         
-        showLoader('Aplicando algoritmos quimiométricos...');
+        showLoader();
         try {
             const itemsToProcess = [...trainItems, { ...blindItem, label: "BLIND" }];
             const payloadSpectra = await Promise.all(itemsToProcess.map(async item => {
@@ -1563,8 +1559,8 @@
             const traceB = { x: blindProcessed.x, y: blindProcessed.y, mode: 'lines', name: blindItem.name, line: { color: 'var(--secondary)', width: 2, dash: 'dot' } };
             
             const layout = {
-                title: 'ComparaciÃ³n Espectral (SNV + Savitzky-Golay)',
-                xaxis: { title: 'NÃºmero de Onda (cmâ»Â¹)', autorange: 'reversed' },
+                title: 'Comparación Espectral (SNV + Savitzky-Golay)',
+                xaxis: { title: 'Número de Onda (cm⁻¹)', autorange: 'reversed' },
                 yaxis: { title: 'Absorbancia Derivada' },
                 margin: { t: 40, b: 40, l: 50, r: 20 },
                 hovermode: 'x unified'
@@ -1579,7 +1575,7 @@
         }
     }
 
-// --- NUEVAS FUNCIONES DE ENTRENAMIENTO Y PREDICCIÃ“N ---
+// --- NUEVAS FUNCIONES DE ENTRENAMIENTO Y PREDICCIÓN ---
     async function procesarEspectroFrontend(file) {
         const text = await file.text();
         const lineas = text.split('\n');
@@ -1631,7 +1627,7 @@
             return;
         }
 
-        showLoader('Cargando espectros...');
+        showLoader();
         const loaderTitle = document.querySelector('.loader-text h2');
         const BATCH_SIZE = 10;
         
@@ -1671,13 +1667,13 @@
             <tr style="border-bottom:1px solid #f1f5f9;">
                 <td style="padding:4px 0; font-size:0.75rem;">${extractCleanName(label)}</td>
                 <td style="padding:4px 0; text-align:center; font-weight:bold; font-size:0.75rem; color:var(--primary);">${counts[label]}</td>
-                <td style="padding:4px 0; text-align:right;"><button class="btn-delete-batch" onclick="deleteBatch('${label.replace(/'/g, "\\'")}')" title="Borrar lote">âŒ</button></td>
+                <td style="padding:4px 0; text-align:right;"><button class="btn-delete-batch" onclick="deleteBatch('${label.replace(/'/g, "\\'")}')" title="Borrar lote">❌</button></td>
             </tr>
         `).join('');
     }
 
     window.deleteBatch = function(label) {
-        if(!confirm(`Â¿EstÃ¡s seguro de eliminar el lote '${label}'?`)) return;
+        if(!confirm(`¿Estás seguro de eliminar el lote '${label}'?`)) return;
         trainingSet = trainingSet.filter(s => s && s !== null && s.label !== label);
         renderDatabaseSummary();
     };
@@ -1719,7 +1715,7 @@
                     title="${extractCleanName(s.name)}">${extractCleanName(s.name)}</td>
                 <td style="padding:4px 0; text-align:right; font-weight:bold; color:${s.prediction.includes('Esperando') ? '#94a3b8' : 'var(--primary)'}">
                     ${s.prediction}
-                    <span style="cursor: pointer; color: #ef4444; font-weight: bold; margin-left: 15px; font-size: 1.1rem; padding: 2px 8px; border-radius: 50%; background-color: #fee2e2;" onclick="this.parentElement.remove();" title="Eliminar resultado">âœ•</span>
+                    <span style="cursor: pointer; color: #ef4444; font-weight: bold; margin-left: 15px; font-size: 1.1rem; padding: 2px 8px; border-radius: 50%; background-color: #fee2e2;" onclick="this.parentElement.remove();" title="Eliminar resultado">✕</span>
                 </td>
             </tr>
         `).join('');
@@ -1835,7 +1831,7 @@
                 throw new Error(data.error);
             }
             if(data.predictions) {
-                // Mapear por Ã­ndice absoluto para evitar desalineaciÃ³n o sobrescritura de archivos con nombres duplicados
+                // Mapear por índice absoluto para evitar desalineación o sobrescritura de archivos con nombres duplicados
                 data.predictions.forEach((pred, i) => { 
                     if(payloadTest[i] && payloadTest[i].originalIndex !== undefined) {
                         const originalIdx = payloadTest[i].originalIndex;
@@ -1844,10 +1840,10 @@
                     }
                 });
                 
-                // Las muestras que no fueron enviadas (invÃ¡lidas) se marcan como error
+                // Las muestras que no fueron enviadas (inválidas) se marcan como error
                 predictSet.forEach(item => {
                     if(item.prediction && item.prediction.includes('Esperando')) {
-                        item.prediction = 'âŒ Error de cÃ¡lculo';
+                        item.prediction = '❌ Error de cálculo';
                     }
                 });
                 
@@ -1857,7 +1853,7 @@
             console.error("Detalle del error en JS:", e);
             predictSet.forEach(item => {
                 if(item.prediction && item.prediction.includes('Esperando')) {
-                    item.prediction = 'âŒ Error de formato / Servidor';
+                    item.prediction = '❌ Error de formato / Servidor';
                 }
             });
             renderPredictResults();
@@ -1873,7 +1869,7 @@
             const selAlgo = document.getElementById('algo-selector');
             const algorithm = selAlgo ? selAlgo.value : 'PLS-DA';
             
-            // ProgramaciÃ³n defensiva profunda (LÃ³gica segura requerida)
+            // Programación defensiva profunda (Lógica segura requerida)
             const validSet = trainingSet.filter(item => item !== undefined && item !== null && item.file);
             
             let spectraData = await Promise.all(validSet.map(async item => {
@@ -1931,10 +1927,10 @@
             const data = await response.json();
             
             if (!data || data.error || !data.scores) {
-                const errMsg = data?.error ? data.error : "Estructura de datos invÃ¡lida enviada por el servidor.";
+                const errMsg = data?.error ? data.error : "Estructura de datos inválida enviada por el servidor.";
                 const traceMsg = data?.trace ? `\nTrace:\n${data.trace}` : "";
-                alert("Error AnalÃ­tico Backend:\n" + errMsg + traceMsg);
-                console.error("Fallo algorÃ­tmico capturado:", data);
+                alert("Error Analítico Backend:\n" + errMsg + traceMsg);
+                console.error("Fallo algorítmico capturado:", data);
                 return;
             }
             
@@ -1980,7 +1976,7 @@
                 y: data.scores[grupo]?.filter(d=>d)?.map(d => d?.lv2 || 0) || [],
                 text: data.scores[grupo]?.filter(d=>d)?.map(d => getTraceName(d?.scientific_name || d?.name || '')) || [],
                 mode: 'markers', 
-                hovertemplate: <b>%{text}</b><br> + hoverX + : %{x:.4f}<br> + hoverY + : %{y:.4f}<extra></extra>,
+                hovertemplate: `<b>%{text}</b><br>` + hoverX + `: %{x:.4f}<br>` + hoverY + `: %{y:.4f}<extra></extra>`,
                 showlegend: true,
                 marker: { size: 10, color: colores[idx % colores.length], line: {width: 1, color: 'white'} }
             }));
@@ -1996,7 +1992,7 @@
                     xref: 'paper', yref: 'paper',
                     x: 0.5, y: -0.25,
                     xanchor: 'center', yanchor: 'top',
-                    text: 'Nota: El grÃ¡fico muestra la distribuciÃ³n multivariante base; el modelo clasifica usando el espectro completo.',
+                    text: 'Nota: El gráfico muestra la distribución multivariante base; el modelo clasifica usando el espectro completo.',
                     showarrow: false,
                     font: { size: 10, color: '#64748b' }
                 }] : []
@@ -2011,7 +2007,7 @@
                     margin: { l: 60, r: 30, t: 45, b: 60 },
                     showlegend: true,
                     legend: LEGEND_LAYOUT,
-                    xaxis: {title: 'cmâ»Â¹', autorange: 'reversed', automargin: true, tickangle: -45}, 
+                    xaxis: {title: 'cm⁻¹', autorange: 'reversed', automargin: true, tickangle: -45}, 
                     yaxis: {title: isPlsDa ? 'VIP Score' : 'Weight/Importance', automargin: true}
                 });
             }
@@ -2063,7 +2059,7 @@
                 showlegend: true,
                 marker: { size: 11, color: palette_pca[idx % palette_pca.length], line: {color: 'white', width: 2} }
             }));
-            layout.title = 'AnÃ¡lisis de Componentes Principales (PCA)' + subtitle;
+            layout.title = 'Análisis de Componentes Principales (PCA)' + subtitle;
             layout.xaxis = { title: `PC1 (${data.explained_variance[0].toFixed(1)}%)` };
             layout.yaxis = { title: `PC2 (${data.explained_variance[1].toFixed(1)}%)` };
             Plotly.react('chemo-graph', traces, layout);
@@ -2079,14 +2075,14 @@
                 colorscale: 'Viridis',
                 zmin: -1, zmax: 1
             }];
-            layout.title = 'Matriz de CorrelaciÃ³n de Pearson' + subtitle;
+            layout.title = 'Matriz de Correlación de Pearson' + subtitle;
             layout.xaxis = { tickangle: 45 };
             layout.yaxis = { autorange: 'reversed' }; 
             layout.margin.l = 100;
             Plotly.react('chemo-graph', traces, layout);
         }
 
-        // BotÃ³n para descargar grÃ¡fico cientÃ­fico (Matplotlib Base64)
+        // Botón para descargar gráfico científico (Matplotlib Base64)
         if (data.plot_image) {
             let downloadDiv = document.getElementById('chemo-download-container');
             if (!downloadDiv) {
@@ -2096,7 +2092,7 @@
                 downloadDiv.style.textAlign = 'center';
                 container.parentNode.appendChild(downloadDiv);
             }
-            downloadDiv.innerHTML = `<button class="primary" style="font-size:0.75rem; background:#00796b; border-color:#00796b; width:100%;" onclick="downloadScientificPlot('${data.plot_image}', '${data.type}')">ðŸ“¥ Descargar GrÃ¡fico CientÃ­fico (EstÃ¡ndar Q1 - PNG)</button>`;
+            downloadDiv.innerHTML = `<button class="primary" style="font-size:0.75rem; background:#00796b; border-color:#00796b; width:100%;" onclick="downloadScientificPlot('${data.plot_image}', '${data.type}')">📥 Descargar Gráfico Científico (Estándar Q1 - PNG)</button>`;
         }
     }
 
@@ -2135,11 +2131,11 @@
             
             lastCharData = data;
             drawCharGraph(data);
-            document.getElementById('char-status').innerText = "IdentificaciÃ³n exitosa âœ“";
+            document.getElementById('char-status').innerText = "Identificación exitosa ✓";
             alert("Picos identificados. Haz clic en 'Generar Tabla' para ver el desglose.");
         } catch(e) {
             console.error(e);
-            document.getElementById('char-status').innerText = "Error en caracterizaciÃ³n.";
+            document.getElementById('char-status').innerText = "Error en caracterización.";
         }
     }
 
@@ -2150,7 +2146,7 @@
         data.names.forEach((name, i) => {
             const color = palette[i % palette.length];
             
-            // Trazo de la lÃ­nea del espectro
+            // Trazo de la línea del espectro
             traces.push({
                 x: data.x_ref,
                 y: data.y_matrix[i],
@@ -2159,7 +2155,7 @@
                 type: 'scatter',
                 mode: 'lines',
                 line: { width: 1.5, color: color },
-                hoverinfo: 'x+y+name', // OptimizaciÃ³n para selecciÃ³n de picos
+                hoverinfo: 'x+y+name', // Optimización para selección de picos
                 showlegend: true
             });
             
@@ -2184,7 +2180,7 @@
                     showlegend: false
                 });
 
-                // INYECCIÃ“N VISUAL: ConstrucciÃ³n de flechas naranjas y texto de nÃºmero de onda
+                // INYECCIÓN VISUAL: Construcción de flechas naranjas y texto de número de onda
                 const anotacionesEspectro = picosX.map((valorX, index) => {
                     return {
                         x: valorX,
@@ -2205,15 +2201,15 @@
         });
 
         const layout = {
-            title: 'IdentificaciÃ³n de Picos Multiespectral',
-            xaxis: { title: 'cmâ»Â¹', autorange: 'reversed' },
+            title: 'Identificación de Picos Multiespectral',
+            xaxis: { title: 'cm⁻¹', autorange: 'reversed' },
             yaxis: { title: currentYTitle },
             margin: SPECTRUM_MARGIN,
             paper_bgcolor: 'transparent',
             plot_bgcolor: 'transparent',
             showlegend: true,
             legend: LEGEND_LAYOUT,
-            dragmode: 'zoom',      // RESTAURA drag-to-zoom hÃ­brido
+            dragmode: 'zoom',      // RESTAURA drag-to-zoom híbrido
             clickmode: 'event',    // EVENTOS DE CLIC PUROS
             hovermode: 'closest',  // ANCLA AL PICO
             hoverdistance: 20      // AUMENTA RADIO DE CAPTURA
@@ -2226,7 +2222,7 @@
     }
 
     function renderCharTableUI() {
-        if(!lastCharData) return alert("Primero realiza la identificaciÃ³n de picos.");
+        if(!lastCharData) return alert("Primero realiza la identificación de picos.");
         
         const head = document.getElementById('char-table-head');
         const body = document.getElementById('char-table-body');
@@ -2234,8 +2230,8 @@
 
         // Header
         let headerHtml = `<tr style="background:#f1f5f9;">
-            <th style="padding:10px; border-bottom:2px solid var(--border);">Wavenumber (cmâ»Â¹)</th>
-            <th style="padding:10px; border-bottom:2px solid var(--border);">AsignaciÃ³n Sugerida</th>`;
+            <th style="padding:10px; border-bottom:2px solid var(--border);">Wavenumber (cm⁻¹)</th>
+            <th style="padding:10px; border-bottom:2px solid var(--border);">Asignación Sugerida</th>`;
         names.forEach(n => {
             headerHtml += `<th style="padding:10px; border-bottom:2px solid var(--border);">${format_scientific_name_js(n)} (Int.)</th>`;
         });
@@ -2264,7 +2260,7 @@
         const btn = document.getElementById('btn-toggle-char-mode');
         btn.classList.toggle('primary', isCharPeakMode);
         btn.classList.toggle('secondary', !isCharPeakMode);
-        btn.innerText = isCharPeakMode ? 'ðŸ–±ï¸ Modo SelecciÃ³n Activo' : 'ðŸ–±ï¸ Activar SelecciÃ³n por Clic';
+        btn.innerText = isCharPeakMode ? '🖱️ Modo Selección Activo' : '🖱️ Activar Selección por Clic';
         document.getElementById('char-graph').style.cursor = isCharPeakMode ? 'crosshair' : 'default';
     }
 
@@ -2273,12 +2269,12 @@
         const p = data.points[0];
         
         if (isCharPeakMode) {
-            // AÃ±adir pico mediante clic DIRECTO (Sin prompt numÃ©rico)
+            // Añadir pico mediante clic DIRECTO (Sin prompt numérico)
             addManualPeak(p.x);
         } else {
             // Seleccionar para borrar
             lastClickedCharPeak = p.x;
-            document.getElementById('char-status').innerText = `Seleccionado: ${p.x.toFixed(1)} cmâ»Â¹`;
+            document.getElementById('char-status').innerText = `Seleccionado: ${p.x.toFixed(1)} cm⁻¹`;
             document.getElementById('btn-remove-peak').style.background = '#fee2e2';
         }
     }
@@ -2286,10 +2282,10 @@
     function addManualPeak(forcedVal = null) {
         let val = forcedVal;
         if (isNaN(val)) {
-            document.getElementById('char-status').innerText = "âš ï¸ Selecciona un punto en el espectro.";
+            document.getElementById('char-status').innerText = "⚠️ Selecciona un punto en el espectro.";
             return;
         }
-        if (!lastCharData) return alert("Realiza primero una identificaciÃ³n automÃ¡tica.");
+        if (!lastCharData) return alert("Realiza primero una identificación automática.");
 
         const assignment = getManualAssignment(val);
         const newRow = { wavenumber: val.toFixed(1), assignment: assignment };
@@ -2311,7 +2307,7 @@
     }
 
     function removeSelectedPeak() {
-        if (!lastClickedCharPeak) return alert("Haz clic en un pico en el grÃ¡fico para seleccionarlo.");
+        if (!lastClickedCharPeak) return alert("Haz clic en un pico en el gráfico para seleccionarlo.");
         if (!lastCharData) return;
 
         lastCharData.table = lastCharData.table.filter(p => Math.abs(p.wavenumber - lastClickedCharPeak) > 2.0);
@@ -2327,14 +2323,14 @@
     }
 
     function getManualAssignment(wn) {
-        if (1003 <= wn && wn <= 1005) return "RespiraciÃ³n del anillo: Fenilalanina (ProteÃ­nas)";
-        if (1650 <= wn && wn <= 1675) return "Estiramiento C=O: Amida I (ProteÃ­nas)";
-        if (1540 <= wn && wn <= 1560) return "Amida II (ProteÃ­nas)";
-        if (1440 <= wn && wn <= 1455) return "DeformaciÃ³n CH2: LÃ­pidos";
-        if (1240 <= wn && wn <= 1265) return "FosfodiÃ©ster (Ãcidos Nucleicos)";
-        if (1735 <= wn && wn <= 1745) return "Estiramiento C=O (Ã‰steres LÃ­pidos)";
-        if (930 <= wn && wn <= 950)   return "VibraciÃ³n C-C: Esqueleto proteico (Î±-hÃ©lice)";
-        return "SeÃ±al vibracional identificada en zona Fingerprint";
+        if (1003 <= wn && wn <= 1005) return "Respiración del anillo: Fenilalanina (Proteínas)";
+        if (1650 <= wn && wn <= 1675) return "Estiramiento C=O: Amida I (Proteínas)";
+        if (1540 <= wn && wn <= 1560) return "Amida II (Proteínas)";
+        if (1440 <= wn && wn <= 1455) return "Deformación CH2: Lípidos";
+        if (1240 <= wn && wn <= 1265) return "Fosfodiéster (Ácidos Nucleicos)";
+        if (1735 <= wn && wn <= 1745) return "Estiramiento C=O (Ésteres Lípidos)";
+        if (930 <= wn && wn <= 950)   return "Vibración C-C: Esqueleto proteico (α-hélice)";
+        return "Señal vibracional identificada en zona Fingerprint";
     }
 
     function downloadCharTable() {
@@ -2386,14 +2382,14 @@
         }
     }
 
-    // FunciÃ³n inyectada para eliminar muestras ciegas individualmente
+    // Función inyectada para eliminar muestras ciegas individualmente
     function removeBlindSample(index) {
         try {
             // 1. Eliminar del array en memoria
             if (index >= 0 && index < predictSet.length) {
                 predictSet.splice(index, 1);
             }
-            // 2. Volver a renderizar la lista (esto actualiza el DOM automÃ¡ticamente)
+            // 2. Volver a renderizar la lista (esto actualiza el DOM automáticamente)
             renderPredictResults();
         } catch (error) {
             console.error("Error al eliminar la muestra:", error);
@@ -2422,8 +2418,3 @@ function closeWelcomeModal() {
 </script>
 </body>
 </html>
-
-
-
-
-
